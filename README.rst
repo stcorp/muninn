@@ -9,7 +9,7 @@ metadata catalogue.
 When using a product archive, muninn can automatically extracted attributes
 from the products when products get added to the archive. Automatic attribute
 extraction is handled through product type specific plug-ins
-(see section "Extensions"), which are *not* included in the muninn
+(see section "Extensions"_), which are *not* included in the muninn
 distribution.
 
 In Norse mythology, Muninn is a raven that, together with another raven called
@@ -51,26 +51,26 @@ Using setup.py: ::
 The muninn distribution contains a generic archiving framework that cannot be
 used in a meaningful way without product type plug-ins. Therefore, after
 installing muninn, you will need to install (or implement) one or more muninn
-extensions (see section "Extensions").
+extensions (see section "Extensions"_).
 
 The extensions required by each archive should be added to the corresponding
-archive configuration file (see section "Archive configuration file"). If you
-install extensions in a custom location, please update the "PYTHONPATH"
+archive configuration file (see section "Archive configuration files"_). If you
+install extensions in a custom location, please update the ``PYTHONPATH``
 environment variable accordingly.
 
-Ensure the "MUNINN_CONFIG_PATH" environment variable, which should contain the
-muninn configuration search path, is set. The configuration search path is a
-colon (":") separated list of any combination of explicit paths to archive
+Ensure the ``MUNINN_CONFIG_PATH`` environment variable, which should contain
+the muninn configuration search path, is set. The configuration search path is
+a colon (``:``) separated list of any combination of explicit paths to archive
 configuration files and directories that will be scanned for archive
 configuration files.
 
 All muninn command-line tools, as well as the muninn.open() library function,
 refer to an archive using its "archive id". This is a name that corresponds to
-an archive configuration file (see section "Archive configuration files")
+an archive configuration file (see section "Archive configuration files"_)
 located in one of the directories on the muninn configuration search path.
 
-For example, given an archive id "foo", muninn expects to find a configuration
-file called "foo.cfg" on the search path.
+For example, given an archive id ``foo``, muninn expects to find a
+configuration file called ``foo.cfg`` on the search path.
 
 
 Upgrade instructions
@@ -84,7 +84,7 @@ Upgrading to version 4.0
 These upgrade steps are provided for Postgres only.
 For each existing archive, please perform the following steps:
 
-1. Perform step 1 from "Upgrading to version 2.0".
+1. Perform step 1 from "Upgrading to version 2.0"_.
 
    Note that migration of postgres databases that used a schema_name is not
    supported.
@@ -113,8 +113,8 @@ Muninn 2.0 requires that an extension contains either namespace definitions
 _or_ product type plug-ins, but not both. The extensions required by an archive
 should be listed explicitly by name in the archive configuration file.
 
-The "PYTHONPATH" environment variable should be set such that the listed
-extensions can be imported by muninn. The "MUNINN_EXTENSION_PATH" environment
+The ``PYTHONPATH`` environment variable should be set such that the listed
+extensions can be imported by muninn. The ``MUNINN_EXTENSION_PATH`` environment
 variable is no longer in use.
 
 For each existing archive, please perform the following steps:
@@ -122,7 +122,7 @@ For each existing archive, please perform the following steps:
 1. Login to the database used by the archive to be upgraded (e.g. using the
    psql command line tool included with Postgres). The connection details can
    be found in the archive configuration file (see section "Archive
-   configuration file" if you are unfamiliar with these files).
+   configuration files"_ if you are unfamiliar with these files).
 
    NB. Any occurence of "<schema name>" in any SQL statements found in this
    section should be substituted by the name schema name found in the archive
@@ -156,15 +156,15 @@ For each existing archive, please perform the following steps:
          UNIQUE (product_type, product_name);
      COMMIT;
 
-4. Update product type plug-ins to use "core.product_name" instead of
-   "core.logical_name". Split extensions that contain both namespace
+4. Update product type plug-ins to use ``core.product_name`` instead of
+   ``core.logical_name``. Split extensions that contain both namespace
    definitions and product type plug-ins. In most cases, this will be taken
    care of by the extension developer and you only need to update each
    extension to the latest version.
 
-5. Update the archive configuration file by adding the "namespace_extensions"
-   and "product_type_extensions" configuration options (see section
-   "Archive configuration file").
+5. Update the archive configuration file by adding the ``namespace_extensions``
+   and ``product_type_extensions`` configuration options (see section
+   "Archive configuration files"_).
 
 Upgrading to version 1.3
 ------------------------
@@ -243,13 +243,14 @@ For Sqlite, muninn will automatically create the database file when it is first
 accessed.
 
 Next, you need to create a configuration file for the archive. See the section
-"Archive configuration files" for details on the the configuration file format.
+"Archive configuration files"_ for details on the the configuration file
+format.
 
 Make sure the configuration file is stored somewhere on the configuration
-search path (see section "Installation instructions"). Move the file or update
+search path (see section "Installation instructions"_). Move the file or update
 the search path if this is not the case.
 
-The final step is to run the "muninn-prepare" command-line tool to initialize
+The final step is to run the ``muninn-prepare`` command-line tool to initialize
 the archive for use: ::
 
   $ muninn-prepare [archive id]
@@ -291,8 +292,8 @@ extension interface. Muninn defines two types of extensions: namespace
 extensions (that contain namespace definitions) and product type extensions
 (that contain product type plug-ins).
 
-A namespace is a named set of product attributes (see section "Namespaces").
-Muninn defines a namespace called "core" that contains a small set of
+A namespace is a named set of product attributes (see section "Namespaces"_).
+Muninn defines a namespace called ``core`` that contains a small set of
 attributes that muninn needs to archive a product. For example, it contains the
 name of the product, its SHA1 hash, UUID, and archive date.
 
@@ -313,50 +314,50 @@ archive the product.
 
 Product type plug-ins can also be used to tailor certain aspects of muninn. For
 example, the plug-in controls what happens to a product (of the type it
-supports) when all of the products it is linked to (see section "Links") have
+supports) when all of the products it is linked to (see section "Links"_) have
 been removed from the archive.
 
 
 Archive configuration files
 ===========================
 An archive configuration file is a text file that describes an archive. The
-configuration file for an archive with id "foo" should be called "foo.cfg".
+configuration file for an archive with id ``foo`` should be called ``foo.cfg``.
 
 The configuration file format resembles Windows INI files in that it consists
-of named sections starting with a "[section]" header followed by "name = value"
-entries. Each section will be discussed in detail below.
+of named sections starting with a ``[section]`` header followed by
+``name = value`` entries. Each section will be discussed in detail below.
 
 Section "archive"
 -----------------
 This section contains general archive settings and may contain the following
 settings:
 
-- root: The root path on disk of the archive.
+- ``root``: The root path on disk of the archive.
 
-- backend: The backend used for storing product attributes. The currently
-  supported backends are "postgresql" and "sqlite".
+- ``backend``: The backend used for storing product attributes. The currently
+  supported backends are ``postgresql`` and ``sqlite``.
 
-- use_symlinks: If set to "true", an archived product will consist of symbolic
-  links to the original product, instead of a copy of the product.
-  The default is "false".
+- ``use_symlinks``: If set to ``true``, an archived product will consist of
+  symbolic links to the original product, instead of a copy of the product.
+  The default is ``false``.
 
-- cascade_grace_period: Number of minutes after which a product may be
+- ``cascade_grace_period``: Number of minutes after which a product may be
   considered for automatic removal. The default is 0 (immediately).
 
-- max_cascade_cycles: Maximum number of iterations of the automatic removal
+- ``max_cascade_cycles``: Maximum number of iterations of the automatic removal
   algorithm. The default is 25.
 
-- external_archives: White space separated list of archive ids of archives
+- ``external_archives``: White space separated list of archive ids of archives
   that may contain products linked to by products stored in this archive.
   The default is the empty list.
 
-- namespace_extensions: White space separated list of names of Python packages
-  or modules that contain namespace definitions (see section "Extensions").
-  The default is the empty list.
+- ``namespace_extensions``: White space separated list of names of Python
+  packages or modules that contain namespace definitions (see section
+  "Extensions"_). The default is the empty list.
 
-- product_type_extensions: White space separated list of names of Python
+- ``product_type_extensions``: White space separated list of names of Python
   modules or packages that contain product type plug-ins (see section
-  "Extensions"). The default is the empty list.
+  "Extensions"_). The default is the empty list.
 
 Section "postgresql"
 --------------------
@@ -409,14 +410,14 @@ Each product attribute can be of one of the following supported types: boolean,
 integer, long, real, text, timestamp, uuid, and geometry. These types are
 described in detail below.
 
-The boolean type represents a truth value and has two possible states: "true"
-and "false".
+The boolean type represents a truth value and has two possible states: ``true``
+and ``false``.
 
 The valid literal boolean values are:
 
-    true
+  ``true``
 
-    false
+  ``false``
 
 The integer types (integer and long) represent whole numbers. The integer type
 is a 32-bit signed integer and can be used to represent values in the range
@@ -426,13 +427,13 @@ to +9223372036854775807 (inclusive).
 
 Some examples of literal integer values:
 
-    -3
+  ``-3``
 
-    0
+  ``0``
 
-    10
+  ``10``
 
-    +99
+  ``+99``
 
 The floating point type (real) represents fractional numbers. The real type is
 a double precision floating point number and has a typical range of around
@@ -440,24 +441,24 @@ a double precision floating point number and has a typical range of around
 
 Some examples of literal real values:
 
-    1E-5
+  ``1E-5``
 
-    1.E+10
+  ``1.E+10``
 
-    -3.1415E0
+  ``-3.1415E0``
 
-    1.0
+  ``1.0``
 
 The text type represents text. Literal values are enclosed in double quotes and
 most common backslash escape sequence are recognized. To include a double quote
 or a backslash inside a text literal, they must be escaped with a backslash,
-i.e. "\"" and "\\".
+i.e. ``\"`` and ``\\``.
 
 Some examples of literal text values:
 
-    "Hello world!\n"
+  ``"Hello world!\n"``
 
-    "This is a so-called \"text\" literal."
+  ``"This is a so-called \"text\" literal."``
 
 The timestamp type represents an instance in time with microsecond resolution.
 Time zone information is not included. Although throughout muninn all
@@ -465,38 +466,39 @@ timestamps are expressed in UTC, users (and especially product type plug-in
 developers) can choose a different convention (e.g. local time) for custom
 product attributes.
 
-The minimum and maximum timestamp values are 0001-01-01T00:00:00.000000 and
-9999-12-31T23:59:59.999999 respectively, which may also be written as
-0000-00-00T00:00:00.000000 and 9999-99-99T99:99:99.999999 for convenience.
+The minimum and maximum timestamp values are ``0001-01-01T00:00:00.000000`` and
+``9999-12-31T23:59:59.999999`` respectively, which may also be written as
+``0000-00-00T00:00:00.000000`` and ``9999-99-99T99:99:99.999999`` for
+convenience.
 
 Some examples of literal timestamp values:
 
-    2000-01-01
+  ``2000-01-01``
 
-    2000-01-01T00:00:00
+  ``2000-01-01T00:00:00``
 
-    2000-01-01T00:00:00.
+  ``2000-01-01T00:00:00.``
 
-    2000-01-01T00:00:00.3
+  ``2000-01-01T00:00:00.3``
 
-    1999-12-21T23:59:59.999999
+  ``1999-12-21T23:59:59.999999``
 
-    0000-00-00
+  ``0000-00-00``
 
-    0000-00-00T00:00:00
+  ``0000-00-00T00:00:00``
 
-    9999-99-99T99:99:99.99
+  ``9999-99-99T99:99:99.99``
 
 The uuid type represents a universally unique identifier, a 128-bit number that
 is used to uniquely identify products in a muninn archive.
 
 Some examples of literal uuid values:
 
-    32a61528-a712-427a-b28f-8ebd5b472b16
+  ``32a61528-a712-427a-b28f-8ebd5b472b16``
 
-    873dd103-2115-4bf8-9f05-d0eb4b3f71ea
+  ``873dd103-2115-4bf8-9f05-d0eb4b3f71ea``
 
-    bdc10916-d89f-416c-8987-a9c2af9b1ef7
+  ``bdc10916-d89f-416c-8987-a9c2af9b1ef7``
 
 The geometry type represents two-dimensional geometric objects. The spatial
 reference system used is WGS84 (SRID=4326). Longitude is measured in degrees
@@ -516,17 +518,17 @@ A sub-set of the Well Known Text (WKT) markup language is used to represent
 literal geometry values. This sub-set is limited to the supported geometric
 objects listed above. Only two-dimensional coordinates are supported. Empty
 geometries are supported. An empty geometry is represented by the name of the
-geometry type followed by the keyword EMPTY.
+geometry type followed by the keyword ``EMPTY``.
 
 Some examples of literal geometry values:
 
-    POINT (3.0 55.0)
+  ``POINT (3.0 55.0)``
 
-    LINESTRING (3.0 55.0, 3.0 80.0, 5.0 75.0)
+  ``LINESTRING (3.0 55.0, 3.0 80.0, 5.0 75.0)``
 
-    POLYGON ((5.0 52.0, 6.0 53.0, 3.0 52.5, 5.0 52.0))
+  ``POLYGON ((5.0 52.0, 6.0 53.0, 3.0 52.5, 5.0 52.0))``
 
-    POLYGON EMPTY
+  ``POLYGON EMPTY``
 
 
 Namespaces
@@ -535,10 +537,10 @@ A namespace is a named set of product attributes. The concept of a namespace is
 used to group related product attributes and to avoid name clashes. Any product
 attribute can be defined to be either optional or mandatory.
 
-For example, the definition of the "core" namespace includes the mandatory
-attribute "uuid", and the optional attributes "validity_start" and
-"validity_stop". The full name of these product attributes is "core.uuid",
-"core.validity_start", and "core.validity_stop".
+For example, the definition of the ``core`` namespace includes the mandatory
+attribute ``uuid``, and the optional attributes ``validity_start`` and
+``validity_stop``. The full name of these product attributes is ``core.uuid``,
+``core.validity_start``, and ``core.validity_stop``.
 
 
 Links
@@ -566,127 +568,127 @@ When a muninn extension includes namespace definitions, all product attributes
 defined in these namespaces can be used in expressions.
 
 The details of the expression language are described below. See the section
-"Data types" for more information about the data types supported by muninn.
+"Data types"_ for more information about the data types supported by muninn.
 
 Attribute references
 --------------------
-A product attribute "x" defined in namespace "y" is referred to using "y.x". If
-the namespace prefix "y" is omitted, it defaults to "core". This means that any
-attribute from the "core" namespace may be referenced directly.
+A product attribute ``x`` defined in namespace ``y`` is referred to using
+``y.x``. If the namespace prefix ``y`` is omitted, it defaults to ``core``.
+This means that any attribute from the ``core`` namespace may be referenced
+directly.
 
 Some examples of attribute references:
 
-    uuid
+  ``uuid``
 
-    validity_start
+  ``validity_start``
 
-    core.uuid
+  ``core.uuid``
 
-    core.validity_start
+  ``core.validity_start``
 
-    xml_pi.instrument
 
 Parameter references
 --------------------
-A name preceded by an at sign "@" denotes the value of the parameter with that
-name. This is primarily useful when calling library functions that take an
+A name preceded by an at sign ``@`` denotes the value of the parameter with
+that name. This is primarily useful when calling library functions that take an
 expression as an argument. These functions will also take a dictionary of
 parameters that will be used to resolved any parameters references present in
 the expression.
 
 Some examples of parameter references:
 
-    @uuid
+  ``@uuid``
 
-    @start
+  ``@start``
 
 Functions and operators
 -----------------------
-The supported logical operators are "not", "and", "or", in order of decreasing
-precedence.
+The supported logical operators are ``not``, ``and``, ``or``, in order of
+decreasing precedence.
 
-The comparison operators "==" (equal) and "!=" (not equal) are supported for
-all types except geometry.
+The comparison operators ``==`` (equal) and ``!=`` (not equal) are supported
+for all types except geometry.
 
-The comparison operators "<" (less than), ">" (greater than), "<=" (less than
-or equal), ">=" (greater than or equal) are supported for all types except
-boolean, uuid, and geometry.
+The comparison operators ``<`` (less than), ``>`` (greater than), ``<=`` (less
+than or equal), ``>=`` (greater than or equal) are supported for all types
+except boolean, uuid, and geometry.
 
-The comparison operator "~=" (matches pattern) is supported only for text. The
-syntax is:
+The comparison operator ``~=`` (matches pattern) is supported only for text.
+The syntax is:
 
     text ~= pattern
 
-Any character in the pattern matches itself, except the percent sign "%", the
-underscore "_", and the backslash "\".
+Any character in the pattern matches itself, except the percent sign ``%``, the
+underscore ``_``, and the backslash ``\``.
 
-The percent sign "%" matches any sequence of zero or more characters. The
-underscore "_" matches any single characters. To match a literal percent sign
-or underscore, it must be preceded by a backslash "\". To match a literal
-backslash, write two backslashes "\\".
+The percent sign ``%`` matches any sequence of zero or more characters. The
+underscore ``_`` matches any single characters. To match a literal percent sign
+or underscore, it must be preceded by a backslash ``\``. To match a literal
+backslash, write two backslashes ``\\``.
 
 The result of the comparison is true only if the pattern matches the text value
 on the left hand side. Therefore, to match a pattern anywhere it should be
 preceded and followed by a percent sign.
 
-Some examples of the "~=" operator:
+Some examples of the ``~=`` operator:
 
-    "foobarbaz" ~= "foobarbaz"      (true)
+    ``"foobarbaz" ~= "foobarbaz"``      (true)
 
-    "foobarbaz" ~= "foo"            (false)
+    ``"foobarbaz" ~= "foo"``            (false)
 
-    "foobarbaz" ~= "%bar%"          (true)
+    ``"foobarbaz" ~= "%bar%"``          (true)
 
-    "foobarbaz" ~= "%ba_"           (true)
+    ``"foobarbaz" ~= "%ba_"``           (true)
 
-The unary and binary arithmetic operators "+" and "-" are supported for all
-numeric types. Furthermore, the binary operator "-" applied to a pair of
+The unary and binary arithmetic operators ``+`` and ``-`` are supported for all
+numeric types. Furthermore, the binary operator ``-`` applied to a pair of
 timestamps returns the length of the time interval between the timestamps as a
 fractional number of seconds. Due to the way timestamps are represented in
 sqlite, time intervals are limited to millisecond precision when using the
 sqlite backend.
 
-The unary function "is_defined" is supported for all data types and returns
+The unary function ``is_defined`` is supported for all data types and returns
 true if its argument is defined. This can be used to check if optional
 attributes are defined or not.
 
-The function "covers(timestamp, timestamp, timestamp, timestamp)" returns true
-if the time range formed by the pair of timestamps covers the time range formed
-by the second pair of timestamps. Both time ranges are closed.
+The function ``covers(timestamp, timestamp, timestamp, timestamp)`` returns
+true if the time range formed by the pair of timestamps covers the time range
+formed by the second pair of timestamps. Both time ranges are closed.
 
-The function "intersects(timestamp, timestamp, timestamp, timestamp)" returns
+The function ``intersects(timestamp, timestamp, timestamp, timestamp)`` returns
 true if the time range formed by the pair of timestamps intersects the time
 range formed by the second pair of timestamps. Both time ranges are closed.
 
-The function "covers(geometry, geometry)" returns true if the first geometry
+The function ``covers(geometry, geometry)`` returns true if the first geometry
 covers the second geometry.
 
-The function "intersects(geometry, geometry)" returns true if the first
+The function ``intersects(geometry, geometry)`` returns true if the first
 geometry intersects the second geometry.
 
-The function "is_source_of(uuid)" returns true if the product under
+The function ``is_source_of(uuid)`` returns true if the product under
 consideration is a (direct) source of the product referred to by specified
 uuid.
 
-The function "is_derived_from(uuid)" returns true if the product under
+The function ``is_derived_from(uuid)`` returns true if the product under
 consideration is (directly) derived from the product referred to by the
 specified uuid.
 
-The function "has_tag(text)" returns true if the product under consideration
+The function ``has_tag(text)`` returns true if the product under consideration
 is tagged with the specified tag.
 
-The function "now()" returns a timestamp that represents the current time in
+The function ``now()`` returns a timestamp that represents the current time in
 UTC.
 
 Examples
 --------
 
-    "is_defined(core.validity_start) and core.validity_start < now()"
+  ``is_defined(core.validity_start) and core.validity_start < now()``
 
-    "covers(core.validity_start, core.validity_stop, @start, @stop)"
+  ``covers(core.validity_start, core.validity_stop, @start, @stop)``
 
-    "covers(core.footprint, POINT (5.0 52.0))"
+  ``covers(core.footprint, POINT (5.0 52.0))``
 
-    "is_derived_from(32a61528-a712-427a-b28f-8ebd5b472b16)"
+  ``is_derived_from(32a61528-a712-427a-b28f-8ebd5b472b16)``
 
-    "validity_stop - validity_start > 300"
+  ``validity_stop - validity_start > 300``
