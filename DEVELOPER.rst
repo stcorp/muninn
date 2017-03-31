@@ -30,7 +30,6 @@ For the muninn package:
 - Add change history entry in ``CHANGES``
 - Check that the content of ``EXTENSIONS.rst`` is up to date
   (any API changes?).
-- Check version numbers mentioned in ``EXTENSIONS.rst``.
 - Check copyright header (year range) in all files.
 - Check that creation of the muninn package using ``python setup.py sdist``
   runs without errors.
