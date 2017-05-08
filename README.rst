@@ -411,16 +411,17 @@ Example configuration file
 Example credentials file
 --------------------------
 ::
-  {
-      "server-one.com": {
-          "username": "one",
-          "password": "password_one"
-     },
-     "server-two.com": {
-          "username": "two",
-          "password": "password_two"
-     }
-  }
+
+       {
+          "server-one.com": {
+             "username": "one",
+             "password": "password_one"
+          },
+          "server-two.com": {
+             "username": "two",
+             "password": "password_two"
+          }
+       }
 
 Data types
 ==========
