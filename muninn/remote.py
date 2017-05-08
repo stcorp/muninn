@@ -5,7 +5,6 @@
 import logging
 import tempfile
 import shutil
-import urllib
 import os
 
 import muninn.util as util
@@ -42,9 +41,10 @@ class UrlBackend(object):
                     tmp_path = os.path.join(tmp_path, product.core.physical_name)
                     util.make_path(tmp_path)
 
-                # Download product.
+                # Define a temp location and download the file
                 tmp_file = os.path.join(tmp_path, product.core.physical_name)
-                (tmp_file, headers) = urllib.urlretrieve(product.core.remote_url, tmp_file)
+                downloader = util.Downloader(product.core.remote_url, archive.auth_file())
+                downloader.save(tmp_file)
 
                 # TODO: implement extraction of downloaded archives
                 # for ftp and file check if url ends with 'core.physical_name + <archive ext>'

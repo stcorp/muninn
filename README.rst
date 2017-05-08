@@ -359,6 +359,10 @@ settings:
   modules or packages that contain product type plug-ins (see section
   "Extensions"_). The default is the empty list.
 
+- ``auth_file``: [Optional] JSON file containing the credentials to download using
+  muninn-pull
+
+
 Section "postgresql"
 --------------------
 This sections contains backend specific settings for the postgresql backend and
@@ -399,10 +403,24 @@ Example configuration file
   backend = postgresql
   use_symlinks = true
   product_type_extensions = cryosat asar
+  auth_file = /home/alice/credentials.json
 
   [postgresql]
   connection_string = dbname=foo user=alice password=wonderland host=192.168.0.1
 
+Example credentials file
+--------------------------
+::
+  {
+      "server-one.com": {
+          "username": "one",
+          "password": "password_one"
+     },
+     "server-two.com": {
+          "username": "two",
+          "password": "password_two"
+     }
+  }
 
 Data types
 ==========

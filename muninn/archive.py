@@ -54,6 +54,7 @@ class _ArchiveConfig(Mapping):
     external_archives = optional(_ArchiveList)
     namespace_extensions = optional(_ExtensionList)
     product_type_extensions = optional(_ExtensionList)
+    auth_file = optional(Text)
 
 
 def _load_extension(name):
@@ -115,13 +116,14 @@ def create(configuration):
 
 class Archive(object):
     def __init__(self, root, backend, use_symlinks=False, cascade_grace_period=0, max_cascade_cycles=25,
-                 external_archives=[]):
+                 external_archives=[], auth_file=None):
         self._root = root
         self._backend = backend
         self._use_symlinks = use_symlinks
         self._cascade_grace_period = datetime.timedelta(minutes=cascade_grace_period)
         self._max_cascade_cycles = max_cascade_cycles
         self._external_archives = external_archives
+        self._auth_file = auth_file
 
         self._namespace_schemas = {}
         self._product_type_plugins = {}
@@ -153,6 +155,10 @@ class Archive(object):
 
         """
         return self._external_archives
+
+    def auth_file(self):
+        """Return the path of the authentication file to download from remote locations"""
+        return self._auth_file
 
     def register_namespace(self, namespace, schema):
         """Register a namespace.

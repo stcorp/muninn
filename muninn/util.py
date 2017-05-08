@@ -9,7 +9,10 @@ import hashlib
 import os
 import shutil
 import tempfile
-
+import json
+import urllib2
+import ftplib
+import urlparse
 
 class crc16(object):
     """Implementation of the CRC-16 algorithm that complies to the hashlib interface."""
@@ -371,3 +374,44 @@ def product_size(roots, resolve_root=True, resolve_links=False):
         roots = [roots]
 
     return sum([_product_size_rec(root, resolve_root, resolve_links) for root in roots])
+
+
+class Downloader:
+
+    def __init__(self, remote_url, auth_file=None):
+        self.remote_url = remote_url
+        self.auth_file = auth_file
+        self.url = urlparse.urlparse(self.remote_url)
+
+    def save(self, local_file):
+        if self.remote_url.lower().startswith('ftp'):
+            self._download_ftp(local_file)
+        else:
+            self._download_http(local_file)
+
+    def _get_credentials(self):
+        if self.auth_file is None:
+            return '', ''
+        credentials = json.loads(open(self.auth_file).read())
+        if self.url.hostname in credentials:
+            return credentials[self.url.hostname]['username'], \
+                   credentials[self.url.hostname]['password']
+        else:
+            return '', ''
+
+    def _download_http(self, local_file):
+        password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+        username, password = self._get_credentials()
+        password_mgr.add_password(None, self.url.hostname, username, password)
+        opener = urllib2.build_opener(urllib2.HTTPBasicAuthHandler(password_mgr))
+        urllib2.install_opener(opener)
+        remote_file = urllib2.urlopen(self.remote_url)
+        with open(local_file, 'wb') as output:
+            output.write(remote_file.read())
+
+    def _download_ftp(self, local_file):
+        username, password = self._get_credentials()
+        ftp = ftplib.FTP(self.url.hostname, username, password)
+        ftp.cwd(os.path.dirname(self.url.path))
+        ftp.retrbinary('RETR %s' % os.path.basename(self.url.path), open(local_file, 'wb').write)
+        ftp.quit()
