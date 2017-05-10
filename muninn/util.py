@@ -376,6 +376,10 @@ def product_size(roots, resolve_root=True, resolve_links=False):
     return sum([_product_size_rec(root, resolve_root, resolve_links) for root in roots])
 
 
+class DownloadError(Exception):
+    pass
+
+
 class Downloader:
 
     def __init__(self, remote_url, auth_file=None):
@@ -400,18 +404,26 @@ class Downloader:
             return '', ''
 
     def _download_http(self, local_file):
-        password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
-        username, password = self._get_credentials()
-        password_mgr.add_password(None, self.url.hostname, username, password)
-        opener = urllib2.build_opener(urllib2.HTTPBasicAuthHandler(password_mgr))
-        urllib2.install_opener(opener)
-        remote_file = urllib2.urlopen(self.remote_url)
-        with open(local_file, 'wb') as output:
-            output.write(remote_file.read())
+        try:
+            password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            username, password = self._get_credentials()
+            password_mgr.add_password(None, self.url.hostname, username, password)
+            opener = urllib2.build_opener(urllib2.HTTPBasicAuthHandler(password_mgr))
+            urllib2.install_opener(opener)
+            remote_file = urllib2.urlopen(self.remote_url)
+            with open(local_file, 'wb') as output:
+                output.write(remote_file.read())
+        except:
+            print 'Error downloading %s' % self.remote_url
+            raise DownloadError
 
     def _download_ftp(self, local_file):
-        username, password = self._get_credentials()
-        ftp = ftplib.FTP(self.url.hostname, username, password)
-        ftp.cwd(os.path.dirname(self.url.path))
-        ftp.retrbinary('RETR %s' % os.path.basename(self.url.path), open(local_file, 'wb').write)
-        ftp.quit()
+        try:
+            username, password = self._get_credentials()
+            ftp = ftplib.FTP(self.url.hostname, username, password)
+            ftp.cwd(os.path.dirname(self.url.path))
+            ftp.retrbinary('RETR %s' % os.path.basename(self.url.path), open(local_file, 'wb').write)
+            ftp.quit()
+        except:
+            print 'Error downloading %s' % self.remote_url
+            raise DownloadError
