@@ -758,11 +758,7 @@ class Archive(object):
             # pull product
             try:
                 remote.pull(self, product)
-            except util.DownloadError:
-                metadata = {'active': True, 'archive_path': None}
-                self.update_properties(Struct({'core': metadata}), product.core.uuid)
-                continue
-            except (KeyboardInterrupt, Error):
+            except (util.DownloadError, KeyboardInterrupt, Error):
                 # reset active/archive_path values
                 metadata = {'active': True, 'archive_path': None}
                 self.update_properties(Struct({'core': metadata}), product.core.uuid)

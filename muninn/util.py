@@ -425,5 +425,4 @@ class Downloader:
             ftp.retrbinary('RETR %s' % os.path.basename(self.url.path), open(local_file, 'wb').write)
             ftp.quit()
         except:
-            print 'Error downloading %s' % self.remote_url
-            raise DownloadError
+            raise DownloadError('Error downloading %s' % self.remote_url)
