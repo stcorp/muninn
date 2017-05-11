@@ -419,6 +419,9 @@ class Downloader:
     def _download_ftp(self, local_file):
         try:
             username, password = self._get_credentials()
+            if username == '':
+                username = 'anonymous'
+                password = 'guest'
             ftp = ftplib.FTP(self.url.hostname, username, password)
             ftp.cwd(os.path.dirname(self.url.path))
             ftp.retrbinary('RETR %s' % os.path.basename(self.url.path), open(local_file, 'wb').write)
