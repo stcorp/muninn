@@ -414,8 +414,7 @@ class Downloader:
             with open(local_file, 'wb') as output:
                 output.write(remote_file.read())
         except:
-            print 'Error downloading %s' % self.remote_url
-            raise DownloadError
+            raise DownloadError('Error downloading %s' % self.remote_url)
 
     def _download_ftp(self, local_file):
         try:
