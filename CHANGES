@@ -1,3 +1,6 @@
+* Added support for separate auth_file that can contain credentials for
+  downloads performed using muninn-pull.
+
 * Added -f option to muninn-strip.
 
 4.0 2017-03-31
