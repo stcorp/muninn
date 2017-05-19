@@ -44,6 +44,8 @@ def main():
     parser = argparse.ArgumentParser(description="Strip products contained in a muninn archive (i.e. remove "
                                      "products from disk, but don't remove the corresponding entries from the product "
                                      "catalogue)", parents=[version_parser])
+    parser.add_argument("-f", "--force", action="store_true", help="also strip partially ingested products; note"
+                        " that this can cause product files to be removed while in the process of being ingested")
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
     parser.add_argument("expression", metavar="EXPRESSION", help="expression used to search for products to remove")
 

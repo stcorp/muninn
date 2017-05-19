@@ -777,7 +777,7 @@ class Archive(object):
 
         return len(queue)
 
-    def strip(self, where="", parameters={}):
+    def strip(self, where="", parameters={}, force=False):
         """Remove one or more products from disk only (not from the product catalogue). Return the number of products
         stripped.
 
@@ -787,10 +787,13 @@ class Archive(object):
         Keyword arguments:
         where       --  Search expression that determines which products to stip.
         parameters  --  Parameters referenced in the search expression (if any).
+        force       --  If set to True, also strip partially ingested products. This affects products for which a
+                        failure occured during ingestion, as well as products in the process of being ingested. Use this
+                        option with care.
         """
         products = self.search(where=where, parameters=parameters)
         for product in products:
-            if not product.core.active:
+            if not product.core.active and not force:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
 
             self._strip(product)
