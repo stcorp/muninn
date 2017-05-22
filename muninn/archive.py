@@ -195,14 +195,14 @@ class Archive(object):
         try:
             return self._namespace_schemas[namespace]
         except KeyError:
-            raise Error("undefined namespace: \"%s\"" % namespace)
+            raise Error("undefined namespace: \"%s\"; defined namespaces: %s" % (namespace, self._namespace_schemas.keys()))
 
     def product_type_plugin(self, product_type):
         """Return a reference to the product type plugin for a product type."""
         try:
             return self._product_type_plugins[product_type]
         except KeyError:
-            raise Error("undefined product type: \"%s\"" % product_type)
+            raise Error("undefined product type: \"%s\"; defined product types: %s" % (product_type, self._product_type_plugins.keys()))
 
     @staticmethod
     def generate_uuid():
