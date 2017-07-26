@@ -1,3 +1,5 @@
+* Close SQL connection after ingestion/search/etc
+
 * Added support for separate auth_file that can contain credentials for
   downloads performed using muninn-pull.
 
