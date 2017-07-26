@@ -6,10 +6,8 @@ from __future__ import absolute_import
 
 import os
 import re
-import collections
 import datetime
 import functools
-import itertools
 import uuid
 
 # Select a version of dbapi2 that's available.
@@ -192,7 +190,7 @@ class SQLiteConnection(object):
                 raise Error("Cannot load the spatialite extension (%s): %s" % (self._mod_spatialite, str(e)))
 
         # ensure that spatial metadata init has been done
-        with self:
+        with self._connection:
             cursor = self._connection.cursor()
             cursor.execute("PRAGMA table_info(geometry_columns);")
             if cursor.fetchall() == []:
@@ -203,7 +201,7 @@ class SQLiteConnection(object):
 
         # create the tables if necessary
         if need_prepare:
-            with self:
+            with self._connection:
                 sqls = self._backend._create_tables_sql()
                 self._backend._execute_list(sqls)
 
