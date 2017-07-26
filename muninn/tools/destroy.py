@@ -36,21 +36,21 @@ def ask_yes_no(question, default=True):
 
 
 def destroy(args):
-    archive = muninn.open(args.archive)
-    if not args.yes:
-        if args.catalogue_only:
-            print(("You are about to remove the catalogue database for the archive \"%s\". " +
-                   "This operation cannot be undone!") % args.archive)
-        else:
-            print(("You are about to completely remove the archive \"%s\". " +
-                   "This operation cannot be undone!") % args.archive)
-        if not ask_yes_no("Do you want to continue?", False):
-            return 1
+    with muninn.open(args.archive) as archive:
+        if not args.yes:
+            if args.catalogue_only:
+                print(("You are about to remove the catalogue database for the archive \"%s\". " +
+                       "This operation cannot be undone!") % args.archive)
+            else:
+                print(("You are about to completely remove the archive \"%s\". " +
+                       "This operation cannot be undone!") % args.archive)
+            if not ask_yes_no("Do you want to continue?", False):
+                return 1
 
-    if args.catalogue_only:
-        archive.destroy_catalogue()
-    else:
-        archive.destroy()
+        if args.catalogue_only:
+            archive.destroy_catalogue()
+        else:
+            archive.destroy()
     return 0
 
 

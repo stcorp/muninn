@@ -20,15 +20,15 @@ def log_internal_error():
 
 
 def prepare(args):
-    archive = muninn.open(args.archive)
-    if args.dry_run:
-        print("The following SQL statements would be executed:")
-        for sql in archive.prepare_catalogue(dry_run=True):
-            print("  " + sql)
-    elif args.catalogue_only:
-        archive.prepare_catalogue()
-    else:
-        archive.prepare(force=args.force)
+    with muninn.open(args.archive) as archive:
+        if args.dry_run:
+            print("The following SQL statements would be executed:")
+            for sql in archive.prepare_catalogue(dry_run=True):
+                print("  " + sql)
+        elif args.catalogue_only:
+            archive.prepare_catalogue()
+        else:
+            archive.prepare(force=args.force)
     return 0
 
 

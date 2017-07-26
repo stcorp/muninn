@@ -68,48 +68,48 @@ def get_path_expansion_function(is_stem=False, is_enclosing_directory=False):
 
 
 def ingest(args):
-    archive = muninn.open(args.archive)
-    path_expansion_function = get_path_expansion_function(args.path_is_stem, args.path_is_enclosing_directory)
-    assert(not args.link or not args.copy)
-    use_symlinks = True if args.link else False if args.copy else None
-    verify_hash = True if args.verify_hash else False
+    with muninn.open(args.archive) as archive:
+        path_expansion_function = get_path_expansion_function(args.path_is_stem, args.path_is_enclosing_directory)
+        assert(not args.link or not args.copy)
+        use_symlinks = True if args.link else False if args.copy else None
+        verify_hash = True if args.verify_hash else False
 
-    errors_encountered = False
-    paths = sys.stdin if "-" in args.path else args.path
-    for path in paths:
-        path = os.path.abspath(path.strip())
+        errors_encountered = False
+        paths = sys.stdin if "-" in args.path else args.path
+        for path in paths:
+            path = os.path.abspath(path.strip())
 
-        # Expand path into multiple files and/or directories that belong to the same product.
-        try:
-            product_paths = path_expansion_function(path)
-        except Error as error:
-            logging.error("%s: unable to determine which files or directories belong to product [%s]" % (path, error))
-            errors_encountered = True
-            continue
-
-        # Discard paths matching any of the user supplied exclude patterns.
-        if args.exclude:
-            product_paths = filter_paths(product_paths, args.exclude)
-
-        if not product_paths:
-            logging.error("%s: path does not match any files or directories" % path)
-            errors_encountered = True
-            continue
-
-        try:
-            properties = archive.ingest(product_paths, args.product_type, use_symlinks=use_symlinks,
-                                        verify_hash=verify_hash)
-        except muninn.Error as error:
-            logging.error("%s: unable to ingest product [%s]" % (path, error))
-            errors_encountered = True
-            continue
-
-        if args.tag:
+            # Expand path into multiple files and/or directories that belong to the same product.
             try:
-                archive.tag(properties.core.uuid, args.tag)
-            except muninn.Error as error:
-                logging.error("%s: unable to tag product [%s]" % (path, error))
+                product_paths = path_expansion_function(path)
+            except Error as error:
+                logging.error("%s: unable to determine which files or directories belong to product [%s]" % (path, error))
                 errors_encountered = True
+                continue
+
+            # Discard paths matching any of the user supplied exclude patterns.
+            if args.exclude:
+                product_paths = filter_paths(product_paths, args.exclude)
+
+            if not product_paths:
+                logging.error("%s: path does not match any files or directories" % path)
+                errors_encountered = True
+                continue
+
+            try:
+                properties = archive.ingest(product_paths, args.product_type, use_symlinks=use_symlinks,
+                                            verify_hash=verify_hash)
+            except muninn.Error as error:
+                logging.error("%s: unable to ingest product [%s]" % (path, error))
+                errors_encountered = True
+                continue
+
+            if args.tag:
+                try:
+                    archive.tag(properties.core.uuid, args.tag)
+                except muninn.Error as error:
+                    logging.error("%s: unable to tag product [%s]" % (path, error))
+                    errors_encountered = True
 
     return 0 if not errors_encountered else 1
 

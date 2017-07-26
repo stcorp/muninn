@@ -21,10 +21,10 @@ def log_internal_error():
 
 
 def untag(args):
-    archive = muninn.open(args.archive)
-    tags = None if args.all else args.tag
-    for product in archive.search(where=args.expression):
-        archive.untag(product.core.uuid, tags)
+    with muninn.open(args.archive) as archive:
+        tags = None if args.all else args.tag
+        for product in archive.search(where=args.expression):
+            archive.untag(product.core.uuid, tags)
 
     return 0
 

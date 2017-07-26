@@ -21,9 +21,9 @@ def log_internal_error():
 
 
 def tag(args):
-    archive = muninn.open(args.archive)
-    for product in archive.search(where=args.expression):
-        archive.tag(product.core.uuid, args.tag)
+    with muninn.open(args.archive) as archive:
+        for product in archive.search(where=args.expression):
+            archive.tag(product.core.uuid, args.tag)
 
     return 0
 

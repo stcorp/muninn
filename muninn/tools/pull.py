@@ -21,15 +21,15 @@ def log_internal_error():
 
 
 def pull(args):
-    archive = muninn.open(args.archive)
-    verify_hash = True if args.verify_hash else False
+    with muninn.open(args.archive) as archive:
+        verify_hash = True if args.verify_hash else False
 
-    # find all remote products that satisfy filter
-    expression = "(is_defined(remote_url) and not is_defined(archive_path))"
-    if args.expression:
-        expression = "%s and %s" % (expression, args.expression)
+        # find all remote products that satisfy filter
+        expression = "(is_defined(remote_url) and not is_defined(archive_path))"
+        if args.expression:
+            expression = "%s and %s" % (expression, args.expression)
 
-    num_products = archive.pull(expression, verify_hash=verify_hash)
+        num_products = archive.pull(expression, verify_hash=verify_hash)
 
     return 0
 

@@ -20,8 +20,8 @@ def log_internal_error():
 
 
 def remove(args):
-    archive = muninn.open(args.archive)
-    archive.remove(args.expression, force=args.force)
+    with muninn.open(args.archive) as archive:
+        archive.remove(args.expression, force=args.force)
     return 0
 
 

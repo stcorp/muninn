@@ -115,14 +115,14 @@ def format_size(size, human_readable=False):
 
 
 def count(args):
-    archive = muninn.open(args.archive)
-    print(archive.count(args.expression))
+    with muninn.open(args.archive) as archive:
+        print(archive.count(args.expression))
     return 0
 
 
 def summary(args):
-    archive = muninn.open(args.archive)
-    summary = archive.summary(args.expression)
+    with muninn.open(args.archive) as archive:
+        summary = archive.summary(args.expression)
 
     if summary.count == 0:
         print("no products found")
@@ -140,64 +140,62 @@ def summary(args):
 
 
 def uuid(args):
-    archive = muninn.open(args.archive)
+    with muninn.open(args.archive) as archive:
+        # Collect possibly multiple sort order specifier lists into a single list.
+        order_by = [] if args.order_by is None else sum(args.order_by, [])
 
-    # Collect possibly multiple sort order specifier lists into a single list.
-    order_by = [] if args.order_by is None else sum(args.order_by, [])
-
-    # Find products using the search expression and print the UUIDs of the products found.
-    for product in archive.search(args.expression, order_by, args.limit):
-        print(product.core.uuid)
+        # Find products using the search expression and print the UUIDs of the products found.
+        for product in archive.search(args.expression, order_by, args.limit):
+            print(product.core.uuid)
 
     return 0
 
 
 def search(args):
-    archive = muninn.open(args.archive)
+    with muninn.open(args.archive) as archive:
+        # Collect possibly multiple sort order specifier lists into a single list.
+        order_by = [] if args.order_by is None else sum(args.order_by, [])
 
-    # Collect possibly multiple sort order specifier lists into a single list.
-    order_by = [] if args.order_by is None else sum(args.order_by, [])
+        # Use default properties if no properties were explicitly requested.
+        if args.properties is None:
+            properties = [("core", "uuid"), ("core", "active"), ("core", "hash"), ("core", "size"),
+                          ("core", "metadata_date"), ("core", "archive_date"), ("core", "archive_path"),
+                          ("core", "product_type"), ("core", "product_name"), ("core", "physical_name"),
+                          ("core", "validity_start"), ("core", "validity_stop"), ("core", "creation_date"),
+                          ("core", "footprint"), ("core", "remote_url")]
+        else:
+            # Expand wildcards.
+            properties = []
+            for (namespace, name) in sum(args.properties, []):
+                if name == "*":
+                    properties.extend([(namespace, name) for name in archive.namespace_schema(namespace)])
+                else:
+                    properties.append((namespace, name))
 
-    # Use default properties if no properties were explicitly requested.
-    if args.properties is None:
-        properties = [("core", "uuid"), ("core", "active"), ("core", "hash"), ("core", "size"),
-                      ("core", "metadata_date"), ("core", "archive_date"), ("core", "archive_path"),
-                      ("core", "product_type"), ("core", "product_name"), ("core", "physical_name"),
-                      ("core", "validity_start"), ("core", "validity_stop"), ("core", "creation_date"),
-                      ("core", "footprint"), ("core", "remote_url")]
-    else:
-        # Expand wildcards.
-        properties = []
-        for (namespace, name) in sum(args.properties, []):
-            if name == "*":
-                properties.extend([(namespace, name) for name in archive.namespace_schema(namespace)])
-            else:
-                properties.append((namespace, name))
+        # Check property names against namespace schemas.
+        for (namespace, name) in properties:
+            schema = archive.namespace_schema(namespace)
+            if name not in schema:
+                logging.error("no property: %r defined within namespace: %r" % (name, namespace))
+                return 1
 
-    # Check property names against namespace schemas.
-    for (namespace, name) in properties:
-        schema = archive.namespace_schema(namespace)
-        if name not in schema:
-            logging.error("no property: %r defined within namespace: %r" % (name, namespace))
-            return 1
+        # Construct a list of the namespaces requested.
+        namespaces = set([namespace for namespace, _ in properties])
+        namespaces.discard("core")
 
-    # Construct a list of the namespaces requested.
-    namespaces = set([namespace for namespace, _ in properties])
-    namespaces.discard("core")
+        # Find products using the search expression.
+        products = archive.search(args.expression, order_by, args.limit, namespaces=namespaces)
 
-    # Find products using the search expression.
-    products = archive.search(args.expression, order_by, args.limit, namespaces=namespaces)
+        # Output the requested properties of all products matching the search expression in the requested output format.
+        if args.output_format == "plain":
+            writer = PlainWriter(properties)
+        else:
+            writer = CSVWriter(properties)
 
-    # Output the requested properties of all products matching the search expression in the requested output format.
-    if args.output_format == "plain":
-        writer = PlainWriter(properties)
-    else:
-        writer = CSVWriter(properties)
-
-    writer.header()
-    for product in products:
-        writer.properties(product)
-    writer.footer()
+        writer.header()
+        for product in products:
+            writer.properties(product)
+        writer.footer()
     return 0
 
 

@@ -172,6 +172,7 @@ class SQLiteConnection(object):
             self._connection.rollback()
 
         self._in_transaction = False
+        self.close()
 
     def _connect(self):
         # Re-establish the connection to the database.

@@ -21,22 +21,21 @@ def log_internal_error():
 
 
 def export(args):
-    archive = muninn.open(args.archive)
+    with muninn.open(args.archive) as archive:
+        if args.list_formats:
+            if not archive.export_formats():
+                print("no alternative export formats available")
+            else:
+                print("alternative export formats: " + " ".join(archive.export_formats()))
+            print("")
+            return 0
 
-    if args.list_formats:
-        if not archive.export_formats():
-            print("no alternative export formats available")
-        else:
-            print("alternative export formats: " + " ".join(archive.export_formats()))
-        print("")
-        return 0
+        if args.expression is None:
+            logging.error("no search expression specified")
+            return 1
 
-    if args.expression is None:
-        logging.error("no search expression specified")
-        return 1
-
-    target_path = os.getcwd() if args.directory is None else args.directory
-    archive.export(where=args.expression, target_path=target_path, format=args.format)
+        target_path = os.getcwd() if args.directory is None else args.directory
+        archive.export(where=args.expression, target_path=target_path, format=args.format)
     return 0
 
 

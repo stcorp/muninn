@@ -21,10 +21,10 @@ def log_internal_error():
 
 
 def list_tags(args):
-    archive = muninn.open(args.archive)
-    for product in archive.search(where=args.expression):
-        tags = archive.tags(product.core.uuid)
-        print("%s (%s): %s" % (product.core.product_name, product.core.uuid, ", ".join(tags)))
+    with muninn.open(args.archive) as archive:
+        for product in archive.search(where=args.expression):
+            tags = archive.tags(product.core.uuid)
+            print("%s (%s): %s" % (product.core.product_name, product.core.uuid, ", ".join(tags)))
 
     return 0
 

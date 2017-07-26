@@ -20,10 +20,9 @@ def log_internal_error():
 
 
 def retrieve(args):
-    archive = muninn.open(args.archive)
-
-    target_path = os.getcwd() if args.directory is None else args.directory
-    archive.retrieve(where=args.expression, target_path=target_path, use_symlinks=args.link)
+    with muninn.open(args.archive) as archive:
+        target_path = os.getcwd() if args.directory is None else args.directory
+        archive.retrieve(where=args.expression, target_path=target_path, use_symlinks=args.link)
     return 0
 
 
