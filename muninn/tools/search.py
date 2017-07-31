@@ -2,10 +2,9 @@
 # Copyright (C) 2014-2017 S[&]T, The Netherlands.
 #
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, division, print_function
 
 import argparse
-import datetime
 import logging
 import muninn
 import os
@@ -89,7 +88,7 @@ def human_readable_size(size, base=1024, powers=["", "K", "M", "G", "T", "E"]):
         unit *= base
         power += 1
 
-    size = float(size) / unit
+    size = size / unit
     ceil_size = ceil(size)
     ceil_size_10 = ceil(size * 10.0) / 10.0
 
@@ -111,7 +110,7 @@ def format_size(size, human_readable=False):
     if not human_readable:
         return str(size)
 
-    return human_readable_size(size)
+    return human_readable_size(float(size))
 
 
 def count(args):
@@ -132,7 +131,7 @@ def summary(args):
     if summary.size is None:
         print("size:           N/A")
     else:
-        print("size:          ", format_size(long(summary.size), args.human_readable))
+        print("size:          ", format_size(summary.size, args.human_readable))
     print("validity start:", format_attribute(summary.validity_start))
     print("validity stop: ", format_attribute(summary.validity_stop))
     print("duration:      ", format_attribute(summary.duration))

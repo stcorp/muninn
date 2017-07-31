@@ -2,7 +2,9 @@
 # Copyright (C) 2014-2017 S[&]T, The Netherlands.
 #
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
+from muninn._compat import string_types as basestring
+from muninn._compat import urlparse
 
 import errno
 import hashlib
@@ -10,9 +12,9 @@ import os
 import shutil
 import tempfile
 import json
-import urllib2
+import requests
 import ftplib
-import urlparse
+
 
 class crc16(object):
     """Implementation of the CRC-16 algorithm that complies to the hashlib interface."""
@@ -385,7 +387,7 @@ class Downloader:
     def __init__(self, remote_url, auth_file=None):
         self.remote_url = remote_url
         self.auth_file = auth_file
-        self.url = urlparse.urlparse(self.remote_url)
+        self.url = urlparse(self.remote_url)
 
     def save(self, local_file):
         if self.remote_url.lower().startswith('ftp'):
@@ -405,14 +407,10 @@ class Downloader:
 
     def _download_http(self, local_file):
         try:
-            password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
             username, password = self._get_credentials()
-            password_mgr.add_password(None, self.url.hostname, username, password)
-            opener = urllib2.build_opener(urllib2.HTTPBasicAuthHandler(password_mgr))
-            urllib2.install_opener(opener)
-            remote_file = urllib2.urlopen(self.remote_url)
+            r = requests.get(self.remote_url, auth=(username, password))
             with open(local_file, 'wb') as output:
-                output.write(remote_file.read())
+                output.write(r.content)
         except:
             raise DownloadError('Error downloading %s' % self.remote_url)
 

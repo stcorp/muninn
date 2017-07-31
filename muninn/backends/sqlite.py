@@ -2,8 +2,9 @@
 # Copyright (C) 2014-2017 S[&]T, The Netherlands.
 #
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
 
+from muninn._compat import dictkeys, dictvalues
 import os
 import re
 import datetime
@@ -205,7 +206,7 @@ class SQLiteConnection(object):
                 sqls = self._backend._create_tables_sql()
                 self._backend._execute_list(sqls)
 
-        # Make sure TEXT data is translated to UTF str types in Python (to align with default psycopg2 behavior)
+        # Make sure TEXT data is translated to UTF-8 str types in Python (to align with default psycopg2 behavior)
         self._connection.text_factory = str
 
     def _disconnect(self):
@@ -236,7 +237,7 @@ class SQLiteBackend(object):
         dbapi2.register_converter("BOOLEAN", lambda x: bool(int(x)))
         dbapi2.register_adapter(bool, lambda x: int(x))
 
-        dbapi2.register_converter("UUID", uuid.UUID)
+        dbapi2.register_converter("UUID", lambda x: uuid.UUID(x.decode()))
         dbapi2.register_adapter(uuid.UUID, lambda x: x.hex)
 
         dbapi2.register_converter("GEOMETRY", _cast_geometry)
@@ -450,8 +451,8 @@ class SQLiteBackend(object):
         # Split the properties into a list of (database) field names and a list of values. This assumes the database
         # field that corresponds to a given property has the same name. If the backend uses different field names, the
         # required translation can be performed here. Values can also be translated if necessary.
-        fields, parameters = vars(properties).keys(), vars(properties).values()
-
+        properties_dict = vars(properties)
+        fields, parameters = dictkeys(properties_dict), dictvalues(properties_dict)
         # Ensure the uuid field is present (for namespaces other than the core namespace this is used as the foreign
         # key).
         if "uuid" not in properties:
@@ -475,7 +476,8 @@ class SQLiteBackend(object):
         # Split the properties into a list of (database) field names and a list of values. This assumes the database
         # field that corresponds to a given property has the same name. If the backend uses different field names, the
         # required translation can be performed here. Values can also be translated if necessary.
-        fields, parameters = vars(properties).keys(), vars(properties).values()
+        properties_dict = vars(properties)
+        fields, parameters = dictkeys(properties_dict), dictvalues(properties_dict)
 
         # Remove the uuid field if present. This field needs to be included in the WHERE clause of the UPDATE query, not
         # in the SET clause.

@@ -2,12 +2,12 @@
 # Copyright (C) 2014-2017 S[&]T, The Netherlands.
 #
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
+
+from muninn._compat import dictkeys, dictvalues, is_python2_unicode
 
 import re
-import collections
 import functools
-import itertools
 import psycopg2
 import psycopg2.errorcodes
 import psycopg2.extensions
@@ -400,8 +400,8 @@ class PostgresqlBackend(object):
         # Split the properties into a list of (database) field names and a list of values. This assumes the database
         # field that corresponds to a given property has the same name. If the backend uses different field names, the
         # required translation can be performed here. Values can also be translated if necessary.
-        fields, parameters = vars(properties).keys(), vars(properties).values()
-
+        properties_dict = vars(properties)
+        fields, parameters = dictkeys(properties_dict), dictvalues(properties_dict)
         # Ensure the uuid field is present (for namespaces other than the core namespace this is used as the foreign
         # key).
         if "uuid" not in properties:
@@ -425,7 +425,8 @@ class PostgresqlBackend(object):
         # Split the properties into a list of (database) field names and a list of values. This assumes the database
         # field that corresponds to a given property has the same name. If the backend uses different field names, the
         # required translation can be performed here. Values can also be translated if necessary.
-        fields, parameters = vars(properties).keys(), vars(properties).values()
+        properties_dict = vars(properties)
+        fields, parameters = dictkeys(properties_dict), dictvalues(properties_dict)
 
         # Remove the uuid field if present. This field needs to be included in the WHERE clause of the UPDATE query, not
         # in the SET clause.
@@ -644,7 +645,7 @@ class PostgresqlBackend(object):
             # We may get unicode from the psycopg2 connection
             # if, possibly by a third party, the UNICODE adapter is loaded.
             # Muninn assumes strs
-            if type(value) is unicode:
+            if is_python2_unicode(value):
                 value = value.encode(self._connection.encoding)
 
             if value is not None or not schema.is_optional(property):

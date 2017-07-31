@@ -2,7 +2,9 @@
 # Copyright (C) 2014-2017 S[&]T, The Netherlands.
 #
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
+
+from muninn._compat import string_types as basestring
 
 import copy
 import datetime
@@ -303,7 +305,7 @@ class TokenStream(object):
         text, timestamp, uuid_, real, integer, boolean, name, operator = match_object.groups()
 
         if text is not None:
-            return Token(TokenType.TEXT, text[1:-1].decode("string-escape"))
+            return Token(TokenType.TEXT, string_unescape(text[1:-1]))
 
         if uuid_ is not None:
             return Token(TokenType.UUID, uuid.UUID(uuid_))
@@ -663,3 +665,31 @@ def analyze(abstract_syntax_tree, namespace_schemas={}, parameters={}):
 
 def parse_and_analyze(text, namespace_schemas={}, parameters={}):
     return analyze(parse(text), namespace_schemas, parameters)
+
+
+def string_unescape(text):
+    '''
+    Unescape special characters in a string.
+    Python2 and 3 compatible, uses the native string type.
+    In python2, the same effect can also be achieved with `string.decode("string-escape")`
+    '''
+    regex = re.compile('\\\\(\\\\|[\'"abfnrtv])')
+    translator = {
+        '\\': '\\',
+        "'": "'",
+        '"': '"',
+        'a': '\a',
+        'b': '\b',
+        'f': '\f',
+        'n': '\n',
+        'r': '\r',
+        't': '\t',
+        'v': '\v',
+    }
+
+    def _replace(m):
+        c = m.group(1)
+        return translator[c]
+
+    result = regex.sub(_replace, text)
+    return result

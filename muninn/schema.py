@@ -2,10 +2,10 @@
 # Copyright (C) 2014-2017 S[&]T, The Netherlands.
 #
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
 
 import datetime
-import inspect
+from muninn._compat import with_metaclass
 import uuid
 
 import muninn.geometry as geometry
@@ -150,8 +150,7 @@ class MetaMapping(type):
         return self._contains(name)
 
 
-class Mapping(Container):
-    __metaclass__ = MetaMapping
+class Mapping(with_metaclass(MetaMapping, Container)):
 
     @classmethod
     def validate(cls, value, partial=False, path=""):

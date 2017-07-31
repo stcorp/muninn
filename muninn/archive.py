@@ -2,7 +2,8 @@
 # Copyright (C) 2014-2017 S[&]T, The Netherlands.
 #
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
+from muninn._compat import string_types as basestring
 
 import copy
 import datetime
@@ -276,7 +277,7 @@ class Archive(object):
         multi-part product).
 
         """
-        for product_type, plugin in self._product_type_plugins.iteritems():
+        for product_type, plugin in self._product_type_plugins.items():
             if plugin.identify(paths):
                 return product_type
 

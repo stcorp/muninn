@@ -2,10 +2,10 @@
 # Copyright (C) 2014-2017 S[&]T, The Netherlands.
 #
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
+from muninn._compat import itervalues, imap, izip
 
 import collections
-import itertools
 
 
 class Prototype(object):
@@ -14,7 +14,7 @@ class Prototype(object):
         self.argument_types = argument_types
         self.return_type = return_type
 
-        self._id = "%s(%s)" % (self.name, ",".join(itertools.imap(lambda type: type.name(), self.argument_types)))
+        self._id = "%s(%s)" % (self.name, ",".join(imap(lambda type: type.name(), self.argument_types)))
         if self.return_type is not None:
             self._id += " " + self.return_type.name()
 
@@ -30,7 +30,7 @@ class Prototype(object):
         if self.arity != other.arity:
             return False
 
-        for type_self, type_other in itertools.izip(self.argument_types, other.argument_types):
+        for type_self, type_other in izip(self.argument_types, other.argument_types):
             if type_self is not type_other:
                 return False
         return True
@@ -67,12 +67,12 @@ class FunctionTable(collections.MutableSet):
             return prototype in prototypes
 
     def __iter__(self):
-        for prototypes in self._prototypes.itervalues():
+        for prototypes in itervalues(self._prototypes):
             for prototype in prototypes:
                 yield prototype
 
     def __len__(self):
-        return sum(itertools.imap(len, self._prototypes.itervalues()))
+        return sum(imap(len, itervalues(self._prototypes)))
 
     def add(self, prototype):
         try:
@@ -93,7 +93,7 @@ class FunctionTable(collections.MutableSet):
                 continue
 
             equal, compatible = 0, 0
-            for candidate_type, type in itertools.izip(candidate.argument_types, prototype.argument_types):
+            for candidate_type, type in izip(candidate.argument_types, prototype.argument_types):
                 if type is candidate_type:
                     equal += 1
                 elif issubclass(type, candidate_type):

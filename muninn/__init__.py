@@ -2,7 +2,7 @@
 # Copyright (C) 2014-2017 S[&]T, The Netherlands.
 #
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
 
 __version__ = "4.0"
 __copyright__ = "Copyright (C) 2014-2017 S[&]T, The Netherlands."

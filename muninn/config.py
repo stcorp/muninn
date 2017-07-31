@@ -2,14 +2,9 @@
 # Copyright (C) 2014-2017 S[&]T, The Netherlands.
 #
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
 
-
-try:
-    basestring
-except NameError:
-    basestring = str
-
+from muninn._compat import string_types as basestring
 
 from muninn.schema import *
 from muninn.visitor import TypeVisitor

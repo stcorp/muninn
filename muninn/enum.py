@@ -2,8 +2,9 @@
 # Copyright (C) 2014-2017 S[&]T, The Netherlands.
 #
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
 
+from muninn._compat import with_metaclass
 
 class MetaEnum(type):
     def __new__(meta, name, bases, dct):
@@ -12,8 +13,7 @@ class MetaEnum(type):
         return super(MetaEnum, meta).__new__(meta, name, bases, dct)
 
 
-class Enum(object):
-    __metaclass__ = MetaEnum
+class Enum(with_metaclass(MetaEnum)):
     _items = ()
 
     @classmethod

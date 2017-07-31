@@ -2,10 +2,9 @@
 # Copyright (C) 2014-2017 S[&]T, The Netherlands.
 #
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, division, print_function
 
 import argparse
-import datetime
 import logging
 import muninn
 import os
