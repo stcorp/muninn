@@ -1,12 +1,19 @@
 from setuptools import setup
 import sys
 
-if sys.hexversion < 0x02060000:
-    sys.exit("Python 2.6 or newer is required to use this package.")
+pyversion = sys.version_info
+if pyversion[0] == 2 and pyversion[1] >= 6:
+    python_req = ">=2.6"
+elif pyversion >= (3, 6):
+    python_req = ">=3.6"
+else:
+    # python_requires is only availabe since setuptools 24.2.0 and pip 9.0.0
+    sys.exit("Python 2.6 (or newer) or 3.6 (or newer) is required to use this package.")
 
-requirements = []
+
+requirements = ["requests"]
 if sys.version_info[0] == 2 and sys.version_info[1] == 6:
-    requirements = ["argparse"]
+    requirements += ["argparse"]
 
 setup(
     name="muninn",
@@ -29,6 +36,7 @@ setup(
                                       "muninn-tag = muninn.tools.tag:main",
                                       "muninn-untag = muninn.tools.untag:main",
                                       "muninn-pull = muninn.tools.pull:main"]},
+    python_requires=python_req,
     install_requires=requirements
 )
 
@@ -38,3 +46,5 @@ setup(
 # bug fix from version 2.2 changed things.
 
 # For the sqlite backend you will need pyspatialite 3.0.1 or higher.
+
+# For muninn-pull using http requests you will need requests 2.13.0 or higher
