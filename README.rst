@@ -644,7 +644,7 @@ underscore ``_``, and the backslash ``\``.
 The percent sign ``%`` matches any sequence of zero or more characters. The
 underscore ``_`` matches any single characters. To match a literal percent sign
 or underscore, it must be preceded by a backslash ``\``. To match a literal
-backslash, write two backslashes ``\\``.
+backslash, write four backslashes ``\\\\``.
 
 The result of the comparison is true only if the pattern matches the text value
 on the left hand side. Therefore, to match a pattern anywhere it should be
