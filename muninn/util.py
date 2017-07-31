@@ -426,3 +426,7 @@ class Downloader:
             ftp.quit()
         except:
             raise DownloadError('Error downloading %s' % self.remote_url)
+
+def quoted_list(lst, quote_text='"', join_text=", "):
+    '''returns a string where all items are surrounded by quotes and joined'''
+    return join_text.join([quote_text + str(x) + quote_text for x in lst])
