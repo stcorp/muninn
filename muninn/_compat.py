@@ -24,6 +24,7 @@ if PY3:
     from urllib.parse import urlparse as urlparse_mod
     urlparse = urlparse_mod
 
+    input = input
 
 else:
 
@@ -41,6 +42,7 @@ else:
     from urlparse import urlparse as urlparse_mod
     urlparse = urlparse_mod
 
+    input = raw_input
 
 def with_metaclass(meta, *bases):
     """

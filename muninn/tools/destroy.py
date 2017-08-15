@@ -3,7 +3,7 @@
 #
 
 from __future__ import absolute_import, division, print_function
-
+from muninn._compat import input
 import argparse
 import logging
 import muninn
@@ -23,7 +23,7 @@ def ask_yes_no(question, default=True):
     prompt = "[y/n]" if default is None else "[Y/n]" if default else "[y/N]"
     while True:
         print(question + " " + prompt, end="")
-        answer = raw_input().lower()
+        answer = input().lower()
 
         if default is not None and not answer:
             return default
