@@ -44,7 +44,7 @@ from muninn.struct import Struct
 class _SQLiteConfig(Mapping):
     _alias = "sqlite"
 
-    connection_string = optional(Text)
+    connection_string = Text
     mod_spatialite_path = optional(Text)
     table_prefix = optional(Text)
 

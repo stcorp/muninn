@@ -27,7 +27,7 @@ from muninn.struct import Struct
 class _PostgresqlConfig(Mapping):
     _alias = "postgresql"
 
-    connection_string = optional(Text)
+    connection_string = Text
     table_prefix = optional(Text)
 
 
