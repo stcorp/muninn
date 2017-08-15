@@ -20,7 +20,7 @@ Installation instructions
 =========================
 To be able to use muninn, you will need:
   - A Unix-based operating system (e.g. Linux).
-  - Python version 2.6 or higher (Python 3 is not yet supported).
+  - Python version 2.6 or higher, or Python 3.6 or higher.
 
 For the postgresql backend:
   - psycopg2 version 2.0 or higher (>=2.2 when using geospatial data)
@@ -28,7 +28,11 @@ For the postgresql backend:
   - PostGIS version 2.0 or higher.
 
 For the sqlite backend:
-  - pyspatialite 3.0.1 or higher
+  - one of:
+    - pysqlite 2.8.3 or higher
+    - python built with sqlite3 loadable extension support
+    - pyspatialite 3.0.1 or higher
+  - mod_spatialite 4.2.0 or higher (not required when using pyspatialite)
 
 To be able to install muninn, you will need:
   - setuptools version 0.6 or compatible.
@@ -368,7 +372,7 @@ Section "postgresql"
 This sections contains backend specific settings for the postgresql backend and
 may contain the following settings:
 
-- connection_string: A postgresql connection string of the database
+- connection_string: Mandatory. A postgresql connection string of the database
   containing product attributes. The default is the empty string, which will
   connect to the default database for the user invoking muninn.
 
@@ -383,9 +387,9 @@ Section "sqlite"
 This sections contains backend specific settings for the postgresql backend and
 may contain the following settings:
 
-- connection_string: A full path to the sqlite database file containing the
-  product attributes. This file will be automatically created by muninn when it
-  first tries to access the database.
+- connection_string: Mandatory. A full path to the sqlite database file 
+  containing the product attributes. This file will be automatically created by 
+  muninn when it first tries to access the database.
 
 - table_prefix: Prefix that should be used for all table names, indices, and
   constraints. This is to allow multiple muninn catalogues inside a single
@@ -393,6 +397,9 @@ may contain the following settings:
   will be prefixed without separation characters, so any underscores, etc. need
   to be included in the option value.
 
+- mod_spatialite_path: Full path of the mod_spatialite library (minus
+  extension), e.g. /usr/local/lib/libspatialite. Not required when using 
+  pyspatialite. 
 
 Example configuration file
 --------------------------
