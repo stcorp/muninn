@@ -396,13 +396,14 @@ class Downloader:
             self._download_http(local_file)
 
     def _get_credentials(self):
-        if self.auth_file is None:
-            return '', ''
-        credentials = json.loads(open(self.auth_file).read())
-        if self.url.hostname in credentials:
-            return credentials[self.url.hostname]['username'], \
-                   credentials[self.url.hostname]['password']
-        else:
+        try:
+            credentials = json.loads(open(self.auth_file).read())
+            if self.url.hostname in credentials:
+                return credentials[self.url.hostname]['username'], \
+                       credentials[self.url.hostname]['password']
+            else:
+                return '', ''
+        except:
             return '', ''
 
     def _download_http(self, local_file):
@@ -422,6 +423,7 @@ class Downloader:
                 password = 'guest'
             ftp = ftplib.FTP(self.url.hostname, username, password)
             ftp.cwd(os.path.dirname(self.url.path))
+            ftp.set_pasv(True)
             ftp.retrbinary('RETR %s' % os.path.basename(self.url.path), open(local_file, 'wb').write)
             ftp.quit()
         except:
