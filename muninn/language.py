@@ -673,6 +673,7 @@ def string_unescape(text):
     Python2 and 3 compatible, uses the native string type.
     In python2, the same effect can also be achieved with `string.decode("string-escape")`
     '''
+    text = str(text)  # make sure we are using the native string type
     regex = re.compile('\\\\(\\\\|[\'"abfnrtv])')
     translator = {
         '\\': '\\',
