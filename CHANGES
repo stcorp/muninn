@@ -1,11 +1,14 @@
 * Added support for python3
 
-* Close SQL connection after ingestion/search/etc
+* Close SQL connection after each operation (ingestion/search/etc.)
 
 * Added support for separate auth_file that can contain credentials for
   downloads performed using muninn-pull.
 
 * Added -f option to muninn-strip.
+
+* Fixed issue where geometry columns in namespace extensions were not
+  created with the sqlite backend.
 
 4.0 2017-03-31
 ~~~~~~~~~~~~~~

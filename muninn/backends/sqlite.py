@@ -756,7 +756,7 @@ class SQLiteBackend(object):
             for name in schema:
                 if self._type_map()[schema[name]] == "GEOMETRY":
                     result.append("SELECT AddGeometryColumn('%s', '%s', 4326, 'GEOMETRY', 2)" %
-                                   (self._core_table_name, name))
+                                   (self._table_name(namespace), name))
 
         # We use explicit 'id' primary keys for the links and tags tables so the entries can be managed using
         # other front-ends that may not support tuples as primary keys.
