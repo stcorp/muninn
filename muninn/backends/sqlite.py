@@ -178,6 +178,9 @@ class SQLiteConnection(object):
         need_prepare = not os.path.exists(self._connection_string)
         self._connection = dbapi2.connect(self._connection_string, detect_types=dbapi2.PARSE_DECLTYPES)
 
+        # make sure that foreign keys are enabled
+        self._connection.execute("PRAGMA foreign_keys = ON;")
+
         # if we have a version of sqlite3 that support extension loading
         # load the pysqlite extension
         if _need_sqlite_extension:
@@ -203,8 +206,12 @@ class SQLiteConnection(object):
         # create the tables if necessary
         if need_prepare:
             with self._connection:
+                # we need to perform a transaction before we allow the actual transaction to happen
+                self._in_transaction = True
                 sqls = self._backend._create_tables_sql()
                 self._backend._execute_list(sqls)
+                self._connection.commit()
+                self._in_transaction = False
 
         # Make sure TEXT data is translated to UTF-8 str types in Python (to align with default psycopg2 behavior)
         self._connection.text_factory = str
