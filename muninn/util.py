@@ -410,6 +410,7 @@ class Downloader:
         try:
             username, password = self._get_credentials()
             r = requests.get(self.remote_url, auth=(username, password))
+            r.raise_for_status()
             with open(local_file, 'wb') as output:
                 output.write(r.content)
         except:
