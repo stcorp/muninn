@@ -154,10 +154,9 @@ Attributes
 
 ``use_hash``
     Determines if a SHA1 hash will be computed for products of the type the
-    plug-in is designed to handle consist. Since computing a hash is an
-    expensive operation, it is useful to set this attribute to False if storing
-    a hash is not required (typical examples are log files and product
-    reports).
+    plug-in is designed to handle. Since computing a hash is an expensive
+    operation, it is useful to set this attribute to False if storing a hash
+    is not required.
 
 ``is_auxiliary_product``
     Should be set to ``True`` if products of the type the plug-in is designed
@@ -261,6 +260,10 @@ Methods
     In some cases, a different implementation is required. For example, when
     products cannot be said to cover a time range, as is the case for some
     auxiliary products.
+
+``post_ingest_hook(self, attributes)``
+    This function is optional. If it exists, it will be called after a
+    successful ingest of the product.
 
 ``export_<format name>(self, archive, product, target_path)``
     Methods starting with ``export_`` can be used to implement product type
