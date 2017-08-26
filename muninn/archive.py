@@ -1064,7 +1064,8 @@ class Archive(object):
 
     def _strip(self, product):
         # Set the archive path to None to indicate the product has no data on disk associated with it.
-        self.update_properties(Struct({'core': {'archive_path': None, 'archive_date': None}}), product.core.uuid)
+        self.update_properties(Struct({'core': {'active': True, 'archive_path': None, 'archive_date': None}}),
+                               product.core.uuid)
 
         # Remove any data on disk associated with the product.
         self._remove(product)
@@ -1079,7 +1080,8 @@ class Archive(object):
     def _remove(self, product):
         # If the product has no data on disk associated with it, return.
         product_path = self._product_path(product)
-        if product_path is None:
+        if product_path is None or not os.path.lexists(product_path):
+            # If the product does not exist, do not consider this an error.
             return
 
         # Remove the data associated with the product from disk.
@@ -1093,9 +1095,7 @@ class Archive(object):
                 try:
                     os.rename(product_path, os.path.join(tmp_path, os.path.basename(product_path)))
                 except EnvironmentError as _error:
-                    # If the product does not exist, do not consider this an error.
-                    if _error.errno != errno.ENOENT:
-                        raise
+                    raise
 
         except EnvironmentError as _error:
             raise Error("unable to remove product '%s' (%s) [%s]" % (product.core.product_name, product.core.uuid,

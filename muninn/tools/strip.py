@@ -21,7 +21,7 @@ def log_internal_error():
 
 def strip(args):
     with muninn.open(args.archive) as archive:
-        archive.strip(args.expression)
+        archive.strip(args.expression, force=args.force)
     return 0
 
 
