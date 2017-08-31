@@ -31,7 +31,7 @@ class EWKBEncoder(Visitor):
 
     def visit_LineString(self, visitable, tagged, srid):
         ewkb = self._encode("I", len(visitable))
-        ewkb += "".join([self.visit(point, False) for point in visitable])
+        ewkb += b"".join([self.visit(point, False) for point in visitable])
         return self._encode_tag(GeometryType.LINESTRING, srid) + ewkb if tagged else ewkb
 
     def visit_LinearRing(self, visitable, tagged, srid):
@@ -39,28 +39,28 @@ class EWKBEncoder(Visitor):
             ewkb = self._encode("I", 0)
         else:
             ewkb = self._encode("I", len(visitable) + 1)
-            ewkb += "".join([self.visit(point, False) for point in visitable])
+            ewkb += b"".join([self.visit(point, False) for point in visitable])
             ewkb += self.visit(visitable.point(0), False)
         return self._encode_tag(GeometryType.LINESTRING, srid) + ewkb if tagged else ewkb
 
     def visit_Polygon(self, visitable, tagged, srid):
         ewkb = self._encode("I", len(visitable))
-        ewkb += "".join([self.visit(ring, False) for ring in visitable])
+        ewkb += b"".join([self.visit(ring, False) for ring in visitable])
         return self._encode_tag(GeometryType.POLYGON, srid) + ewkb if tagged else ewkb
 
     def visit_MultiPoint(self, visitable, tagged, srid):
         ewkb = self._encode("I", len(visitable))
-        ewkb += "".join([self.visit(point, True, False) for point in visitable])
+        ewkb += b"".join([self.visit(point, True, False) for point in visitable])
         return self._encode_tag(GeometryType.MULTIPOINT, srid) + ewkb if tagged else ewkb
 
     def visit_MultiLineString(self, visitable, tagged, srid):
         ewkb = self._encode("I", len(visitable))
-        ewkb += "".join([self.visit(line_string, True, False) for line_string in visitable])
+        ewkb += b"".join([self.visit(line_string, True, False) for line_string in visitable])
         return self._encode_tag(GeometryType.MULTILINESTRING, srid) + ewkb if tagged else ewkb
 
     def visit_MultiPolygon(self, visitable, tagged, srid):
         ewkb = self._encode("I", len(visitable))
-        ewkb += "".join([self.visit(polygon, True, False) for polygon in visitable])
+        ewkb += b"".join([self.visit(polygon, True, False) for polygon in visitable])
         return self._encode_tag(GeometryType.MULTIPOLYGON, srid) + ewkb if tagged else ewkb
 
     def default(self, visitable, tagged, srid):
@@ -109,7 +109,7 @@ def _decode_point(stream):
 
 def _decode_line_string(stream):
     count = stream.decode("I")
-    return LineString([_decode_point(stream) for _ in xrange(count)])
+    return LineString([_decode_point(stream) for _ in range(count)])
 
 
 def _decode_linear_ring(stream):
@@ -120,7 +120,7 @@ def _decode_linear_ring(stream):
     if count < 4:
         raise Error("linear ring should be empty or should contain >= 4 points")
 
-    points = [_decode_point(stream) for _ in xrange(count)]
+    points = [_decode_point(stream) for _ in range(count)]
     if points[-1] != points[0]:
         raise Error("linear ring should be closed")
 
@@ -129,12 +129,12 @@ def _decode_linear_ring(stream):
 
 def _decode_polygon(stream):
     count = stream.decode("I")
-    return Polygon([_decode_linear_ring(stream) for _ in xrange(count)])
+    return Polygon([_decode_linear_ring(stream) for _ in range(count)])
 
 
 def _decode_geometry_sequence(stream, expected_ewkb_type):
     sequence, count = [], stream.decode("I")
-    for _ in xrange(count):
+    for _ in range(count):
         stream = EWKBStream(stream.tail())
         sequence.append(_decode_ewkb(stream, expected_ewkb_type))
     return sequence

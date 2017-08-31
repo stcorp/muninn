@@ -3,6 +3,7 @@
 #
 
 from __future__ import absolute_import, division, print_function
+from builtins import int
 
 import datetime
 from muninn._compat import with_metaclass
@@ -41,15 +42,14 @@ class Type(object):
 class Long(Type):
     @classmethod
     def validate(cls, value):
-        if type(value) is not int and type(value) is not long or value < -9223372036854775808 \
-                or value > 9223372036854775807:
+        if not isinstance(value, int) or value < -9223372036854775808 or value > 9223372036854775807:
             raise ValueError("invalid value %r for type %r" % (value, cls.name()))
 
 
 class Integer(Type):
     @classmethod
     def validate(cls, value):
-        if type(value) is not int and type(value) is not long or value < -2147483648 or value > 2147483647:
+        if not isinstance(value, int) or value < -2147483648 or value > 2147483647:
             raise ValueError("invalid value %r for type %r" % (value, cls.name()))
 
 
