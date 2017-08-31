@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+import codecs
 import struct
 
 from muninn.enum import Enum
@@ -187,7 +188,7 @@ def encode_ewkb(geometry):
 
 
 def encode_hexewkb(geometry):
-    return encode_ewkb(geometry).encode("hex").upper()
+    return codecs.encode(encode_ewkb(geometry), "hex").upper()
 
 
 def decode_ewkb(ewkb):
@@ -195,4 +196,4 @@ def decode_ewkb(ewkb):
 
 
 def decode_hexewkb(hexewkb):
-    return decode_ewkb(hexewkb.decode("hex"))
+    return decode_ewkb(codecs.decode(hexewkb, "hex"))
