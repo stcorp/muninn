@@ -32,7 +32,7 @@ class BLOBGeometryEncoder(Visitor):
 
     def visit_LineString(self, visitable, tagged):
         wkb = self._encode("I", len(visitable))
-        wkb += "".join([self.visit(point, False) for point in visitable])
+        wkb += b"".join([self.visit(point, False) for point in visitable])
         return self._encode_tag(GeometryType.LINESTRING) + wkb if tagged else wkb
 
     def visit_LinearRing(self, visitable, tagged):
@@ -40,28 +40,28 @@ class BLOBGeometryEncoder(Visitor):
             wkb = self._encode("I", 0)
         else:
             wkb = self._encode("I", len(visitable) + 1)
-            wkb += "".join([self.visit(point, False) for point in visitable])
+            wkb += b"".join([self.visit(point, False) for point in visitable])
             wkb += self.visit(visitable.point(0), False)
         return self._encode_tag(GeometryType.LINESTRING) + wkb if tagged else wkb
 
     def visit_Polygon(self, visitable, tagged):
         wkb = self._encode("I", len(visitable))
-        wkb += "".join([self.visit(ring, False) for ring in visitable])
+        wkb += b"".join([self.visit(ring, False) for ring in visitable])
         return self._encode_tag(GeometryType.POLYGON) + wkb if tagged else wkb
 
     def visit_MultiPoint(self, visitable, tagged):
         wkb = self._encode("I", len(visitable))
-        wkb += "".join([self.entity + self.visit(point, True) for point in visitable])
+        wkb += b"".join([self.entity + self.visit(point, True) for point in visitable])
         return self._encode_tag(GeometryType.MULTIPOINT) + wkb if tagged else wkb
 
     def visit_MultiLineString(self, visitable, tagged):
         wkb = self._encode("I", len(visitable))
-        wkb += "".join([self.entity + self.visit(line_string, True) for line_string in visitable])
+        wkb += b"".join([self.entity + self.visit(line_string, True) for line_string in visitable])
         return self._encode_tag(GeometryType.MULTILINESTRING) + wkb if tagged else wkb
 
     def visit_MultiPolygon(self, visitable, tagged):
         wkb = self._encode("I", len(visitable))
-        wkb += "".join([self.entity + self.visit(polygon, True) for polygon in visitable])
+        wkb += b"".join([self.entity + self.visit(polygon, True) for polygon in visitable])
         return self._encode_tag(GeometryType.MULTIPOLYGON) + wkb if tagged else wkb
 
     def default(self, visitable, tagged):
@@ -111,7 +111,7 @@ def _decode_point(stream):
 
 def _decode_line_string(stream):
     count = stream.decode("I")
-    return LineString([_decode_point(stream) for _ in xrange(count)])
+    return LineString([_decode_point(stream) for _ in range(count)])
 
 
 def _decode_linear_ring(stream):
@@ -122,7 +122,7 @@ def _decode_linear_ring(stream):
     if count < 4:
         raise Error("linear ring should be empty or should contain >= 4 points")
 
-    points = [_decode_point(stream) for _ in xrange(count)]
+    points = [_decode_point(stream) for _ in range(count)]
     if points[-1] != points[0]:
         raise Error("linear ring should be closed")
 
@@ -131,13 +131,13 @@ def _decode_linear_ring(stream):
 
 def _decode_polygon(stream):
     count = stream.decode("I")
-    return Polygon([_decode_linear_ring(stream) for _ in xrange(count)])
+    return Polygon([_decode_linear_ring(stream) for _ in range(count)])
 
 
 def _decode_geometry_sequence(stream, expected_wkb_type):
     count = stream.decode("I")
     sequence = []
-    for _ in xrange(count):
+    for _ in range(count):
         entity = stream.decode("B")
         if entity != 0x69:
             raise Error("invalid SQLite BLOB-Geometry")
@@ -203,7 +203,7 @@ def encode_blob_geometry(geometry):
     blob += encoder.visit(geometry)
     # LAST
     blob += encoder._encode("B", 0xfe)
-    return buffer(blob)
+    return memoryview(blob)
 
 
 def decode_blob_geometry(blob):
