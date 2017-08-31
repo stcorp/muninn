@@ -11,6 +11,8 @@ PY3 = sys.version_info[0] == 3
 
 if PY3:
 
+    long = int
+
     string_types = (str, )
     def is_python2_unicode(x): return False
 
@@ -27,6 +29,8 @@ if PY3:
     input = input
 
 else:
+
+    long = long
 
     string_types = (basestring, )
     def is_python2_unicode(x): return type(x) is unicode

@@ -188,7 +188,7 @@ def encode_ewkb(geometry):
 
 
 def encode_hexewkb(geometry):
-    return codecs.encode(encode_ewkb(geometry), "hex").upper()
+    return codecs.encode(encode_ewkb(geometry), "hex").decode().upper()
 
 
 def decode_ewkb(ewkb):
