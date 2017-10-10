@@ -759,22 +759,27 @@ class Archive(object):
             # pull product
             try:
                 remote.pull(self, product)
+
+                # reactivate and update size
+                size = util.product_size(self._product_path(product))
+                metadata = {'active': True, 'archive_date': self._backend.server_time_utc(), 'size': size}
+                self.update_properties(Struct({'core': metadata}), product.core.uuid)
+
+                # verify product hash.
+                if verify_hash and 'hash' in product.core:
+                    if self.verify_hash("uuid == @uuid", {"uuid": product.core.uuid}):
+                        raise Error("pulled product '%s' (%s) has incorrect hash" %
+                                    (product.core.product_name, product.core.uuid))
+
+                # Run the post pull hook (if defined by the product type plug-in).
+                if hasattr(plugin, "post_pull_hook"):
+                    plugin.post_pull_hook(self, product)
+
             except (util.DownloadError, KeyboardInterrupt, Error):
                 # reset active/archive_path values
                 metadata = {'active': True, 'archive_path': None}
                 self.update_properties(Struct({'core': metadata}), product.core.uuid)
                 raise
-
-            # reactivate and update size
-            size = util.product_size(self._product_path(product))
-            metadata = {'active': True, 'archive_date': self._backend.server_time_utc(), 'size': size}
-            self.update_properties(Struct({'core': metadata}), product.core.uuid)
-
-            # verify product hash.
-            if verify_hash and 'hash' in product.core:
-                if self.verify_hash("uuid == @uuid", {"uuid": product.core.uuid}):
-                    raise Error("pulled product '%s' (%s) has incorrect hash" %
-                                (product.core.product_name, product.core.uuid))
 
         return len(queue)
 

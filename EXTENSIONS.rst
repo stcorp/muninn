@@ -261,9 +261,13 @@ Methods
     products cannot be said to cover a time range, as is the case for some
     auxiliary products.
 
-``post_ingest_hook(self, attributes)``
+``post_ingest_hook(self, archive, attributes)``
     This function is optional. If it exists, it will be called after a
     successful ingest of the product.
+
+``post_pull_hook(self, archive, attributes)``
+    This function is optional. If it exists, it will be called after a
+    successful pull of the product.
 
 ``export_<format name>(self, archive, product, target_path)``
     Methods starting with ``export_`` can be used to implement product type
