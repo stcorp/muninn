@@ -924,8 +924,8 @@ class Archive(object):
         parameters  --  Parameters referenced in the search expression (if any).
 
         """
-        restricted_properties = set("uuid", "active", "hash", "size", "metadata_date", "archive_date", "archive_path",
-                                    "product_type", "physical_name")
+        restricted_properties = set(["uuid", "active", "hash", "size", "metadata_date", "archive_date", "archive_path",
+                                    "product_type", "physical_name"])
 
         for product in self.search(where=where, parameters=parameters):
             if not product.core.active:
@@ -941,9 +941,9 @@ class Archive(object):
 
             if plugin.use_enclosing_directory:
                 paths = [os.path.join(product_path, basename) for basename in os.listdir(product_path)]
-                metadata = plugin.analyze(paths)
             else:
-                metadata = plugin.analyze(product_path)
+                paths = [product_path]
+            metadata = plugin.analyze(paths)
 
             if isinstance(metadata, (tuple, list)):
                 properties, tags = metadata
