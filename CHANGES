@@ -1,4 +1,7 @@
-* New product plugin method `post_pull_hook` is called after a successful
+* muninn.Archive.update_properties() takes an optional 'create_namespaces'
+  parameter that, if set, will create any undefined namespaces for a product.
+
+* New product plugin method 'post_pull_hook' is called after a successful
   pull.
 
 * Added support for python3

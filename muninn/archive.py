@@ -901,7 +901,7 @@ class Archive(object):
         self._update_metadata_date(properties)
         self._backend.insert_product_properties(properties)
 
-    def update_properties(self, properties, uuid=None):
+    def update_properties(self, properties, uuid=None, create_namespaces=False):
         """Update product properties in the product catalogue. The UUID of the product to update will be taken from the
         "core.uuid" property if it is present in the specified properties. Otherwise, the UUID should be provided
         separately.
@@ -913,10 +913,20 @@ class Archive(object):
 
         Keyword arguments:
         uuid    --  UUID of the product to update. By default, the UUID will be taken from the "core.uuid" property.
+        create_namespaces  --  Tests if all namespaces are already defined for the product, and creates them if needed
 
         """
+        if create_namespaces:
+            if 'core' in properties and 'uuid' in properties.core:
+                uuid = properties.core.uuid if uuid is None else uuid
+                if uuid != properties.core.uuid:
+                    raise Error("specified uuid does not match uuid included in the specified product properties")
+            existing_product = self.search(where='uuid == @uuid', parameters={'uuid': uuid})[0]
+            new_namespaces = list(set(vars(properties).keys()) - set(vars(existing_product).keys()))
+        else:
+            new_namespaces = None
         self._update_metadata_date(properties)
-        self._backend.update_product_properties(properties, uuid)
+        self._backend.update_product_properties(properties, uuid=uuid, new_namespaces=new_namespaces)
 
     def rebuild_properties(self, where="", parameters={}):
         """Rebuilds product properties by re-extracting these properties (using product type plug-ins) from the products

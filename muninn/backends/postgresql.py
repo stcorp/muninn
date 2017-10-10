@@ -267,7 +267,8 @@ class PostgresqlBackend(object):
                 self._insert_namespace_properties(properties.core.uuid, ns_name, ns_properties)
 
     @translate_psycopg_errors
-    def update_product_properties(self, properties, uuid=None):
+    def update_product_properties(self, properties, uuid=None, new_namespaces=None):
+        new_namespaces = new_namespaces or []
         if "core" in properties:
             self._validate_namespace_properties("core", properties.core, partial=True)
             if "uuid" in properties.core:
@@ -283,7 +284,10 @@ class PostgresqlBackend(object):
             for ns_name, ns_properties in vars(properties).items():
                 if ns_name == "core":
                     continue
-                self._update_namespace_properties(uuid, ns_name, ns_properties)
+                if ns_name in new_namespaces:
+                    self._insert_namespace_properties(uuid, ns_name, ns_properties)
+                else:
+                    self._update_namespace_properties(uuid, ns_name, ns_properties)
 
     @translate_psycopg_errors
     def delete_product_properties(self, uuid):
