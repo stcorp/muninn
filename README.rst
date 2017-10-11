@@ -717,4 +717,4 @@ Examples
 
   ``is_derived_from(32a61528-a712-427a-b28f-8ebd5b472b16)``
 
-  ``validity_stop - validity_start > 300``
+  ``validity_stop - validity_start > 300`` (timestamp differences are in seconds)
