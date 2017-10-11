@@ -477,6 +477,8 @@ class Archive(object):
         # AttributeError instances raised by the plug-in.
         if hasattr(plugin, "post_ingest_hook"):
             plugin.post_ingest_hook(self, properties)
+        if hasattr(plugin, "post_create_hook"):
+            plugin.post_create_hook(self, properties)
 
         return properties
 
@@ -774,6 +776,8 @@ class Archive(object):
                 # Run the post pull hook (if defined by the product type plug-in).
                 if hasattr(plugin, "post_pull_hook"):
                     plugin.post_pull_hook(self, product)
+                if hasattr(plugin, "post_create_hook"):
+                    plugin.post_create_hook(self, product)
 
             except (util.DownloadError, KeyboardInterrupt, Error):
                 # reset active/archive_path values

@@ -269,6 +269,11 @@ Methods
     This function is optional. If it exists, it will be called after a
     successful pull of the product.
 
+``post_create_hook(self, archive, attributes)``
+    This function is optional. If it exists, it will be called after a
+    successful creation of the product (either ingest or pull). It is called
+    after the more specific hooks.
+
 ``export_<format name>(self, archive, product, target_path)``
     Methods starting with ``export_`` can be used to implement product type
     specific export functionality. For example, a method ``export_tgz`` could

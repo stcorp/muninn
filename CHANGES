@@ -4,6 +4,9 @@
 * New product plugin method 'post_pull_hook' is called after a successful
   pull.
 
+* New product plugin method 'post_create_hook' is called after a successful
+  product creation (either ingest or pull).
+
 * Added support for python3
 
 * Close SQL connection after each operation (ingestion/search/etc.)
