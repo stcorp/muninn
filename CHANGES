@@ -1,3 +1,5 @@
+* Added tabulate package to format the output
+
 * muninn.Archive.update_properties() takes an optional 'create_namespaces'
   parameter that, if set, will create any undefined namespaces for a product.
 

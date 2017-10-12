@@ -9,6 +9,10 @@ import logging
 import muninn
 import os
 import sys
+import tabulate
+
+OWN_SUPPORTED_FORMATS = ['psv', 'csv']
+SUPPORTED_FORMATS = set(tabulate.tabulate_formats + OWN_SUPPORTED_FORMATS)
 
 
 class PlainWriter(object):
@@ -30,6 +34,29 @@ class PlainWriter(object):
 
     def footer(self):
         pass
+
+
+class TabulateWriter(PlainWriter):
+    def __init__(self, properties, fmt='orgtbl'):
+        super(TabulateWriter, self).__init__(properties)
+        self._header = []
+        self._data = []
+        self._format = fmt
+
+    def header(self):
+        self._header = [namespace + "." + name for namespace, name in self._properties]
+
+    def properties(self, properties):
+        values = []
+        for namespace, name in self._properties:
+            try:
+                values.append(str(properties[namespace][name]))
+            except KeyError:
+                values.append("")
+        self._data.append(values)
+
+    def footer(self):
+        print(tabulate.tabulate(self._data, headers=self._header, tablefmt=self._format))
 
 
 class CSVWriter(PlainWriter):
@@ -186,10 +213,12 @@ def search(args):
         products = archive.search(args.expression, order_by, args.limit, namespaces=namespaces)
 
         # Output the requested properties of all products matching the search expression in the requested output format.
-        if args.output_format == "plain":
+        if args.output_format == "psv":  # PSV = Pipe Separated Values
             writer = PlainWriter(properties)
-        else:
+        elif args.output_format == "csv":
             writer = CSVWriter(properties)
+        else:
+            writer = TabulateWriter(properties, args.output_format)
 
         writer.header()
         for product in products:
@@ -250,7 +279,7 @@ def main():
     version_parser.add_argument("--version", action="store_true", help="output version information and exit")
 
     parser = argparse.ArgumentParser(description="Search a muninn archive for products.", parents=[version_parser])
-    parser.add_argument("-f", "--output-format", choices=["plain", "csv"], default="plain", help="output format")
+    parser.add_argument("-f", "--output-format", choices=SUPPORTED_FORMATS, default="orgtbl", help="output format")
     parser.add_argument("-l", "--limit", type=int, help="limit the maximum number of products")
     parser.add_argument("-o", "--order-by", action="append", type=order_by_list, default=[], help="white space "
                         "separated list of sort order specifiers; a \"+\" prefix denotes ascending order; no prefix "

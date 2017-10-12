@@ -11,7 +11,7 @@ else:
     sys.exit("Python 2.6 (or newer) or 3.6 (or newer) is required to use this package.")
 
 
-requirements = ["requests"]
+requirements = ["requests", "tabulate"]
 if sys.version_info[0] == 2 and sys.version_info[1] == 6:
     requirements += ["argparse"]
 
