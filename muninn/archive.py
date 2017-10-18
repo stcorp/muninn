@@ -1024,21 +1024,30 @@ class Archive(object):
         """Return the UUIDs of the products that are linked to the given product as derived products."""
         return self._backend.derived_products(uuid)
 
-    def product_path(self, uuid_or_name):
-        """Return the path on disk where the product with the specified uuid or product name is located."""
-        if isinstance(uuid_or_name, uuid.UUID):
-            products = self.search(where="uuid == @uuid", parameters={"uuid": uuid_or_name})
+    def product_path(self, uuid_or_name_or_properties):
+        """Return the path on disk where the product with the specified product.
+        Product can be specified by either: uuid, product name or product properties.
+        """
+        if isinstance(uuid_or_name_or_properties, Struct):
+            product = uuid_or_name_or_properties
+        elif isinstance(uuid_or_name_or_properties, uuid.UUID):
+            products = self.search(where="uuid == @uuid", parameters={"uuid": uuid_or_name_or_properties})
             if len(products) == 0:
-                raise Error("product with uuid '%s' not found" % uuid_or_name)
+                raise Error("product with uuid '%s' not found" % uuid_or_name_or_properties)
+            assert len(products) == 1
+            product = products.pop[0]
         else:
-            products = self.search(where="product_name == @product_name", parameters={"product_name": uuid_or_name})
+            products = self.search(
+                where="product_name == @product_name",
+                parameters={"product_name": uuid_or_name_or_properties}
+            )
             if len(products) == 0:
-                raise Error("product with name '%s' not found" % uuid_or_name)
+                raise Error("product with name '%s' not found" % uuid_or_name_or_properties)
             if len(products) != 1:
-                raise Error("more than one product found with name '%s'" % uuid_or_name)
+                raise Error("more than one product found with name '%s'" % uuid_or_name_or_properties)
+            product = products.pop[0]
 
-        assert(len(products) == 1)
-        return self._product_path(products.pop())
+        return self._product_path(product)
 
     def close(self):
         """Close the archive immediately instead of when (and if) the archive instance is collected.

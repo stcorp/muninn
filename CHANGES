@@ -1,3 +1,5 @@
+* muninn.Archive.product_path() argument can be a product properties Struct.
+
 * Added tabulate package to format the output
 
 * muninn.Archive.update_properties() takes an optional 'create_namespaces'
