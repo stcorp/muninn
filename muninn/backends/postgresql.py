@@ -431,6 +431,8 @@ class PostgresqlBackend(object):
         # required translation can be performed here. Values can also be translated if necessary.
         properties_dict = vars(properties)
         fields, parameters = dictkeys(properties_dict), dictvalues(properties_dict)
+        if not fields:
+            return  # nothing to do
 
         # Remove the uuid field if present. This field needs to be included in the WHERE clause of the UPDATE query, not
         # in the SET clause.
