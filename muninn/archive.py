@@ -1035,7 +1035,7 @@ class Archive(object):
             if len(products) == 0:
                 raise Error("product with uuid '%s' not found" % uuid_or_name_or_properties)
             assert len(products) == 1
-            product = products.pop[0]
+            product = products[0]
         else:
             products = self.search(
                 where="product_name == @product_name",
@@ -1045,7 +1045,7 @@ class Archive(object):
                 raise Error("product with name '%s' not found" % uuid_or_name_or_properties)
             if len(products) != 1:
                 raise Error("more than one product found with name '%s'" % uuid_or_name_or_properties)
-            product = products.pop[0]
+            product = products[0]
 
         return self._product_path(product)
 
