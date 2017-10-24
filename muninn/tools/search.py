@@ -82,7 +82,10 @@ def parse_property_name(name):
     split_name = name.split(".")
 
     if len(split_name) == 1:
-        return ("core", split_name[0])
+        if name == '*':
+            return ('*', '*')
+        else:
+            return ('core', name)
     elif len(split_name) == 2:
         return tuple(split_name)
 
@@ -170,6 +173,22 @@ def uuid(args):
     return 0
 
 
+def _extend_properties(properties, namespace, name, archive):
+    if namespace == '*':
+        # get all namespaces; make sure 'core' is the first one
+        namespaces = archive.namespaces()
+        if namespaces[0] != 'core':
+            namespaces.remove('core')
+            namespaces.insert(0, 'core')
+        for namespace in namespaces:
+            _extend_properties(properties, namespace, name, archive)
+    elif name == "*":
+        # get all fields
+        properties.extend([(namespace, name) for name in archive.namespace_schema(namespace)])
+    else:
+        properties.append((namespace, name))
+
+
 def search(args):
     with muninn.open(args.archive) as archive:
         # Collect possibly multiple sort order specifier lists into a single list.
@@ -186,10 +205,7 @@ def search(args):
             # Expand wildcards.
             properties = []
             for (namespace, name) in sum(args.properties, []):
-                if name == "*":
-                    properties.extend([(namespace, name) for name in archive.namespace_schema(namespace)])
-                else:
-                    properties.append((namespace, name))
+                _extend_properties(properties, namespace, name, archive)
 
         # Check property names against namespace schemas.
         for (namespace, name) in properties:
