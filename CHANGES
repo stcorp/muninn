@@ -1,3 +1,9 @@
+* Changed muninn-serach behaviour: when prodided with `-p '*'`, it will fetch
+  all fields of all namespaces.
+
+* Added muninn-info to display generic archive information (currently, the 
+  availables namespaces and product types)
+
 * muninn.Archive.product_path() argument can be a product properties Struct.
 
 * Added tabulate package to format the output
