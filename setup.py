@@ -26,6 +26,7 @@ setup(
     packages=["muninn", "muninn.backends", "muninn.tools"],
     entry_points={"console_scripts": ["muninn-destroy = muninn.tools.destroy:main",
                                       "muninn-export = muninn.tools.export:main",
+                                      "muninn-info = muninn.tools.info:main",
                                       "muninn-ingest = muninn.tools.ingest:main",
                                       "muninn-list-tags = muninn.tools.list_tags:main",
                                       "muninn-prepare = muninn.tools.prepare:main",
