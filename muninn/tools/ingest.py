@@ -66,7 +66,7 @@ def get_path_expansion_function(is_stem=False, is_enclosing_directory=False):
 def ingest(args):
     with muninn.open(args.archive) as archive:
         path_expansion_function = get_path_expansion_function(args.path_is_stem, args.path_is_enclosing_directory)
-        assert not args.link or not args.copy
+        assert not args.link or not args.copy or not args.keep
         use_symlinks = True if args.link else False if args.copy else None
         verify_hash = True if args.verify_hash else False
 
@@ -94,7 +94,7 @@ def ingest(args):
 
             try:
                 properties = archive.ingest(product_paths, args.product_type, use_symlinks=use_symlinks,
-                                            verify_hash=verify_hash)
+                                            verify_hash=verify_hash, use_original_file=args.keep)
             except muninn.Error as error:
                 logging.error("%s: unable to ingest product [%s]" % (path, error))
                 errors_encountered = True
@@ -129,6 +129,8 @@ def main():
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-l", "--link", action="store_true", help="ingest symbolic links to each product")
     group.add_argument("-c", "--copy", action="store_true", help="ingest a copy of each product")
+    group.add_argument("-k", "--keep", action="store_true", help="ingest product, leaving the original location if it "
+                                                                 "is in the muninn path, otherwise throws an error")
     parser.add_argument("--verify-hash", action="store_true",
                         help="verify the hash of the product after it has been put in the archive")
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")

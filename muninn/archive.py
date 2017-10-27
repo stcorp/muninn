@@ -284,7 +284,7 @@ class Archive(object):
         raise Error("unable to identify product: \"%s\"" % paths)
 
     def ingest(self, paths, product_type=None, properties=None, ingest_product=True, use_symlinks=None,
-               verify_hash=False):
+               verify_hash=False, use_original_file=False):
         """Ingest a product into the archive. Multiple paths can be specified, but the set of files and/or directories
         these paths refer to is always ingested as a single logical product.
 
@@ -390,10 +390,18 @@ class Archive(object):
             # Ingest the product into the archive.
             if ingest_product:
                 # Determine the (absolute) path in the archive that will contain the product and create it if required.
-                abs_archive_path = os.path.realpath(os.path.join(self._root, properties.core.archive_path))
-                abs_product_path = os.path.join(abs_archive_path, properties.core.physical_name)
+                if use_original_file is True:
+                    for path in paths:
+                        if not util.is_sub_path(os.path.realpath(path), self._root, allow_equal=True):
+                            raise Error("cannot ingest a file without copying it, if it is not in the muninn root")
+                    properties.core.archive_path = os.path.dirname(
+                        os.path.realpath(paths[0])).replace(os.path.realpath(self._root), '')
+                else:
+                    abs_archive_path = os.path.realpath(os.path.join(self._root, properties.core.archive_path))
+                    abs_product_path = os.path.join(abs_archive_path, properties.core.physical_name)
 
-                if util.is_sub_path(os.path.realpath(paths[0]), abs_product_path, allow_equal=True):
+                if not use_original_file and \
+                        util.is_sub_path(os.path.realpath(paths[0]), abs_product_path, allow_equal=True):
                     # Product should already be in the target location
                     for path in paths:
                         if not os.path.exists(path):
@@ -401,7 +409,7 @@ class Archive(object):
                         if not util.is_sub_path(os.path.realpath(path), abs_product_path, allow_equal=True):
                             raise Error("cannot ingest product where only part of the files are already at the "
                                         "destination location")
-                else:
+                elif not use_original_file:
                     # Create destination location for product
                     try:
                         util.make_path(abs_archive_path)
@@ -447,7 +455,6 @@ class Archive(object):
                     except EnvironmentError as _error:
                         raise Error("unable to transfer product to destination path '%s' [%s]" %
                                     (abs_product_path, _error))
-
                 # Verify product hash.
                 if verify_hash:
                     if self.verify_hash("uuid == @uuid", {"uuid": properties.core.uuid}):
