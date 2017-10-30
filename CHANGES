@@ -1,3 +1,6 @@
+* Added a 'paths' option to muninn-search that prints the physical path of the
+  products found instead of the normal output.
+
 * Added option to ingest products already in the root archive folder without copying.
 
 * Changed muninn-serach behaviour: when prodided with `-p '*'`, it will fetch

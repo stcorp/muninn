@@ -173,6 +173,15 @@ def uuid(args):
     return 0
 
 
+def paths(args):
+    with muninn.open(args.archive) as archive:
+        products = archive.search(args.expression, order_by=['core.physical_name'])
+        for product in products:
+            product_path = archive.product_path(product)
+            print(product_path)
+    return 0
+
+
 def _extend_properties(properties, namespace, name, archive):
     if namespace == '*':
         # get all namespaces; make sure 'core' is the first one
@@ -279,6 +288,8 @@ def run(args):
         return summary(args)
     elif args.uuid:
         return uuid(args)
+    elif args.paths:
+        return paths(args)
     else:
         return search(args)
 
@@ -301,6 +312,8 @@ def main():
                        "summary of the products matching the search expression")
     group.add_argument("-u", "--uuid", action="store_true", help="supress normal output; instead print the uuid "
                        "of each product found")
+    group.add_argument("--paths", action="store_true", help="supress normal output; instead print the physical "
+                       "path of each product found")
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
     parser.add_argument("expression", metavar="EXPRESSION", help="expression used to search for products")
 
