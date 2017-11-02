@@ -387,8 +387,8 @@ Section "sqlite"
 This sections contains backend specific settings for the postgresql backend and
 may contain the following settings:
 
-- connection_string: Mandatory. A full path to the sqlite database file 
-  containing the product attributes. This file will be automatically created by 
+- connection_string: Mandatory. A full path to the sqlite database file
+  containing the product attributes. This file will be automatically created by
   muninn when it first tries to access the database.
 
 - table_prefix: Prefix that should be used for all table names, indices, and
@@ -398,8 +398,8 @@ may contain the following settings:
   to be included in the option value.
 
 - mod_spatialite_path: Full path of the mod_spatialite library (minus
-  extension), e.g. /usr/local/lib/libspatialite. Not required when using 
-  pyspatialite. 
+  extension), e.g. /usr/local/lib/libspatialite. Not required when using
+  pyspatialite.
 
 Example configuration file
 --------------------------

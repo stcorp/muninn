@@ -1,17 +1,17 @@
 * Added a 'paths' option to muninn-search that prints the physical path of the
   products found instead of the normal output.
 
-* Added option to ingest products already in the root archive folder without copying.
+* Added option to ingest products already in the root archive folder without
+  copying.
 
-* Changed muninn-serach behaviour: when prodided with `-p '*'`, it will fetch
-  all fields of all namespaces.
+* Allow `muninn-search -p '*'` to fetch all fields of all namespaces.
 
-* Added muninn-info to display generic archive information (currently, the 
+* Added muninn-info to display generic archive information (currently, the
   availables namespaces and product types)
 
 * muninn.Archive.product_path() argument can be a product properties Struct.
 
-* Added tabulate package to format the output
+* Added tabulate package to format the output.
 
 * muninn.Archive.update_properties() takes an optional 'create_namespaces'
   parameter that, if set, will create any undefined namespaces for a product.
@@ -22,9 +22,9 @@
 * New product plugin method 'post_create_hook' is called after a successful
   product creation (either ingest or pull).
 
-* Added support for python3
+* Added support for Python 3.
 
-* Close SQL connection after each operation (ingestion/search/etc.)
+* Close SQL connection after each operation (ingestion/search/etc.).
 
 * Added support for separate auth_file that can contain credentials for
   downloads performed using muninn-pull.
