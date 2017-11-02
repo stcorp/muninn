@@ -8,12 +8,20 @@ import argparse
 import logging
 
 import muninn
-import tabulate
+try:
+    import tabulate
+except:
+    tabulate = None
 
 from .utils import create_parser, parse_args_and_run
 
 OWN_SUPPORTED_FORMATS = ['psv', 'csv']
-SUPPORTED_FORMATS = set(tabulate.tabulate_formats + OWN_SUPPORTED_FORMATS)
+if tabulate is None:
+    default_format = 'psv'
+    SUPPORTED_FORMATS = OWN_SUPPORTED_FORMATS
+else:
+    default_format = 'orgtbl'
+    SUPPORTED_FORMATS = set(tabulate.tabulate_formats + OWN_SUPPORTED_FORMATS)
 
 
 class PlainWriter(object):
@@ -235,8 +243,10 @@ def search(args):
             writer = PlainWriter(properties)
         elif args.output_format == "csv":
             writer = CSVWriter(properties)
-        else:
+        elif tabulate is not None:
             writer = TabulateWriter(properties, args.output_format)
+        else:
+            writer = PlainWriter(properties)
 
         writer.header()
         for product in products:
@@ -295,7 +305,8 @@ def run(args):
 
 def main():
     parser = create_parser(description="Search a muninn archive for products.")
-    parser.add_argument("-f", "--output-format", choices=SUPPORTED_FORMATS, default="orgtbl", help="output format")
+    parser.add_argument("-f", "--output-format", choices=SUPPORTED_FORMATS, default=default_format,
+                        help="output format")
     parser.add_argument("-l", "--limit", type=int, help="limit the maximum number of products")
     parser.add_argument("-o", "--order-by", action="append", type=order_by_list, default=[], help="white space "
                         "separated list of sort order specifiers; a \"+\" prefix denotes ascending order; no prefix "

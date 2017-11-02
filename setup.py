@@ -11,7 +11,7 @@ else:
     sys.exit("Python 2.6 (or newer) or 3.6 (or newer) is required to use this package.")
 
 
-requirements = ["requests", "tabulate"]
+requirements = []
 if sys.version_info[0] == 2 and sys.version_info[1] == 6:
     requirements += ["argparse"]
 
@@ -46,6 +46,9 @@ setup(
 # the database, but version 2.4.5 did. It is likely that the 'string literal'
 # bug fix from version 2.2 changed things.
 
-# For the sqlite backend you will need pyspatialite 3.0.1 or higher.
+# For the sqlite backend you will need pyspatialite>=3.0.1 or sqlite/pysqlite with
+# the mod_spatialite extension.
 
 # For muninn-pull using http requests you will need requests 2.13.0 or higher
+
+# To get more output formatting options for muninn-search install 'tabulate'

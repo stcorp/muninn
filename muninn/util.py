@@ -12,9 +12,7 @@ import os
 import shutil
 import tempfile
 import json
-import requests
 import ftplib
-
 
 class crc16(object):
     """Implementation of the CRC-16 algorithm that complies to the hashlib interface."""
@@ -407,6 +405,7 @@ class Downloader:
             return '', ''
 
     def _download_http(self, local_file):
+        import requests
         try:
             username, password = self._get_credentials()
             r = requests.get(self.remote_url, auth=(username, password))
