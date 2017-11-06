@@ -1,4 +1,6 @@
-* command line tools have a --verbose mode, that displays debug-level logging.
+* Muninn supports custom remote backends
+
+* Command line tools have a --verbose mode, that displays debug-level logging.
 
 * Added a 'paths' option to muninn-search that prints the physical path of the
   products found instead of the normal output.

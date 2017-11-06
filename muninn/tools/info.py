@@ -27,6 +27,11 @@ def run(args):
         for product_type in sorted(archive.product_types()):
             print("  %s" % product_type)
 
+        if archive.remote_backends():
+            print("\nREMOTE BACKENDS")
+            for remote_backend in sorted(archive.remote_backends()):
+                print("  %s" % remote_backend)
+
     return 0
 
 

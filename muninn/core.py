@@ -33,8 +33,9 @@ class Remote(Text):
     @classmethod
     def validate(cls, value):
         super(Remote, cls).validate(value)
-        if not any([value.startswith(x) for x in REMOTE_PREFIXES.values()]):
-            raise ValueError("The protocol of '%s' is not supported" % value)
+        # NOTE: We used to verify the value started with one of the supported prefixes
+        # But now the list can be extended through a remote backend plugin, which is
+        # archive dependent. The validation is now done at pull-time.
 
 
 class Core(Mapping):

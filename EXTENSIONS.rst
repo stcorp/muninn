@@ -10,9 +10,10 @@ muninn README.rst file, in particular the sections "Extensions", "Data types",
 "Namespaces", and "Links".
 
 A muninn extension is a Python module or package that implements the muninn
-extension interface. Muninn defines two types of extensions: namespace
-extensions (that contain namespace definitions) and product type extensions
-(that contain product type plug-ins).
+extension interface. Muninn defines three types of extensions: namespace
+extensions (that contain namespace definitions), product type extensions
+(that contain product type plug-ins) and remote backend extensions (that
+contain remote backend plug-ins).
 
 A namespace is a set of related attributes, i.e. a set of (key, value) pairs.
 The namespace definition specifies the keys (field names) available within the
@@ -68,6 +69,10 @@ separate Struct instance for each namespace. For example: ::
   attributes.xml_pi.startTime = datetime.datetime.utcnow()
   ... more of the same ...
 
+A remote backend plug-in adds the hability of an archive to pull products
+from remote sources using a protocol beyond the basic file/ftp/http/https
+protocols.
+
 
 Namespace extension API
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -116,6 +121,30 @@ Global functions
     (see below) and that implements this interface for the specified product
     type. An exception should be raised if the extension does not support the
     specified product type.
+
+
+Remote backend extension API
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+All attributes, functions, and methods described in this section are mandatory,
+unless explicitly stated otherwise.
+
+Exceptions
+----------
+Extensions are only allowed to raise muninn.Error or instances of exception
+classes derived from ``muninn.Error``. If an extension raises an exception that
+does not derive from ``muninn.Error``, or allows exceptions from underlying
+modules to propagate outside of the extension, this should be considered a bug.
+
+Global functions
+----------------
+``remote_backends()``
+    Return a list containing the names of all remote backends defined by the
+    extension.
+
+``remote_backend(name)``
+    Return the remote backend definition of the specified remote backend. An 
+    exception should be raised if the specified remote backend is not defined
+    by the extension.
 
 
 Product type plug-in API
@@ -288,3 +317,26 @@ Methods
     structure.
 
     These methods are optional.
+
+
+Remote backend plug-in API
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+A Remote backend plug-in is an instance of a class that implements the
+interface defined in this section.
+
+All attributes, functions, and methods described in this section are mandatory,
+unless explicitly stated otherwise.
+
+Exceptions
+----------
+Remote backend plug-ins are only allowed to raise ``muninn.Error`` or instances
+of exception classes derived from ``muninn.Error``. If an extension raises an
+exception that does not derive from ``muninn.Error``, or allows exceptions from
+underlying modules to propagate outside of the extension, this should be
+considered a bug.
+
+Methods
+-------
+``pull(self, archive, product)``
+    Download the product specified. The existing product metadata should already
+    specify the location of the file(s).

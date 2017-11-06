@@ -363,6 +363,10 @@ settings:
   modules or packages that contain product type plug-ins (see section
   "Extensions"_). The default is the empty list.
 
+- ``remote_backend_extensions``: White space separated list of names of Python
+  modules or packages that contain remote backend plug-ins (see section
+  "Extensions"_). The default is the empty list.
+
 - ``auth_file``: [Optional] JSON file containing the credentials to download using
   muninn-pull
 

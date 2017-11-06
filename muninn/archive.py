@@ -55,6 +55,7 @@ class _ArchiveConfig(Mapping):
     external_archives = optional(_ArchiveList)
     namespace_extensions = optional(_ExtensionList)
     product_type_extensions = optional(_ExtensionList)
+    remote_backend_extensions = optional(_ExtensionList)
     auth_file = optional(Text)
 
 
@@ -89,6 +90,7 @@ def create(configuration):
     # Create the archive.
     namespace_extensions = options.pop("namespace_extensions", [])
     product_type_extensions = options.pop("product_type_extensions", [])
+    remote_backend_extensions = options.pop("remote_backend_extensions", [])
     archive = Archive(backend=backend, **options)
 
     # Register core namespace.
@@ -112,6 +114,15 @@ def create(configuration):
         except AttributeError:
             raise Error("extension %r does not implement the product type extension API" % name)
 
+    # Register custom remote backends.
+    for name in remote_backend_extensions:
+        extension = _load_extension(name)
+        try:
+            for remote_backend in extension.remote_backends():
+                archive.register_remote_backend(remote_backend, extension.remote_backend(remote_backend))
+        except AttributeError:
+            raise Error("extension %r does not implement the remote backend extension API" % name)
+
     return archive
 
 
@@ -128,6 +139,7 @@ class Archive(object):
 
         self._namespace_schemas = {}
         self._product_type_plugins = {}
+        self._remote_backend_plugins = copy.copy(remote.REMOTE_BACKENDS)
         self._export_formats = set()
 
         self._backend.initialize(self._namespace_schemas)
@@ -143,6 +155,10 @@ class Archive(object):
     def product_types(self):
         """Return a list of supported product types."""
         return self._product_type_plugins.keys()
+
+    def remote_backends(self):
+        """Return a list of supported remote_backends."""
+        return self._remote_backend_plugins.keys()
 
     def export_formats(self):
         """Return a list of supported alternative export formats."""
@@ -191,6 +207,20 @@ class Archive(object):
         self._product_type_plugins[product_type] = plugin
         self._update_export_formats(plugin)
 
+    def register_remote_backend(self, remote_backend, plugin):
+        """Register a remote backend.
+
+        Arguments:
+        remote_backend -- Remote backend.
+        plugin         -- Reference to an object that implements the remote backend plugin API and as such takes care of
+                          the details of extracting product properties from products of the specified remote backend.
+
+        """
+        if remote_backend in self._remote_backend_plugins:
+            raise Error("redefinition of remote backend: \"%s\"" % remote_backend)
+
+        self._remote_backend_plugins[remote_backend] = plugin
+
     def namespace_schema(self, namespace):
         """Return the schema definition of a namespace."""
         try:
@@ -204,6 +234,13 @@ class Archive(object):
             return self._product_type_plugins[product_type]
         except KeyError:
             raise Error("undefined product type: \"%s\"; defined product types: %s" % (product_type, util.quoted_list(self._product_type_plugins.keys())))
+
+    def remote_backend(self, remote_backend):
+        """Return the schema definition of a remote_backend."""
+        try:
+            return self._remote_backend_plugins[remote_backend]
+        except KeyError:
+            raise Error("undefined remote backend: \"%s\"; defined remote backends: %s" % (remote_backend, util.quoted_list(self._remote_backend.keys())))
 
     @staticmethod
     def generate_uuid():
