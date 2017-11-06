@@ -22,8 +22,9 @@ version_parser.add_argument("--version", action="store_true", help="output versi
 
 
 def create_parser(*args, **kwargs):
-    return argparse.ArgumentParser(*args, parents=[version_parser], **kwargs)
-
+    parser = argparse.ArgumentParser(*args, parents=[version_parser], **kwargs)
+    parser.add_argument("--verbose", action="store_true", help="display debug information")
+    return parser
 
 def version(program_name):
     print("%s %s" % (program_name, muninn.__version__))
@@ -47,7 +48,8 @@ def parse_args_and_run(parser, func):
 
     args = parser.parse_args(unused_args)
 
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+    log_level = logging.DEBUG if args.verbose else logging.INFO
+    logging.basicConfig(level=log_level, format="%(levelname)s: %(message)s")
 
     try:
         return func(args)

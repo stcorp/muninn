@@ -4,6 +4,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import logging
+
 import muninn
 
 from .utils import create_parser, parse_args_and_run
@@ -19,6 +21,7 @@ def pull(args):
             expression = "%s and %s" % (expression, args.expression)
 
         num_products = archive.pull(expression, verify_hash=verify_hash)
+        logging.debug('Pulled %d products', num_products)
 
     return 0
 
