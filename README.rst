@@ -401,8 +401,8 @@ may contain the following settings:
   will be prefixed without separation characters, so any underscores, etc. need
   to be included in the option value.
 
-- mod_spatialite_path: Full path of the mod_spatialite library (minus
-  extension), e.g. /usr/local/lib/libspatialite. Not required when using
+- mod_spatialite_path: Full path to the mod_spatialite library (minus
+  extension), e.g. /usr/local/lib/mod_spatialite. Not required when using
   pyspatialite.
 
 Example configuration file

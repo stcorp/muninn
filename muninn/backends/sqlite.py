@@ -184,14 +184,12 @@ class SQLiteConnection(object):
         # if we have a version of sqlite3 that support extension loading
         # load the pysqlite extension
         if _need_sqlite_extension:
-            if self._mod_spatialite is None:
-                raise Error("No 'mod_spatialite_path' configured on the sqlite backend.")
-
             try:
                 self._connection.enable_load_extension(True)
                 self._connection.execute("select load_extension(\"%s\");" % (self._mod_spatialite))
             except Exception as e:
-                raise Error("Cannot load the spatialite extension (%s): %s" % (self._mod_spatialite, str(e)))
+                raise Error("loading mod_spatialite extension failed (mod_spatialite_path='%s'): %s" % \
+                            (self._mod_spatialite, str(e)))
 
         # ensure that spatial metadata init has been done
         with self._connection:
@@ -199,7 +197,9 @@ class SQLiteConnection(object):
             cursor.execute("PRAGMA table_info(geometry_columns);")
             if cursor.fetchall() == []:
                 try:
+                    cursor.execute("BEGIN")
                     cursor.execute("SELECT InitSpatialMetadata()")
+                    cursor.execute("COMMIT")
                 finally:
                     cursor.close()
 
@@ -240,7 +240,7 @@ class SQLiteConnection(object):
 
 
 class SQLiteBackend(object):
-    def __init__(self, connection_string="", mod_spatialite_path=None, table_prefix=""):
+    def __init__(self, connection_string="", mod_spatialite_path="mod_spatialite", table_prefix=""):
         dbapi2.register_converter("BOOLEAN", lambda x: bool(int(x)))
         dbapi2.register_adapter(bool, lambda x: int(x))
 
