@@ -97,7 +97,7 @@ def swallow_sqlite_errors(error_codes):
 
 def _adapt_geometry(geometry):
     """Return the SQLite BLOB-Geometry representation of a Geometry instance."""
-    return blobgeometry.encode_blob_geometry(geometry)
+    return dbapi2.Binary(blobgeometry.encode_blob_geometry(geometry))
 
 
 def _cast_geometry(blob):
