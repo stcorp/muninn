@@ -80,21 +80,6 @@ def translate_sqlite_errors(func):
     return translate_sqlite_errors_
 
 
-def swallow_sqlite_errors(error_codes):
-    """Decorator that swallows a set of specific sqlite exceptions."""
-    def swallow_sqlite_errors_(func):
-        @functools.wraps(func)
-        def swallow_sqlite_errors__(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except dbapi2.Error as _error:
-                if _error.pgcode not in error_codes:
-                    raise
-
-        return swallow_sqlite_errors__
-    return swallow_sqlite_errors_
-
-
 def _adapt_geometry(geometry):
     """Return the SQLite BLOB-Geometry representation of a Geometry instance."""
     return dbapi2.Binary(blobgeometry.encode_blob_geometry(geometry))
