@@ -183,19 +183,13 @@ class SQLiteConnection(object):
         with self._connection:
             cursor = self._connection.cursor()
             cursor.execute("SELECT CheckSpatialMetaData();")
-            status = cursor.fetchone()[0]
-            if status == 0:
+            if cursor.fetchone()[0] == 0:
                 try:
                     cursor.execute("BEGIN")
                     cursor.execute("SELECT InitSpatialMetadata()")
                     cursor.execute("COMMIT")
                 finally:
                     cursor.close()
-            elif status == 1:
-                raise Error("this database was created using spatialite 3.1.0 or earlier; " +
-                            " muninn requires spatialite 4.0.0 or higher")
-            elif status != 3:
-                raise Error("this database was not created using spatialite 4.0.0 or higher")
 
         # create the tables if necessary
         if need_prepare:
