@@ -12,23 +12,13 @@ import functools
 import uuid
 
 # Select a version of dbapi2 that's available.
-# Pyspatialite is the default, thanks to legacy.
-#
-# These days pyspatialite is not buildable, so we actually prefer pysqlite.
-# This is builtin in python as the sqlite3 module, but it may be compiled without
-# extension support, in which case the user might install a homebrew version of pysqlite
-# that does support it.
-# In conclusion: if pyspatialite is not available, prefer homebrew versions of pysqlite over
-# builtin versions.
+# Since we need the spatialite module, we need a version of sqlite3 that supports extensions.
+# The defaulft version of sqlite3 that comes with Python does not support this, so we prefer pysqlite2
+# (which does come with an extension-enabled version of sqlite3) over the sqlite3 python module.
 try:
-    import pyspatialite.dbapi2 as dbapi2
-    _need_sqlite_extension = False
+    import pysqlite2.dbapi2 as dbapi2
 except ImportError:
-    _need_sqlite_extension = True
-    try:
-        import pysqlite2.dbapi2 as dbapi2
-    except ImportError:
-        import sqlite3.dbapi2 as dbapi2
+    import sqlite3.dbapi2 as dbapi2
 
 import muninn.config as config
 import muninn.backends.sql as sql
@@ -181,27 +171,31 @@ class SQLiteConnection(object):
         # make sure that foreign keys are enabled
         self._connection.execute("PRAGMA foreign_keys = ON;")
 
-        # if we have a version of sqlite3 that support extension loading
-        # load the pysqlite extension
-        if _need_sqlite_extension:
-            try:
-                self._connection.enable_load_extension(True)
-                self._connection.execute("select load_extension(\"%s\");" % (self._mod_spatialite))
-            except Exception as e:
-                raise Error("loading mod_spatialite extension failed (mod_spatialite_path='%s'): %s" % \
-                            (self._mod_spatialite, str(e)))
+        # load the spatialite extension
+        try:
+            self._connection.enable_load_extension(True)
+            self._connection.execute("select load_extension(\"%s\");" % (self._mod_spatialite))
+        except Exception as e:
+            raise Error("loading mod_spatialite extension failed (mod_spatialite_path='%s'): %s" % \
+                        (self._mod_spatialite, str(e)))
 
         # ensure that spatial metadata init has been done
         with self._connection:
             cursor = self._connection.cursor()
-            cursor.execute("PRAGMA table_info(geometry_columns);")
-            if cursor.fetchall() == []:
+            cursor.execute("SELECT CheckSpatialMetaData();")
+            status = cursor.fetchone()[0]
+            if status == 0:
                 try:
                     cursor.execute("BEGIN")
                     cursor.execute("SELECT InitSpatialMetadata()")
                     cursor.execute("COMMIT")
                 finally:
                     cursor.close()
+            elif status == 1:
+                raise Error("this database was created using spatialite 3.1.0 or earlier; " +
+                            " muninn requires spatialite 4.0.0 or higher")
+            elif status != 3:
+                raise Error("this database was not created using spatialite 4.0.0 or higher")
 
         # create the tables if necessary
         if need_prepare:

@@ -23,7 +23,7 @@ To be able to use muninn, you will need:
   - Python version 2.6 or higher, or Python 3.6 or higher.
 
 For the postgresql backend:
-  - psycopg2 version 2.0 or higher (>=2.2 when using geospatial data)
+  - psycopg2 version 2.2 or higher.
   - PostgreSQL version 8.4 or higher.
   - PostGIS version 2.0 or higher.
 
@@ -31,11 +31,16 @@ For the sqlite backend:
   - one of:
     - pysqlite 2.8.3 or higher
     - python built with sqlite3 loadable extension support
-    - pyspatialite 3.0.1 or higher
-  - mod_spatialite 4.2.0 or higher (not required when using pyspatialite)
+  - libspatialite 4.2.0 or higher
 
 To be able to install muninn, you will need:
   - setuptools version 0.6 or compatible.
+
+Optional dependencies:
+  - argparse: mandatory when using Python 2.6
+  - requests: to perform a muninn-pull on http/https urls
+  - tabulate: provides more output format options for muninn-search
+
 
 Muninn is distributed as a source distribution created using setuptools version
 0.6. It can be installed in several ways, for example using pip or by invoking
@@ -401,9 +406,10 @@ may contain the following settings:
   will be prefixed without separation characters, so any underscores, etc. need
   to be included in the option value.
 
-- mod_spatialite_path: Full path to the mod_spatialite library (minus
-  extension), e.g. /usr/local/lib/mod_spatialite. Not required when using
-  pyspatialite.
+- mod_spatialite_path: Path/name of the mod_spatialite library. Will be set to
+  'mod_spatialite' by default (which only works if library is on search path).
+  Change this to e.g. /usr/local/lib/mod_spatialite to set an explicit path
+  (no filename extension needed).
 
 Example configuration file
 --------------------------

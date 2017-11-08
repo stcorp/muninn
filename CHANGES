@@ -25,6 +25,12 @@
 
 * Added support for Python 3.
 
+* Dropped support for spatialite 3.1 and earlier. spatialite 4.0.0 or higher
+  is now required (which requires a version of sqlite3 that support
+  extensions). Support for pyspatialite, which only worked with spatialite
+  3.1, has been dropped. pysqlite2 is now the preferred module for sqlite
+  support.
+
 * Close SQL connection after each operation (ingestion/search/etc.).
 
 * Added support for separate auth_file that can contain credentials for
