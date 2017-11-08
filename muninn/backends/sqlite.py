@@ -521,17 +521,13 @@ class SQLiteBackend(object):
             cursor.close()
 
     def _tag(self, uuid, tags):
-        query = "INSERT INTO %s (uuid, tag) VALUES (%s, %s)" % (self._tag_table_name, self._placeholder(),
-                                                                self._placeholder())
+        query = "INSERT OR IGNORE INTO %s (uuid, tag) VALUES (%s, %s)" % \
+            (self._tag_table_name, self._placeholder(), self._placeholder())
         for tag in tags:
             with self._connection:
                 cursor = self._connection.cursor()
                 try:
                     cursor.execute(query, (uuid, tag))
-                except dbapi2.Error as _error:
-                    # If the tag already exists, swallow the exception.
-                    if not _error.message.endswith('not unique'):
-                        raise
                 finally:
                     cursor.close()
 
@@ -562,18 +558,14 @@ class SQLiteBackend(object):
             cursor.close()
 
     def _link(self, uuid, source_uuids):
-        query = "INSERT INTO %s (uuid, source_uuid) VALUES (%s, %s)" % (self._link_table_name, self._placeholder(),
-                                                                        self._placeholder())
+        query = "INSERT OR IGNORE INTO %s (uuid, source_uuid) VALUES (%s, %s)" % \
+            (self._link_table_name, self._placeholder(), self._placeholder())
 
         for source_uuid in source_uuids:
             with self._connection:
                 cursor = self._connection.cursor()
                 try:
                     cursor.execute(query, (uuid, source_uuid))
-                except dbapi2.Error as _error:
-                    # If the link already exists, swallow the exception.
-                    if not _error.message.endswith('not unique'):
-                        raise
                 finally:
                     cursor.close()
 
