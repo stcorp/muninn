@@ -30,6 +30,7 @@ setup(
                                       "muninn-ingest = muninn.tools.ingest:main",
                                       "muninn-list-tags = muninn.tools.list_tags:main",
                                       "muninn-prepare = muninn.tools.prepare:main",
+                                      "muninn-rebuild = muninn.tools.rebuild:main",
                                       "muninn-remove = muninn.tools.remove:main",
                                       "muninn-retrieve = muninn.tools.retrieve:main",
                                       "muninn-search = muninn.tools.search:main",
