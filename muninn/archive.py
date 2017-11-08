@@ -1023,6 +1023,13 @@ class Archive(object):
             # Update tags.
             self.tag(product.core.uuid, tags)
 
+            # Run the post rebuild hook (if defined by the product type plug-in).
+            #
+            # Note that hasattr() is used instead of a try + except block that swallows AttributeError to avoid hiding
+            # AttributeError instances raised by the plug-in.
+            if hasattr(plugin, "post_rebuild_hook"):
+                plugin.post_rebuild_hook(self, properties)
+
     def tag(self, uuid, tags):
         """Set one or more tags on a product."""
         if isinstance(tags, basestring):
