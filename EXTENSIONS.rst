@@ -298,10 +298,6 @@ Methods
     This function is optional. If it exists, it will be called after a
     successful pull of the product.
 
-``post_rebuild_hook(self, archive, attributes)``
-    This function is optional. If it exists, it will be called after a
-    successful rebuild of the product.
-
 ``export_<format name>(self, archive, product, target_path)``
     Methods starting with ``export_`` can be used to implement product type
     specific export functionality. For example, a method ``export_tgz`` could

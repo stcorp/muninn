@@ -1,4 +1,5 @@
-* Added muninn-rebuild to rebuild the properties of a set of products.
+* Added muninn-update to update the properties of a set of products.
+  This is an archive maintenance tool. Use with care!
   A use case is to populate a newly added namespace.
 
 * Muninn supports custom remote backends
@@ -24,8 +25,7 @@
   parameter that, if set, will create any undefined namespaces for a product.
 
 * New product plugin methods:
- - 'post_pull_hook' is called after a successful pull
- - 'post_rebuild_hook' is called after a successful rebuild
+  - 'post_pull_hook' is called after a successful pull
 
 * Added support for Python 3.
 

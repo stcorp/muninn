@@ -312,8 +312,8 @@ def main():
                         "separated list of sort order specifiers; a \"+\" prefix denotes ascending order; no prefix "
                         "denotes descending order")
     parser.add_argument("-p", "--property", action="append", type=property_list, dest="properties",
-                        help="white space separated list of properties to output; use <namespace>.* to include all "
-                        " properties of a namespace, e.g. core.*")
+                        help="white space separated list of properties to output; use `<namespace>.*` to include all "
+                        "properties of a namespace, e.g. core.*; use `*` to include all namespaces")
     parser.add_argument("-H", "--human-readable", action="store_true", help="output human readable size in product "
                         "summary (see -s, --summary option)")
     group = parser.add_mutually_exclusive_group()

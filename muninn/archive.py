@@ -772,7 +772,7 @@ class Archive(object):
 
         return count
 
-    def pull(self, where="", verify_hash=False):
+    def pull(self, where="", verify_hash=False, force=False, disable_hooks=False):
         """Pull one or more remote products into the archive.
         Return the number of products pulled.
 
@@ -780,16 +780,21 @@ class Archive(object):
         archive (i.e. the archive_path core metadata field should not be set).
 
         Keyword arguments:
-        where        --  Search expression.
-        parameters   --  Parameters referenced in the search expression (if any).
-        verify_hash  --  If set to True then, after the pull, the product in the archive will be matched against
-                         the hash from the metadata (only if the metadata contained a hash).
+        where         --  Search expression.
+        parameters    --  Parameters referenced in the search expression (if any).
+        verify_hash   --  If set to True then, after the pull, the product in the archive will be matched against
+                          the hash from the metadata (only if the metadata contained a hash).
+        force         --  Also pull existing products (not meant for routine operation).
+        disable_hooks --  Disable product type hooks (not meant for routine operation).
 
         """
         queue = self.search(where)
         for product in queue:
             if 'archive_path' in product.core:
-                raise Error("cannot pull local products")
+                if force:
+                    self._strip(product)
+                else:
+                    raise Error("cannot pull local products")
             if 'remote_url' not in product.core:
                 raise Error("cannot pull products that have no remote_url")
 
@@ -822,7 +827,7 @@ class Archive(object):
                                 (product.core.product_name, product.core.uuid))
 
             # Run the post pull hook (if defined by the product type plug-in).
-            if hasattr(plugin, "post_pull_hook"):
+            if not disable_hooks and hasattr(plugin, "post_pull_hook"):
                 plugin.post_pull_hook(self, product)
 
         return len(queue)
@@ -972,7 +977,7 @@ class Archive(object):
         self._update_metadata_date(properties)
         self._backend.update_product_properties(properties, uuid=uuid, new_namespaces=new_namespaces)
 
-    def rebuild_properties(self, where="", parameters={}):
+    def rebuild_properties(self, where="", parameters={}, disable_hooks=False):
         """Rebuilds product properties by re-extracting these properties (using product type plug-ins) from the products
         stored in the archive.
         Only properties and tags that are returned by the product type plug-in will be updated. Other properties or
@@ -986,7 +991,8 @@ class Archive(object):
         restricted_properties = set(["uuid", "active", "hash", "size", "metadata_date", "archive_date", "archive_path",
                                     "product_type", "physical_name"])
 
-        for product in self.search(where=where, parameters=parameters):
+        queue = self.search(where=where, parameters=parameters)
+        for product in queue:
             if not product.core.active:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
 
@@ -1023,12 +1029,14 @@ class Archive(object):
             # Update tags.
             self.tag(product.core.uuid, tags)
 
-            # Run the post rebuild hook (if defined by the product type plug-in).
+            # Run the post ingest hook (if defined by the product type plug-in).
             #
             # Note that hasattr() is used instead of a try + except block that swallows AttributeError to avoid hiding
             # AttributeError instances raised by the plug-in.
-            if hasattr(plugin, "post_rebuild_hook"):
-                plugin.post_rebuild_hook(self, properties)
+            if not disable_hooks and hasattr(plugin, "post_ingest_hook"):
+                plugin.post_ingest_hook(self, properties)
+
+        return len(queue)
 
     def tag(self, uuid, tags):
         """Set one or more tags on a product."""
