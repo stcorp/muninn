@@ -203,7 +203,7 @@ def encode_blob_geometry(geometry):
     blob += encoder.visit(geometry)
     # LAST
     blob += encoder._encode("B", 0xfe)
-    return memoryview(blob)
+    return blob
 
 
 def decode_blob_geometry(blob):

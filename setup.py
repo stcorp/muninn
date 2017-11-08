@@ -43,13 +43,10 @@ setup(
 )
 
 # For the postgres backend you will need psycopg 2.2 or higher.
-# psycopg 2.0.13 did not work when transfering geospatial information to/from
-# the database, but version 2.4.5 did. It is likely that the 'string literal'
-# bug fix from version 2.2 changed things.
 
-# For the sqlite backend you will need pyspatialite>=3.0.1 or sqlite/pysqlite with
-# the mod_spatialite extension.
+# For the sqlite backend you will need sqlite/pysqlite2 with the mod_spatialite
+# extension.
 
-# For muninn-pull using http requests you will need requests 2.13.0 or higher
+# For muninn-pull using http requests you will need 'requests' 2.13.0 or higher
 
 # To get more output formatting options for muninn-search install 'tabulate'
