@@ -24,7 +24,7 @@ def update(args):
     if args.force:
         expression = args.expression
     else:
-        expression = "is_defined(core.archive_path)"
+        expression = "core.active and is_defined(core.archive_path)"
         if args.expression:
             expression += " and (%s)" % args.expression
 
