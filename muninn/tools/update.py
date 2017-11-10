@@ -21,12 +21,9 @@ ACTIONS = [
 
 
 def update(args):
-    if args.force:
-        expression = args.expression
-    else:
-        expression = "core.active and is_defined(core.archive_path)"
-        if args.expression:
-            expression += " and (%s)" % args.expression
+    expression = "is_defined(core.archive_path)"
+    if args.expression:
+        expression += " and (%s)" % args.expression
 
     namespaces = []
     if args.namespaces:
@@ -82,8 +79,6 @@ def main():
         This is a archive maintenance tool, meant to be used when the archive structure has changed.
         Use with care!""")
     parser.add_argument("-a", "--action", choices=ACTIONS, required=True, help="action name")
-    parser.add_argument("-f", "--force", action="store_true", help="""also tries to rebuild the properties of products
-                        that are not present in the filesystem""")
     parser.add_argument("--disable-hooks", action="store_true",
                         help="do not run the hooks associated with the action")
     parser.add_argument("--namespaces", action="append",
