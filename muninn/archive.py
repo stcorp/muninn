@@ -1076,7 +1076,8 @@ class Archive(object):
         # Note that hasattr() is used instead of a try + except block that swallows AttributeError to avoid hiding
         # AttributeError instances raised by the plug-in.
         if not disable_hooks and hasattr(plugin, "post_ingest_hook"):
-            plugin.post_ingest_hook(self, properties)
+            product.update(properties)
+            plugin.post_ingest_hook(self, product)
 
     def _relocate(self, product, properties=None):
         """Relocate a product to the archive_path reported by the product type plugin.
