@@ -861,6 +861,9 @@ class Archive(object):
             self.update_properties(Struct({'core': metadata}), product.core.uuid)
             product.core.archive_path = new_archive_path
 
+        # update size
+        product.core.size = util.product_size(self._product_path(product))
+
         # verify product hash.
         if verify_hash and 'hash' in product.core:
             if self.verify_hash("uuid == @uuid", {"uuid": product.core.uuid}):
@@ -1059,6 +1062,9 @@ class Archive(object):
                 delattr(properties.core, name)
             except AttributeError:
                 pass
+
+        # update size
+        properties.core.size = util.product_size(self._product_path(product))
 
         # Make sure product is stored in the correct location
         new_archive_path = self._relocate(product, metadata)
