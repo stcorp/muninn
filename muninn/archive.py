@@ -1061,7 +1061,7 @@ class Archive(object):
                 pass
 
         # Make sure product is stored in the correct location
-        new_archive_path = self._relocate(product)
+        new_archive_path = self._relocate(product, metadata)
         if new_archive_path:
             properties.core.archive_path = new_archive_path
 
@@ -1078,16 +1078,19 @@ class Archive(object):
         if not disable_hooks and hasattr(plugin, "post_ingest_hook"):
             plugin.post_ingest_hook(self, properties)
 
-    def _relocate(self, product):
+    def _relocate(self, product, properties=None):
         """Relocate a product to the archive_path reported by the product type plugin.
         Returns the new archive_path if the product was moved."""
         result = None
         product_archive_path = product.core.archive_path
+        product_path = self._product_path(product)
+        if properties:
+            product = copy.deepcopy(product)
+            product.update(properties)
         plugin = self.product_type_plugin(product.core.product_type)
         plugin_archive_path = plugin.archive_path(product)
 
         if product_archive_path != plugin_archive_path:
-            product_path = self._product_path(product)
             abs_archive_path = os.path.realpath(os.path.join(self._root, plugin_archive_path))
             util.make_path(abs_archive_path)
             os.rename(product_path, os.path.join(abs_archive_path, product.core.physical_name))
