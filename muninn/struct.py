@@ -4,6 +4,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+from muninn.exceptions import Error
+
 
 class Struct(object):
     def __init__(self, data=None):
@@ -41,3 +43,17 @@ class Struct(object):
 
     def __repr__(self):
         return "Struct(%r)" % vars(self)
+
+    def update(self, other):
+        '''update a struct, using the same semantics as dict.update()'''
+        for key in other:
+            other_item = other[key]
+            if isinstance(other_item, Struct):
+                if key not in self:
+                    self[key] = Struct()
+                else:
+                    if not isinstance(self[key], Struct):
+                        raise Error('Incompatible structs: %s vs %s' % (self, other))
+                self[key].update(other_item)
+            else:
+                self[key] = other_item
