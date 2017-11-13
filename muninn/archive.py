@@ -1083,6 +1083,8 @@ class Archive(object):
         # AttributeError instances raised by the plug-in.
         if not disable_hooks and hasattr(plugin, "post_ingest_hook"):
             product.update(properties)
+            if 'hash' not in product.core:
+                product.core.hash = None
             plugin.post_ingest_hook(self, product)
 
     def _relocate(self, product, properties=None):
