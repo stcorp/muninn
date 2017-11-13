@@ -524,6 +524,13 @@ class Archive(object):
 
         return properties
 
+    def _get_product(self, uuid):
+        products = self.search('uuid == @uuid', parameters={'uuid': uuid})
+        if len(products) == 0:
+            raise Error('No product found with UUID: %s' % uuid)
+        assert len(products) == 1
+        return products[0]
+
     def search(self, where="", order_by=[], limit=None, parameters={}, namespaces=[]):
         """Search the product catalogue for products matching the specified search expression.
 
@@ -772,7 +779,7 @@ class Archive(object):
 
         return count
 
-    def pull(self, where="", verify_hash=False, force=False, disable_hooks=False):
+    def pull(self, where="", parameters={}, verify_hash=False):
         """Pull one or more remote products into the archive.
         Return the number of products pulled.
 
@@ -784,17 +791,13 @@ class Archive(object):
         parameters    --  Parameters referenced in the search expression (if any).
         verify_hash   --  If set to True then, after the pull, the product in the archive will be matched against
                           the hash from the metadata (only if the metadata contained a hash).
-        force         --  Also pull existing products (not meant for routine operation).
         disable_hooks --  Disable product type hooks (not meant for routine operation).
 
         """
-        queue = self.search(where)
+        queue = self.search(where=where, parameters=parameters)
         for product in queue:
             if 'archive_path' in product.core:
-                if force:
-                    self._strip(product)
-                else:
-                    raise Error("cannot pull local products")
+                raise Error("cannot pull local products")
             if 'remote_url' not in product.core:
                 raise Error("cannot pull products that have no remote_url")
 
@@ -827,10 +830,44 @@ class Archive(object):
                                 (product.core.product_name, product.core.uuid))
 
             # Run the post pull hook (if defined by the product type plug-in).
-            if not disable_hooks and hasattr(plugin, "post_pull_hook"):
+            if hasattr(plugin, "post_pull_hook"):
                 plugin.post_pull_hook(self, product)
 
         return len(queue)
+
+    def rebuild_pull_properties(self, uuid, verify_hash=False, disable_hooks=False):
+        """Refresh products by re-running the pull, but using the existing products stored in the archive.
+
+        Keyword arguments:
+        verify_hash   --  If set to True then the product in the archive will be matched against
+                          the hash from the metadata (only if the metadata contained a hash).
+        disable_hooks --  Disable product type hooks (not meant for routine operation).
+
+        """
+        product = self._get_product(uuid)
+        if 'archive_path' not in product.core:
+            raise Error("cannot update missing product")
+        if 'remote_url' not in product.core:
+            raise Error("cannot pull products that have no remote_url")
+
+        plugin = self.product_type_plugin(product.core.product_type)
+
+        # make sure product is stored in the correct location
+        new_archive_path = self._relocate(product)
+        if new_archive_path:
+            metadata = {'archive_path': new_archive_path}
+            self.update_properties(Struct({'core': metadata}), product.core.uuid)
+            product.core.archive_path = new_archive_path
+
+        # verify product hash.
+        if verify_hash and 'hash' in product.core:
+            if self.verify_hash("uuid == @uuid", {"uuid": product.core.uuid}):
+                raise Error("pulled product '%s' (%s) has incorrect hash" %
+                            (product.core.product_name, product.core.uuid))
+
+        # Run the post pull hook (if defined by the product type plug-in).
+        if not disable_hooks and hasattr(plugin, "post_pull_hook"):
+            plugin.post_pull_hook(self, product)
 
     def strip(self, where="", parameters={}, force=False):
         """Remove one or more products from disk only (not from the product catalogue). Return the number of products
@@ -977,66 +1014,84 @@ class Archive(object):
         self._update_metadata_date(properties)
         self._backend.update_product_properties(properties, uuid=uuid, new_namespaces=new_namespaces)
 
-    def rebuild_properties(self, where="", parameters={}, disable_hooks=False):
+    def rebuild_properties(self, uuid, disable_hooks=False):
         """Rebuilds product properties by re-extracting these properties (using product type plug-ins) from the products
         stored in the archive.
         Only properties and tags that are returned by the product type plug-in will be updated. Other properties or
         tags will remain as they were.
 
         Keyword arguments:
-        where       --  Search expression that determines for which products the properties should be rebuild.
-        parameters  --  Parameters referenced in the search expression (if any).
+        disable_hooks --  Disable product type hooks (not meant for routine operation).
 
         """
         restricted_properties = set(["uuid", "active", "hash", "size", "metadata_date", "archive_date", "archive_path",
-                                    "product_type", "physical_name"])
+                                     "product_type", "physical_name"])
 
-        queue = self.search(where=where, parameters=parameters)
-        for product in queue:
-            if not product.core.active:
-                raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
+        product = self._get_product(uuid)
+        if not product.core.active:
+            raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
 
-            # Determine the path of the product on disk.
+        # Determine the path of the product on disk.
+        product_path = self._product_path(product)
+        if not product_path:
+            raise Error("no data available for product '%s' (%s)" % (product.core.product_name, product.core.uuid))
+
+        # Extract product metadata.
+        plugin = self.product_type_plugin(product.core.product_type)
+
+        if plugin.use_enclosing_directory:
+            paths = [os.path.join(product_path, basename) for basename in os.listdir(product_path)]
+        else:
+            paths = [product_path]
+        metadata = plugin.analyze(paths)
+
+        if isinstance(metadata, (tuple, list)):
+            properties, tags = metadata
+        else:
+            properties, tags = metadata, []
+
+        # Remove properties that should not be changed.
+        assert "core" in properties
+        for name in restricted_properties:
+            try:
+                delattr(properties.core, name)
+            except AttributeError:
+                pass
+
+        # Make sure product is stored in the correct location
+        new_archive_path = self._relocate(product)
+        if new_archive_path:
+            properties.core.archive_path = new_archive_path
+
+        # Update product properties.
+        self.update_properties(properties, uuid=product.core.uuid)
+
+        # Update tags.
+        self.tag(product.core.uuid, tags)
+
+        # Run the post ingest hook (if defined by the product type plug-in).
+        #
+        # Note that hasattr() is used instead of a try + except block that swallows AttributeError to avoid hiding
+        # AttributeError instances raised by the plug-in.
+        if not disable_hooks and hasattr(plugin, "post_ingest_hook"):
+            plugin.post_ingest_hook(self, properties)
+
+    def _relocate(self, product):
+        """Relocate a product to the archive_path reported by the product type plugin.
+        Returns the new archive_path if the product was moved."""
+        result = None
+        product_archive_path = product.core.archive_path
+        plugin = self.product_type_plugin(product.core.product_type)
+        plugin_archive_path = plugin.archive_path(product)
+
+        if product_archive_path != plugin_archive_path:
             product_path = self._product_path(product)
-            if not product_path:
-                raise Error("no data available for product '%s' (%s)" % (product.core.product_name, product.core.uuid))
+            abs_archive_path = os.path.realpath(os.path.join(self._root, plugin_archive_path))
+            util.make_path(abs_archive_path)
+            os.rename(product_path, os.path.join(abs_archive_path, product.core.physical_name))
+            result = plugin_archive_path
 
-            # Extract product metadata.
-            plugin = self.product_type_plugin(product.core.product_type)
-
-            if plugin.use_enclosing_directory:
-                paths = [os.path.join(product_path, basename) for basename in os.listdir(product_path)]
-            else:
-                paths = [product_path]
-            metadata = plugin.analyze(paths)
-
-            if isinstance(metadata, (tuple, list)):
-                properties, tags = metadata
-            else:
-                properties, tags = metadata, []
-
-            # Remove properties that should not be changed.
-            assert("core" in properties)
-            for name in restricted_properties:
-                try:
-                    delattr(properties.core, name)
-                except AttributeError:
-                    pass
-
-            # Update product properties.
-            self.update_properties(properties, uuid=product.core.uuid)
-
-            # Update tags.
-            self.tag(product.core.uuid, tags)
-
-            # Run the post ingest hook (if defined by the product type plug-in).
-            #
-            # Note that hasattr() is used instead of a try + except block that swallows AttributeError to avoid hiding
-            # AttributeError instances raised by the plug-in.
-            if not disable_hooks and hasattr(plugin, "post_ingest_hook"):
-                plugin.post_ingest_hook(self, properties)
-
-        return len(queue)
+        return result
 
     def tag(self, uuid, tags):
         """Set one or more tags on a product."""

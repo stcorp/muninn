@@ -32,19 +32,24 @@ def update(args):
 
     if args.action == 'ingest':
         with muninn.open(args.archive) as archive:
-            count = archive.rebuild_properties(expression, disable_hooks=args.disable_hooks)
-        logger.debug('`ingest` was run on %d product(s)' % count)
+            products = [(product.core.uuid, product.core.product_name) for product in archive.search(expression)]
+            for uuid, product_name in products:
+                logger.debug('running update:ingest on %s ' % product_name)
+                archive.rebuild_properties(uuid, disable_hooks=args.disable_hooks)
+        logger.debug('update:ingest was run on %d product(s)' % len(products))
 
     elif args.action == 'post_ingest':
         with muninn.open(args.archive) as archive:
-            products = archive.search(expression, namespaces=namespaces)
+            products = [(product.core.uuid, product.core.product_type) for product in archive.search(expression, namespaces=namespaces)]
             count = 0
-            for product in products:
-                plugin = archive.product_type_plugin(product.core.product_type)
+            for uuid, product_type in products:
+                plugin = archive.product_type_plugin(product_type)
                 if hasattr(plugin, "post_ingest_hook"):
                     count += 1
+                    product = archive._get_product(uuid)
+                    logger.debug('running update:post_ingest on %s ' % product.core.product_name)
                     plugin.post_ingest_hook(archive, product)
-        logger.debug('`post_ingest` was run on %d product(s)' % count)
+        logger.debug('update:post_ingest was run on %d product(s)' % count)
 
     elif args.action == 'pull':
         # only get products with a remote_url
@@ -52,21 +57,25 @@ def update(args):
             expression = "is_defined(remote_url) and (%s)" % expression
         else:
             expression = "is_defined(remote_url)"
-        # NB: existing files will be overwritten
         with muninn.open(args.archive) as archive:
-            count = archive.pull(expression, verify_hash=args.verify_hash, force=True, disable_hooks=args.disable_hooks)
-        logger.debug('`pull` was run on %d product(s)' % count)
+            products = [(product.core.uuid, product.core.product_name) for product in archive.search(expression)]
+            for uuid, product_name in products:
+                logger.debug('running update:pull on %s ' % product_name)
+                archive.rebuild_pull_properties(uuid, verify_hash=args.verify_hash, disable_hooks=args.disable_hooks)
+        logger.debug('update:pull was run on %d product(s)' % len(products))
 
     elif args.action == 'post_pull':
         with muninn.open(args.archive) as archive:
-            products = archive.search(expression)
+            products = [(product.core.uuid, product.core.product_type) for product in archive.search(expression)]
             count = 0
-            for product in products:
-                plugin = archive.product_type_plugin(product.core.product_type)
+            for uuid, product_type in products:
+                plugin = archive.product_type_plugin(product_type)
                 if hasattr(plugin, "post_pull_hook"):
                     count += 1
+                    product = archive._get_product(uuid)
+                    logger.debug('running update:post_pull on %s ' % product.core.product_name)
                     plugin.post_pull_hook(archive, product)
-        logger.debug('`post_pull` was run on %d product(s)' % count)
+        logger.debug('update:post_pull was run on %d product(s)' % count)
 
     else:
         return 1
@@ -84,7 +93,7 @@ def main():
     parser.add_argument("--namespaces", action="append",
                         help="white space separated list of namespaces to make available for `post_ingest`")
     parser.add_argument("--verify-hash", action="store_true",
-                        help="verify the hash of the product after it has been put in the archive by `pull`")
+                        help="verify the hash of the product after a `pull` update")
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
     parser.add_argument("expression", metavar="EXPRESSION", default="", help="expression to select products")
     return parse_args_and_run(parser, update)
