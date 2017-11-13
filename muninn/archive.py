@@ -1067,7 +1067,7 @@ class Archive(object):
         properties.core.size = util.product_size(self._product_path(product))
 
         # Make sure product is stored in the correct location
-        new_archive_path = self._relocate(product, metadata)
+        new_archive_path = self._relocate(product, properties)
         if new_archive_path:
             properties.core.archive_path = new_archive_path
 
