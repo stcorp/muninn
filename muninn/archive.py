@@ -407,7 +407,7 @@ class Archive(object):
         self.create_properties(properties)
 
         # Determine archive path.
-        if ingest_product:
+        if ingest_product and use_original_file is False:
             if properties.core.archive_path is None:
                 properties.core.archive_path = plugin.archive_path(properties)
 
@@ -431,8 +431,10 @@ class Archive(object):
                     for path in paths:
                         if not util.is_sub_path(os.path.realpath(path), self._root, allow_equal=True):
                             raise Error("cannot ingest a file without copying it, if it is not in the muninn root")
-                    properties.core.archive_path = os.path.dirname(
-                        os.path.realpath(paths[0])).replace(os.path.realpath(self._root), '')
+                    # strip the archive root
+                    properties.core.archive_path = os.path.relpath(
+                        os.path.dirname(os.path.realpath(paths[0])),
+                        start=os.path.realpath(self._root))
                 else:
                     abs_archive_path = os.path.realpath(os.path.join(self._root, properties.core.archive_path))
                     abs_product_path = os.path.join(abs_archive_path, properties.core.physical_name)
