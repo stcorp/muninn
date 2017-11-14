@@ -380,8 +380,7 @@ class DownloadError(Exception):
     pass
 
 
-class Downloader:
-
+class Downloader(object):
     def __init__(self, remote_url, auth_file=None):
         self.remote_url = remote_url
         self.auth_file = auth_file
@@ -412,8 +411,8 @@ class Downloader:
             r.raise_for_status()
             with open(local_file, 'wb') as output:
                 output.write(r.content)
-        except:
-            raise DownloadError('Error downloading %s' % self.remote_url)
+        except Exception as e:
+            raise DownloadError('Error downloading %s (Reason: %s)' % (self.remote_url, e))
 
     def _download_ftp(self, local_file):
         try:
@@ -426,8 +425,8 @@ class Downloader:
             ftp.set_pasv(True)
             ftp.retrbinary('RETR %s' % os.path.basename(self.url.path), open(local_file, 'wb').write)
             ftp.quit()
-        except:
-            raise DownloadError('Error downloading %s' % self.remote_url)
+        except Exception as e:
+            raise DownloadError('Error downloading %s (Reason: %s)' % (self.remote_url, e))
 
 def quoted_list(lst, quote_text='"', join_text=", "):
     '''returns a string where all items are surrounded by quotes and joined'''
