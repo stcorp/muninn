@@ -1,31 +1,5 @@
-* Added muninn-update to update the properties of a set of products.
-  This is an archive maintenance tool. Use with care!
-  A use case is to populate a newly added namespace.
-
-* Muninn supports custom remote backends
-
-* Command line tools have a --verbose mode, that displays debug-level logging.
-
-* Added a 'paths' option to muninn-search that prints the physical path of the
-  products found instead of the normal output.
-
-* Added option to ingest products already in the root archive folder without
-  copying.
-
-* Allow calling `muninn-search -p '*'` to fetch all fields of all namespaces.
-
-* Added muninn-info to display generic archive information (currently, the
-  availables namespaces and product types)
-
-* muninn.Archive.product_path() argument can be a product properties Struct.
-
-* Added tabulate package to format the output.
-
-* muninn.Archive.update_properties() takes an optional 'create_namespaces'
-  parameter that, if set, will create any undefined namespaces for a product.
-
-* New product plugin methods:
-  - 'post_pull_hook' is called after a successful pull
+4.1 2017-11-15
+~~~~~~~~~~~~~~
 
 * Added support for Python 3.
 
@@ -35,6 +9,38 @@
   3.1, has been dropped. pysqlite2 is now the preferred module for sqlite
   support.
 
+* Muninn now supports custom remote backends (used for muninn-pull).
+  The ecmwfapi pull support has now been removed from the core muninn code and
+  will become available as a separate plugin.
+
+* Added muninn-info to display generic archive information (currently, the
+  availables namespaces and product types)
+
+* Added archive maintenance tool muninn-update that allows updating properties
+  for a set of products (for when e.g. a product type plugin has changed).
+
+* Added mod_spatialite_path option for sqlite backend.
+
+* Command line tools now have a --verbose mode, displaying debug-level logging.
+
+* Added 'paths' option to muninn-search that prints the physical path of the
+  products found instead of the normal output.
+
+* Added --keep option to muninn-ingest to ingest products that are already in
+  the archive, maintaining its current relative path.
+
+* Allow calling `muninn-search -p '*'` to fetch all fields of all namespaces.
+
+* muninn.Archive.product_path() argument can be a product properties Struct.
+
+* Added support for tabulate package to format the output.
+
+* muninn.Archive.update_properties() takes an optional 'create_namespaces'
+  parameter that, if set, will create any undefined namespaces for a product.
+
+* Added product plugin method 'post_pull_hook' that is called after a
+  successful pull.
+
 * Close SQL connection after each operation (ingestion/search/etc.).
 
 * Added support for separate auth_file that can contain credentials for
@@ -43,7 +49,7 @@
 * Added -f option to muninn-strip.
 
 * Fixed issue where geometry columns in namespace extensions were not
-  created with the sqlite backend.
+  created when using the sqlite backend.
 
 4.0 2017-03-31
 ~~~~~~~~~~~~~~
