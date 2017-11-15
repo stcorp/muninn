@@ -47,12 +47,12 @@ in most cases.
 
 Using pip: ::
 
-  $ pip install muninn-4.0.tar.gz
+  $ pip install muninn-4.1.tar.gz
 
 Using setup.py: ::
 
-  $ tar xvfz muninn-4.0.tar.gz
-  $ cd muninn-4.0
+  $ tar xvfz muninn-4.1.tar.gz
+  $ cd muninn-4.1
   $ python setup.py install
 
 The muninn distribution contains a generic archiving framework that cannot be
