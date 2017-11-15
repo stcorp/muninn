@@ -28,9 +28,7 @@ For the postgresql backend:
   - PostGIS version 2.0 or higher.
 
 For the sqlite backend:
-  - one of:
-    - pysqlite 2.8.3 or higher
-    - python built with sqlite3 loadable extension support
+  - pysqlite >=2.8.3 or python built with sqlite3 loadable extension support
   - libspatialite 4.2.0 or higher
 
 To be able to install muninn, you will need:
