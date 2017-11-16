@@ -22,8 +22,7 @@ For the muninn package:
 
 - Update version number in ``muninn/__init__.py``
 - Update version number in ``setup.py``
-- Update version number in ``README.rst``
-- Update release date in ``README.rst``
+- Update version number in ``README.rst`` (3x)
 - Check the list of dependencies in the ``README.rst``
 - Check version numbers mentioned elsewhere in the ``README.rst``
 - Check the upgrade instructions in ``README.rst``
