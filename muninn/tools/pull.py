@@ -16,12 +16,13 @@ def pull(args):
         verify_hash = True if args.verify_hash else False
 
         # find all remote products that satisfy filter
-        expression = "(is_defined(remote_url) and not is_defined(archive_path))"
+        expression = "is_defined(remote_url) and not is_defined(archive_path)"
         if args.expression:
-            expression = "%s and %s" % (expression, args.expression)
+            expression = "%s and (%s)" % (expression, args.expression)
 
+        logging.debug('Going to pull products that match: %s', expression)
         num_products = archive.pull(expression, verify_hash=verify_hash)
-        logging.debug('Pulled %d products', num_products)
+        logging.debug('Pulled %d product(s)', num_products)
 
     return 0
 
