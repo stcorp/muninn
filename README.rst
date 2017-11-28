@@ -381,7 +381,8 @@ may contain the following settings:
 
 - connection_string: Mandatory. A postgresql connection string of the database
   containing product attributes. The default is the empty string, which will
-  connect to the default database for the user invoking muninn.
+  connect to the default database for the user invoking muninn. See psycopg
+  documentation for the syntax.
 
 - table_prefix: Prefix that should be used for all table names, indices, and
   constraints. This is to allow multiple muninn catalogues inside a single
