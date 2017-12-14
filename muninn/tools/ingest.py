@@ -94,7 +94,7 @@ def ingest(args):
 
             try:
                 properties = archive.ingest(product_paths, args.product_type, use_symlinks=use_symlinks,
-                                            verify_hash=verify_hash, use_current_path=args.keep)
+                                            verify_hash=verify_hash, use_current_path=args.keep, force=args.force)
             except muninn.Error as error:
                 logging.error("%s: unable to ingest product [%s]" % (path, error))
                 errors_encountered = True
@@ -131,6 +131,8 @@ def main():
     group.add_argument("-c", "--copy", action="store_true", help="ingest a copy of each product")
     group.add_argument("-k", "--keep", action="store_true", help="ingest product, using the current product path if it "
                                                                  "is in the muninn path, otherwise throws an error")
+    parser.add_argument("-f", "--force", action="store_true", help="remove any existing product with the same type and "
+                                                                   "name before ingesting the new product")
     parser.add_argument("--verify-hash", action="store_true",
                         help="verify the hash of the product after it has been put in the archive")
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
