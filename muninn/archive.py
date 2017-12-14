@@ -321,7 +321,7 @@ class Archive(object):
         raise Error("unable to identify product: \"%s\"" % paths)
 
     def ingest(self, paths, product_type=None, properties=None, ingest_product=True, use_symlinks=None,
-               verify_hash=False, use_current_path=False):
+               verify_hash=False, use_current_path=False, force=False):
         """Ingest a product into the archive. Multiple paths can be specified, but the set of files and/or directories
         these paths refer to is always ingested as a single logical product.
 
@@ -351,6 +351,11 @@ class Archive(object):
         use_current_path -- Ingest the product by keeping the file(s) at the current path (which must be inside the
                             root directory of the archive).
                             This option is ignored if ingest_product=False.
+        force            -- If set to True then any existing product with the same type and name (unique constraint)
+                            will be removed before ingestion, including partially ingested products.
+                            NB. Depending on product type specific cascade rules, removing a product can result in one
+                            or more derived products being removed (or stripped) along with it.
+
         """
         if isinstance(paths, basestring):
             paths = [paths]
@@ -386,6 +391,7 @@ class Archive(object):
             properties, tags = copy.deepcopy(properties), []
 
         assert(properties is not None and "core" in properties)
+        assert "product_name" in properties.core and properties.core.product_name, "product_name is required in core.properties"
 
         # Set core product properties that are not determined by the plugin.
         # Note that metadata_date is set automatically by create_properties()
@@ -407,6 +413,13 @@ class Archive(object):
             properties.core.physical_name = os.path.basename(paths[0])
         else:
             raise Error("cannot determine physical name for multi-part product")
+
+        # Remove existing product with the same product type and name before ingesting
+        if force:
+            self.remove(where="core.product_type == @product_type and core.product_name == @product_name", parameters={
+                'product_type': properties.core.product_type,
+                'product_name': properties.core.product_name,
+            }, force=True)
 
         self.create_properties(properties)
 
@@ -994,7 +1007,7 @@ class Archive(object):
             An important side effect of this operation is that it
             will fail if:
 
-            1. The randomly generated UUID is not unique within the product catalogue.
+            1. The core.uuid is not unique within the product catalogue.
             2. The combination of core.archive_path and core.physical_name is
                not unique within the product catalogue.
         """
