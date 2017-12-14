@@ -186,7 +186,8 @@ def paths(args):
         products = archive.search(args.expression, order_by=['core.physical_name'])
         for product in products:
             product_path = archive.product_path(product)
-            print(product_path)
+            if product_path is not None:
+                print(product_path)
     return 0
 
 
