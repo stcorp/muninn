@@ -321,7 +321,7 @@ class Archive(object):
         raise Error("unable to identify product: \"%s\"" % paths)
 
     def ingest(self, paths, product_type=None, properties=None, ingest_product=True, use_symlinks=None,
-               verify_hash=False, use_original_file=False):
+               verify_hash=False, use_current_path=False):
         """Ingest a product into the archive. Multiple paths can be specified, but the set of files and/or directories
         these paths refer to is always ingested as a single logical product.
 
@@ -334,19 +334,23 @@ class Archive(object):
         try to copy/symlink it.
 
         Keyword arguments:
-        product_type    --  Product type of the product to ingest. If left unspecified, an attempt will be made to
+        product_type     -- Product type of the product to ingest. If left unspecified, an attempt will be made to
                             determine the product type automatically. By default, the product type will be determined
                             automatically.
-        properties      --  Used as product properties if specified. No properties will be extracted from the product in
-                            this case.
-        ingest_product  --  If set to False, the product itself will not be ingested into the archive, only its
+        properties       -- Used as product properties if specified. No properties will be extracted from the product
+                            in this case.
+        ingest_product   -- If set to False, the product itself will not be ingested into the archive, only its
                             properties. By default, the product will be ingested.
-        use_symlinks    --  If set to True, symbolic links to the original product will be stored in the archive instead
-                            of a copy of the original product. If set to None, the value of the corresponding archive
-                            wide configuration option will be used. By default, the archive configuration will be used.
-        verify_hash     --  If set to True then, after the ingestion, the product in the archive will be matched against
+        use_symlinks     -- If set to True, symbolic links to the original product will be stored in the archive
+                            instead of a copy of the original product. If set to None, the value of the corresponding
+                            archive wide configuration option will be used. By default, the archive configuration will
+                            be used.
+                            This option is ignored if use_current_path=True.
+        verify_hash      -- If set to True then, after the ingestion, the product in the archive will be matched against
                             the hash from the metadata (only if the metadata contained a hash).
-
+        use_current_path -- Ingest the product by keeping the file(s) at the current path (which must be inside the
+                            root directory of the archive).
+                            This option is ignored if ingest_product=False.
         """
         if isinstance(paths, basestring):
             paths = [paths]
@@ -406,11 +410,6 @@ class Archive(object):
 
         self.create_properties(properties)
 
-        # Determine archive path.
-        if ingest_product and use_original_file is False:
-            if properties.core.archive_path is None:
-                properties.core.archive_path = plugin.archive_path(properties)
-
         # Try to determine the product hash and ingest the product into the archive.
         try:
             # Determine product hash. Since it is an expensive operation, the hash is computed after inserting the
@@ -420,84 +419,96 @@ class Archive(object):
                     properties.core.hash = util.product_hash(paths)
                 except EnvironmentError as _error:
                     raise Error("cannot determine product hash [%s]" % (_error,))
-
                 # Update the product hash in the product catalogue.
                 self.update_properties(Struct({'core': {'hash': properties.core.hash}}), properties.core.uuid)
 
             # Ingest the product into the archive.
             if ingest_product:
                 # Determine the (absolute) path in the archive that will contain the product and create it if required.
-                if use_original_file is True:
+                if use_current_path:
                     for path in paths:
                         if not util.is_sub_path(os.path.realpath(path), self._root, allow_equal=True):
-                            raise Error("cannot ingest a file without copying it, if it is not in the muninn root")
-                    # strip the archive root
-                    properties.core.archive_path = os.path.relpath(
-                        os.path.dirname(os.path.realpath(paths[0])),
-                        start=os.path.realpath(self._root))
+                            raise Error("cannot ingest a file in-place if it is not inside the muninn archive root")
+                    if len(paths) > 1:
+                        # check whether all files have the right enclosing directory
+                        for path in paths:
+                            enclosing_directory = os.path.basename(os.path.dirname(os.path.realpath(path)))
+                            if enclosing_directory != properties.core.physical_name:
+                                raise Error("multi-part product has invalid enclosing directory for in-place ingestion")
+                        # strip the archive root
+                        properties.core.archive_path = os.path.relpath(
+                            os.path.dirname(os.path.dirname(os.path.realpath(paths[0]))),
+                            start=os.path.realpath(self._root))
+                    else:
+                        # strip the archive root
+                        properties.core.archive_path = os.path.relpath(
+                            os.path.dirname(os.path.realpath(paths[0])),
+                            start=os.path.realpath(self._root))
                 else:
+                    properties.core.archive_path = plugin.archive_path(properties)
                     abs_archive_path = os.path.realpath(os.path.join(self._root, properties.core.archive_path))
                     abs_product_path = os.path.join(abs_archive_path, properties.core.physical_name)
 
-                if not use_original_file and \
-                        util.is_sub_path(os.path.realpath(paths[0]), abs_product_path, allow_equal=True):
-                    # Product should already be in the target location
-                    for path in paths:
-                        if not os.path.exists(path):
-                            raise Error("product source path does not exist '%s'" % (path,))
-                        if not util.is_sub_path(os.path.realpath(path), abs_product_path, allow_equal=True):
-                            raise Error("cannot ingest product where only part of the files are already at the "
-                                        "destination location")
-                elif not use_original_file:
-                    # Create destination location for product
-                    try:
-                        util.make_path(abs_archive_path)
-                    except EnvironmentError as _error:
-                        raise Error("cannot create parent destination path '%s' [%s]" % (abs_archive_path, _error))
+                if not use_current_path:
+                    if util.is_sub_path(os.path.realpath(paths[0]), abs_product_path, allow_equal=True):
+                        # Product should already be in the target location
+                        for path in paths:
+                            if not os.path.exists(path):
+                                raise Error("product source path does not exist '%s'" % (path,))
+                            if not util.is_sub_path(os.path.realpath(path), abs_product_path, allow_equal=True):
+                                raise Error("cannot ingest product where only part of the files are already at the "
+                                            "destination location")
+                    else:
+                        # Create destination location for product
+                        try:
+                            util.make_path(abs_archive_path)
+                        except EnvironmentError as _error:
+                            raise Error("cannot create parent destination path '%s' [%s]" % (abs_archive_path, _error))
 
-                    # Create a temporary directory and transfer the product there, then move the product to its
-                    # destination within the archive.
-                    try:
-                        with util.TemporaryDirectory(prefix=".ingest-", suffix="-%s" % properties.core.uuid.hex,
-                                                     dir=abs_archive_path) as tmp_path:
+                        # Create a temporary directory and transfer the product there, then move the product to its
+                        # destination within the archive.
+                        try:
+                            with util.TemporaryDirectory(prefix=".ingest-", suffix="-%s" % properties.core.uuid.hex,
+                                                         dir=abs_archive_path) as tmp_path:
 
-                            # Create enclosing directory if required.
-                            if plugin.use_enclosing_directory:
-                                tmp_path = os.path.join(tmp_path, properties.core.physical_name)
-                                util.make_path(tmp_path)
+                                # Create enclosing directory if required.
+                                if plugin.use_enclosing_directory:
+                                    tmp_path = os.path.join(tmp_path, properties.core.physical_name)
+                                    util.make_path(tmp_path)
 
-                            # Transfer the product (parts).
-                            if use_symlinks or use_symlinks is None and self._use_symlinks:
-                                # Create symbolic link(s) for the product (parts).
-                                for path in paths:
-                                    if util.is_sub_path(path, self._root):
-                                        # Create a relative symbolic link when the target is part of the archive
-                                        # (i.e. when creating an intra-archive symbolic link). This ensures the
-                                        # archive can be relocated without breaking intra-archive symbolic links.
-                                        os.symlink(os.path.relpath(path, abs_archive_path),
-                                                   os.path.join(tmp_path, os.path.basename(path)))
-                                    else:
-                                        os.symlink(path, os.path.join(tmp_path, os.path.basename(path)))
-                            else:
-                                # Copy product (parts).
-                                for path in paths:
-                                    util.copy_path(path, tmp_path, resolve_root=True)
+                                # Transfer the product (parts).
+                                if use_symlinks or use_symlinks is None and self._use_symlinks:
+                                    # Create symbolic link(s) for the product (parts).
+                                    for path in paths:
+                                        if util.is_sub_path(path, self._root):
+                                            # Create a relative symbolic link when the target is part of the archive
+                                            # (i.e. when creating an intra-archive symbolic link). This ensures the
+                                            # archive can be relocated without breaking intra-archive symbolic links.
+                                            os.symlink(os.path.relpath(path, abs_archive_path),
+                                                       os.path.join(tmp_path, os.path.basename(path)))
+                                        else:
+                                            os.symlink(path, os.path.join(tmp_path, os.path.basename(path)))
+                                else:
+                                    # Copy product (parts).
+                                    for path in paths:
+                                        util.copy_path(path, tmp_path, resolve_root=True)
 
-                            # Move the transferred product into its destination within the archive.
-                            if plugin.use_enclosing_directory:
-                                os.rename(tmp_path, abs_product_path)
-                            else:
-                                assert(len(paths) == 1 and properties.core.physical_name == os.path.basename(paths[0]))
-                                tmp_product_path = os.path.join(tmp_path, properties.core.physical_name)
-                                os.rename(tmp_product_path, abs_product_path)
+                                # Move the transferred product into its destination within the archive.
+                                if plugin.use_enclosing_directory:
+                                    os.rename(tmp_path, abs_product_path)
+                                else:
+                                    assert(len(paths) == 1 and properties.core.physical_name == os.path.basename(paths[0]))
+                                    tmp_product_path = os.path.join(tmp_path, properties.core.physical_name)
+                                    os.rename(tmp_product_path, abs_product_path)
 
-                    except EnvironmentError as _error:
-                        raise Error("unable to transfer product to destination path '%s' [%s]" %
-                                    (abs_product_path, _error))
-                # Verify product hash.
-                if verify_hash:
-                    if self.verify_hash("uuid == @uuid", {"uuid": properties.core.uuid}):
-                        raise Error("ingested product has incorrect hash")
+                        except EnvironmentError as _error:
+                            raise Error("unable to transfer product to destination path '%s' [%s]" %
+                                        (abs_product_path, _error))
+                        # Verify product hash after copy
+                        if verify_hash:
+                            if self.verify_hash("uuid == @uuid", {"uuid": properties.core.uuid}):
+                                raise Error("ingested product has incorrect hash")
+                properties.core.archive_date = self._backend.server_time_utc()
         except:
             # Try to remove the entry for this product from the product catalogue.
             self._backend.delete_product_properties(properties.core.uuid)
@@ -505,8 +516,6 @@ class Archive(object):
 
         # Activate product.
         properties.core.active = True
-        if ingest_product:
-            properties.core.archive_date = self._backend.server_time_utc()
         metadata = {
             'active': properties.core.active,
             'archive_date': properties.core.archive_date,
