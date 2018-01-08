@@ -1094,7 +1094,7 @@ class Archive(object):
             properties.core.archive_path = new_archive_path
 
         # Update product properties.
-        self.update_properties(properties, uuid=product.core.uuid)
+        self.update_properties(properties, uuid=product.core.uuid, create_namespaces=True)
 
         # Update tags.
         self.tag(product.core.uuid, tags)
