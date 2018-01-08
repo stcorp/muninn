@@ -85,7 +85,7 @@ def update(args):
 
 def main():
     parser = create_parser(description="""Updates properties of existing products.
-        This is a archive maintenance tool, meant to be used when the archive structure has changed.
+        This is an archive maintenance tool, meant to be used when the archive structure has changed.
         Use with care!""")
     parser.add_argument("-a", "--action", choices=ACTIONS, required=True, help="action name")
     parser.add_argument("--disable-hooks", action="store_true",
