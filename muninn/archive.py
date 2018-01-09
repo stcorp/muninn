@@ -859,13 +859,15 @@ class Archive(object):
 
         return len(queue)
 
-    def rebuild_pull_properties(self, uuid, verify_hash=False, disable_hooks=False):
+    def rebuild_pull_properties(self, uuid, verify_hash=False, disable_hooks=False, use_current_path=False):
         """Refresh products by re-running the pull, but using the existing products stored in the archive.
 
         Keyword arguments:
         verify_hash   --  If set to True then the product in the archive will be matched against
                           the hash from the metadata (only if the metadata contained a hash).
         disable_hooks --  Disable product type hooks (not meant for routine operation).
+        use_current_path -- Do not attempt to relocate the product to the location specified in the product
+                            type plug-in. Useful for read-only archives.
 
         """
         product = self._get_product(uuid)
@@ -877,11 +879,12 @@ class Archive(object):
         plugin = self.product_type_plugin(product.core.product_type)
 
         # make sure product is stored in the correct location
-        new_archive_path = self._relocate(product)
-        if new_archive_path:
-            metadata = {'archive_path': new_archive_path}
-            self.update_properties(Struct({'core': metadata}), product.core.uuid)
-            product.core.archive_path = new_archive_path
+        if not use_current_path:
+            new_archive_path = self._relocate(product)
+            if new_archive_path:
+                metadata = {'archive_path': new_archive_path}
+                self.update_properties(Struct({'core': metadata}), product.core.uuid)
+                product.core.archive_path = new_archive_path
 
         # update size
         product.core.size = util.product_size(self._product_path(product))
@@ -1041,7 +1044,7 @@ class Archive(object):
         self._update_metadata_date(properties)
         self._backend.update_product_properties(properties, uuid=uuid, new_namespaces=new_namespaces)
 
-    def rebuild_properties(self, uuid, disable_hooks=False):
+    def rebuild_properties(self, uuid, disable_hooks=False, use_current_path=False):
         """Rebuilds product properties by re-extracting these properties (using product type plug-ins) from the products
         stored in the archive.
         Only properties and tags that are returned by the product type plug-in will be updated. Other properties or
@@ -1049,6 +1052,8 @@ class Archive(object):
 
         Keyword arguments:
         disable_hooks --  Disable product type hooks (not meant for routine operation).
+        use_current_path -- Do not attempt to relocate the product to the location specified in the product
+                            type plug-in. Useful for read-only archives.
 
         """
         restricted_properties = set(["uuid", "active", "hash", "size", "metadata_date", "archive_date", "archive_path",
@@ -1089,9 +1094,10 @@ class Archive(object):
         properties.core.size = util.product_size(self._product_path(product))
 
         # Make sure product is stored in the correct location
-        new_archive_path = self._relocate(product, properties)
-        if new_archive_path:
-            properties.core.archive_path = new_archive_path
+        if not use_current_path:
+            new_archive_path = self._relocate(product, properties)
+            if new_archive_path:
+                properties.core.archive_path = new_archive_path
 
         # Update product properties.
         self.update_properties(properties, uuid=product.core.uuid, create_namespaces=True)

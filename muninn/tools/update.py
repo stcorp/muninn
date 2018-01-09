@@ -35,7 +35,7 @@ def update(args):
             products = [(product.core.uuid, product.core.product_name) for product in archive.search(expression)]
             for uuid, product_name in products:
                 logger.debug('running update:ingest on %s ' % product_name)
-                archive.rebuild_properties(uuid, disable_hooks=args.disable_hooks)
+                archive.rebuild_properties(uuid, disable_hooks=args.disable_hooks, use_current_path=args.keep)
         logger.debug('update:ingest was run on %d product(s)' % len(products))
 
     elif args.action == 'post_ingest':
@@ -61,7 +61,7 @@ def update(args):
             products = [(product.core.uuid, product.core.product_name) for product in archive.search(expression)]
             for uuid, product_name in products:
                 logger.debug('running update:pull on %s ' % product_name)
-                archive.rebuild_pull_properties(uuid, verify_hash=args.verify_hash, disable_hooks=args.disable_hooks)
+                archive.rebuild_pull_properties(uuid, verify_hash=args.verify_hash, disable_hooks=args.disable_hooks, use_current_path=args.keep)
         logger.debug('update:pull was run on %d product(s)' % len(products))
 
     elif args.action == 'post_pull':
@@ -94,6 +94,9 @@ def main():
                         help="white space separated list of namespaces to make available for `post_ingest`")
     parser.add_argument("--verify-hash", action="store_true",
                         help="verify the hash of the product after a `pull` update")
+    parser.add_argument("-k", "--keep", action="store_true",
+                        help="do not attempt to relocate the product to the location specified in the "
+                             "product type plug-in (useful for read-only archives)")
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
     parser.add_argument("expression", metavar="EXPRESSION", default="", help="expression to select products")
     return parse_args_and_run(parser, update)
