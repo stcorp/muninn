@@ -150,15 +150,15 @@ class Archive(object):
 
     def namespaces(self):
         """Return a list of supported namespaces."""
-        return self._namespace_schemas.keys()
+        return list(self._namespace_schemas.keys())
 
     def product_types(self):
         """Return a list of supported product types."""
-        return self._product_type_plugins.keys()
+        return list(self._product_type_plugins.keys())
 
     def remote_backends(self):
         """Return a list of supported remote_backends."""
-        return self._remote_backend_plugins.keys()
+        return list(self._remote_backend_plugins.keys())
 
     def export_formats(self):
         """Return a list of supported alternative export formats."""
