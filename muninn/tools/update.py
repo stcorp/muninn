@@ -32,21 +32,20 @@ def update(args):
 
     if args.action == 'ingest':
         with muninn.open(args.archive) as archive:
-            products = [(product.core.uuid, product.core.product_name) for product in archive.search(expression)]
-            for uuid, product_name in products:
-                logger.debug('running update:ingest on %s ' % product_name)
-                archive.rebuild_properties(uuid, disable_hooks=args.disable_hooks, use_current_path=args.keep)
+            products = archive.search(expression)
+            for product in products:
+                logger.debug('running update:ingest on %s ' % product.core.product_name)
+                archive.rebuild_properties(product.core.uuid, disable_hooks=args.disable_hooks, use_current_path=args.keep)
         logger.debug('update:ingest was run on %d product(s)' % len(products))
 
     elif args.action == 'post_ingest':
         with muninn.open(args.archive) as archive:
-            products = [(product.core.uuid, product.core.product_type) for product in archive.search(expression, namespaces=namespaces)]
+            products = archive.search(expression, namespaces=namespaces)
             count = 0
-            for uuid, product_type in products:
-                plugin = archive.product_type_plugin(product_type)
+            for product in products:
+                plugin = archive.product_type_plugin(product.core.product_type)
                 if hasattr(plugin, "post_ingest_hook"):
                     count += 1
-                    product = archive._get_product(uuid)
                     logger.debug('running update:post_ingest on %s ' % product.core.product_name)
                     plugin.post_ingest_hook(archive, product)
         logger.debug('update:post_ingest was run on %d product(s)' % count)
@@ -58,21 +57,20 @@ def update(args):
         else:
             expression = "is_defined(remote_url)"
         with muninn.open(args.archive) as archive:
-            products = [(product.core.uuid, product.core.product_name) for product in archive.search(expression)]
-            for uuid, product_name in products:
-                logger.debug('running update:pull on %s ' % product_name)
-                archive.rebuild_pull_properties(uuid, verify_hash=args.verify_hash, disable_hooks=args.disable_hooks, use_current_path=args.keep)
+            products = archive.search(expression)
+            for product in products:
+                logger.debug('running update:pull on %s ' % product.core.product_name)
+                archive.rebuild_pull_properties(product.core.uuid, verify_hash=args.verify_hash, disable_hooks=args.disable_hooks, use_current_path=args.keep)
         logger.debug('update:pull was run on %d product(s)' % len(products))
 
     elif args.action == 'post_pull':
         with muninn.open(args.archive) as archive:
-            products = [(product.core.uuid, product.core.product_type) for product in archive.search(expression)]
+            products = archive.search(expression)
             count = 0
-            for uuid, product_type in products:
-                plugin = archive.product_type_plugin(product_type)
+            for product in products:
+                plugin = archive.product_type_plugin(product.core.product_type)
                 if hasattr(plugin, "post_pull_hook"):
                     count += 1
-                    product = archive._get_product(uuid)
                     logger.debug('running update:post_pull on %s ' % product.core.product_name)
                     plugin.post_pull_hook(archive, product)
         logger.debug('update:post_pull was run on %d product(s)' % count)
