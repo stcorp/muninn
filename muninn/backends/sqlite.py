@@ -769,7 +769,7 @@ class SQLiteBackend(object):
                     schema = self._namespace_schema(namespace)
                     for name in schema:
                         if self._type_map()[schema[name]] == "GEOMETRY":
-                            cursor.execute("SELECT DiscardGeometryColumn('%s', '%s')" % (self._core_table_name, name))
+                            cursor.execute("SELECT DiscardGeometryColumn('%s', '%s')" % (self._table_name(namespace), name))
                 # then remove the tables
                 cursor.execute("DROP TABLE IF EXISTS %s" % self._tag_table_name)
                 cursor.execute("DROP TABLE IF EXISTS %s" % self._link_table_name)
