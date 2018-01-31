@@ -360,10 +360,12 @@ class SQLBuilder(object):
         select_list = []
         select_list.append("COUNT(*) AS count")
         select_list.append("SUM(%s) AS size" % self._column_name("core", "size"))
-        select_list.append("MIN(%s) AS validity_start" % self._column_name("core", "validity_start"))
-        select_list.append("MAX(%s) AS validity_stop" % self._column_name("core", "validity_stop"))
-        select_list.append("SUM(%s - %s) AS duration" % (self._column_name("core", "validity_stop"),
-                                                         self._column_name("core", "validity_start")))
+        start_column = self._column_name("core", "validity_start")
+        stop_colum = self._column_name("core", "validity_stop")
+        select_list.append("MIN(%s) AS validity_start" % start_column)
+        select_list.append("MAX(%s) AS validity_stop" % stop_colum)
+        duration = self._rewriter_table[Prototype("-", (Timestamp, Timestamp), Real)](stop_colum, start_column)
+        select_list.append("SUM(%s) AS duration" % duration)
         select_clause = "SELECT %s" % ", ".join(select_list)
 
         # Generate the FROM clause.

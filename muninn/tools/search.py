@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, print_function
 
 import argparse
 import logging
+from datetime import timedelta
 
 import muninn
 try:
@@ -134,6 +135,17 @@ def human_readable_size(size, base=1024, powers=["", "K", "M", "G", "T", "E"]):
     return result + powers[power]
 
 
+def format_duration(duration):
+    if duration is None:
+        return "<unknown>"
+
+    try:
+        duration = timedelta(seconds=round(duration))
+    except OverflowError:
+        return "<overflow>"
+    return str(duration)
+
+
 def format_size(size, human_readable=False):
     if size is None:
         return "<unknown>"
@@ -165,7 +177,7 @@ def summary(args):
         print("size:          ", format_size(summary.size, args.human_readable))
     print("validity start:", format_attribute(summary.validity_start))
     print("validity stop: ", format_attribute(summary.validity_stop))
-    print("duration:      ", format_attribute(summary.duration))
+    print("duration:      ", format_duration(summary.duration))
     return 0
 
 
