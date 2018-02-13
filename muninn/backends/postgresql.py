@@ -475,15 +475,19 @@ class PostgresqlBackend(object):
             cursor.close()
 
     def _tag(self, uuid, tags):
-        query = "INSERT INTO %s (uuid, tag) VALUES (%s, %s)" % (self._tag_table_name, self._placeholder(),
+        query = "INSERT INTO %s (uuid, tag) SELECT %s, %s" % (self._tag_table_name, self._placeholder(),
                                                                 self._placeholder())
+        query += " WHERE NOT EXISTS (SELECT 1 FROM %s WHERE uuid=%s and tag=%s)" % (self._tag_table_name,
+                                                                                    self._placeholder(),
+                                                                                    self._placeholder())
         for tag in tags:
             with self._connection:
                 cursor = self._connection.cursor()
                 try:
-                    cursor.execute(query, (uuid, tag))
+                    cursor.execute(query, (uuid, tag, uuid, tag))
                 except psycopg2.Error as _error:
-                    # If the tag already exists, swallow the exception.
+                    # There is still a small chance due to concurrency that the tag already exists.
+                    # For those cases we swallow the exception.
                     if _error.pgcode != psycopg2.errorcodes.UNIQUE_VIOLATION:
                         raise
                 finally:
@@ -516,16 +520,20 @@ class PostgresqlBackend(object):
             cursor.close()
 
     def _link(self, uuid, source_uuids):
-        query = "INSERT INTO %s (uuid, source_uuid) VALUES (%s, %s)" % (self._link_table_name, self._placeholder(),
+        query = "INSERT INTO %s (uuid, source_uuid) SELECT %s, %s" % (self._link_table_name, self._placeholder(),
                                                                         self._placeholder())
 
+        query += " WHERE NOT EXISTS (SELECT 1 FROM %s WHERE uuid=%s and source_uuid=%s)" % (self._link_table_name,
+                                                                                            self._placeholder(),
+                                                                                            self._placeholder())
         for source_uuid in source_uuids:
             with self._connection:
                 cursor = self._connection.cursor()
                 try:
-                    cursor.execute(query, (uuid, source_uuid))
+                    cursor.execute(query, (uuid, source_uuid, uuid, source_uuid))
                 except psycopg2.Error as _error:
-                    # If the tag already exists, swallow the exception.
+                    # There is still a small chance due to concurrency that the link already exists.
+                    # For those cases we swallow the exception.
                     if _error.pgcode != psycopg2.errorcodes.UNIQUE_VIOLATION:
                         raise
                 finally:
