@@ -6,6 +6,12 @@ from __future__ import absolute_import, division, print_function
 
 import logging
 
+try:
+    from tqdm import tqdm as bar
+except:
+    def bar(range):
+        return range
+
 import muninn
 
 from .utils import create_parser, parse_args_and_run
@@ -33,7 +39,7 @@ def update(args):
     if args.action == 'ingest':
         with muninn.open(args.archive) as archive:
             products = archive.search(expression)
-            for product in products:
+            for product in bar(products):
                 logger.debug('running update:ingest on %s ' % product.core.product_name)
                 archive.rebuild_properties(product.core.uuid, disable_hooks=args.disable_hooks, use_current_path=args.keep)
         logger.debug('update:ingest was run on %d product(s)' % len(products))
@@ -42,7 +48,7 @@ def update(args):
         with muninn.open(args.archive) as archive:
             products = archive.search(expression, namespaces=namespaces)
             count = 0
-            for product in products:
+            for product in bar(products):
                 plugin = archive.product_type_plugin(product.core.product_type)
                 if hasattr(plugin, "post_ingest_hook"):
                     count += 1
@@ -58,7 +64,7 @@ def update(args):
             expression = "is_defined(remote_url)"
         with muninn.open(args.archive) as archive:
             products = archive.search(expression)
-            for product in products:
+            for product in bar(products):
                 logger.debug('running update:pull on %s ' % product.core.product_name)
                 archive.rebuild_pull_properties(product.core.uuid, verify_hash=args.verify_hash, disable_hooks=args.disable_hooks, use_current_path=args.keep)
         logger.debug('update:pull was run on %d product(s)' % len(products))
@@ -67,7 +73,7 @@ def update(args):
         with muninn.open(args.archive) as archive:
             products = archive.search(expression)
             count = 0
-            for product in products:
+            for product in bar(products):
                 plugin = archive.product_type_plugin(product.core.product_type)
                 if hasattr(plugin, "post_pull_hook"):
                     count += 1

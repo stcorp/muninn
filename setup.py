@@ -52,3 +52,5 @@ setup(
 # For muninn-pull using http requests you will need 'requests' 2.13.0 or higher
 
 # To get more output formatting options for muninn-search install 'tabulate'
+
+# To see progress bars for muninn-update install 'tqdm'
