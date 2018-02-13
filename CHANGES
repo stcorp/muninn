@@ -2,6 +2,8 @@
 
 * Improved formatting of duration in muninn-search summary output.
 
+* Add optional progress bars to muninn-update (requires 'tqdm' package).
+
 4.1 2017-11-16
 ~~~~~~~~~~~~~~
 
