@@ -256,16 +256,16 @@ class SQLiteBackend(object):
 
     @translate_sqlite_errors
     def prepare(self, dry_run=False):
-        result = []
-        dbexists = os.path.isfile(self._connection_string)
-        # If the db did not exist before, then the table creation was already done when the db was created
-        if dbexists:
-            sqls = self._create_tables_sql()
-            if not dry_run:
+        sqls = self._create_tables_sql()
+        if not dry_run:
+            dbexists = os.path.isfile(self._connection_string)
+            # If the db did not exist before, then the table creation was already done when the db was created
+            if dbexists:
                 with self._connection:
                     self._execute_list(sqls)
-            result = sqls
-        return result
+            else:
+                sqls = []
+        return sqls
 
     def exists(self):
         if not os.path.isfile(self._connection_string):
