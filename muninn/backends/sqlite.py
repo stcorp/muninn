@@ -595,7 +595,7 @@ class SQLiteBackend(object):
                                       force_available=False):
         core_properties = list(self._namespace_schema("core"))
         select_list = ["%s.%s" % (self._core_table_name, name) for name in core_properties]
-        query = "SELECT %s FROM %s WHERE %s.active AND datetime(\"now\") - %s.archive_date > %s AND NOT " \
+        query = "SELECT %s FROM %s WHERE %s.active AND strftime('%%s', 'now') - strftime('%%s', %s.archive_date) > %s AND NOT " \
                 "EXISTS (SELECT 1 FROM %s WHERE %s.uuid = %s.uuid)" % (", ".join(select_list),
                                                                        self._core_table_name, self._core_table_name,
                                                                        self._core_table_name, self._placeholder(),
@@ -607,6 +607,8 @@ class SQLiteBackend(object):
 
         if force_available:
             query = "%s AND archive_path IS NOT NULL" % query
+
+        grace_period = grace_period.total_seconds()
 
         cursor = self._connection.cursor()
         try:
@@ -621,7 +623,7 @@ class SQLiteBackend(object):
         core_properties = list(self._namespace_schema("core"))
         select_list = ["%s.%s" % (self._core_table_name, name) for name in core_properties]
 
-        query = "SELECT %s FROM %s WHERE active AND datetime(\"now\") - archive_date > %s AND uuid IN (SELECT " \
+        query = "SELECT %s FROM %s WHERE active AND strftime('%%s', 'now') - strftime('%%s', archive_date) > %s AND uuid IN (SELECT " \
                 "uuid FROM %s EXCEPT SELECT DISTINCT link.uuid FROM %s AS link LEFT JOIN %s AS source ON " \
                 "(link.source_uuid = source.uuid) WHERE source.uuid IS NULL OR source.archive_path IS NOT NULL)" % \
                 (", ".join(select_list), self._core_table_name, self._placeholder(), self._link_table_name,
@@ -629,6 +631,8 @@ class SQLiteBackend(object):
 
         if product_type is not None:
             query = "%s AND product_type = %s" % (query, self._placeholder())
+
+        grace_period = grace_period.total_seconds()
 
         cursor = self._connection.cursor()
         try:
