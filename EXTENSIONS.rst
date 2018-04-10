@@ -301,7 +301,8 @@ Methods
 ``export_<format name>(self, archive, product, target_path)``
     Methods starting with ``export_`` can be used to implement product type
     specific export functionality. For example, a method ``export_tgz`` could
-    be implemented that exports a product as a gzipped tarball.
+    be implemented that exports a product as a gzipped tarball. The return
+    value is the path of the exported product.
 
     These methods can use the archive instance passed in to, for example,
     locate associated products to be included in the exported product.

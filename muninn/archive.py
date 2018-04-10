@@ -654,7 +654,7 @@ class Archive(object):
         return count
 
     def export(self, where="", parameters={}, target_path=os.path.curdir, format=None):
-        """Export one or more products from the archive. Return the number of products exported.
+        """Export one or more products from the archive. Return the list of file paths of the exported products.
 
         By default, a copy of the original product will be retrieved from the archive. This default behavior can be
         customized by the product type plug-in. For example, the custom implementation for a certain product type might
@@ -673,6 +673,7 @@ class Archive(object):
                 raise Error("invalid export format '%s'" % format)
             export_method_name = export_method_name + "_" + format
 
+        result = []
         products = self.search(where=where, parameters=parameters)
         for product in products:
             if not product.core.active:
@@ -688,15 +689,16 @@ class Archive(object):
 
             export_method = getattr(plugin, export_method_name, None)
             if export_method is not None:
-                export_method(self, product, target_path)
+                exported_path = export_method(self, product, target_path)
             elif format is not None:
                 raise Error("export format '%s' not supported for product '%s' (%s)" % (format,
                                                                                         product.core.product_name,
                                                                                         product.core.uuid))
             else:
-                self._retrieve(product, target_path, False)
+                exported_path = self._retrieve(product, target_path, False)
+            result.append(exported_path)
 
-        return len(products)
+        return result
 
     def export_by_uuid(self, uuid, target_path=os.path.curdir, format=None):
         """Export a product from the archive by uuid.
@@ -708,13 +710,13 @@ class Archive(object):
         An exception will be raised if no product with the specified uuid can be found.
 
         """
-        count = self.export("uuid == @uuid", {"uuid": uuid}, target_path, format)
-        assert(count <= 1)
+        paths = self.export("uuid == @uuid", {"uuid": uuid}, target_path, format)
+        assert(len(paths) <= 1)
 
-        if count == 0:
+        if not paths:
             raise Error("product with uuid '%s' not found" % uuid)
 
-        return count
+        return paths
 
     def export_by_name(self, product_name, target_path=os.path.curdir, format=None):
         """Export one or more products from the archive by name.
@@ -729,13 +731,13 @@ class Archive(object):
         An exception will be raised if no products with the specified name can be found.
 
         """
-        count = self.export("product_name == @product_name", {"product_name": product_name}, target_path, format)
-        assert(count >= 0)
+        paths = self.export("product_name == @product_name", {"product_name": product_name}, target_path, format)
+        assert(len(paths) >= 0)
 
-        if count == 0:
+        if not paths:
             raise Error("no products found with name '%s'" % product_name)
 
-        return count
+        return paths
 
     def remove(self, where="", parameters={}, force=False):
         """Remove one or more products from the archive, both from disk as well as from the product catalogue. Return
@@ -1240,6 +1242,9 @@ class Archive(object):
         except EnvironmentError as _error:
             raise Error("unable to retrieve product '%s' (%s) [%s]" % (product.core.product_name, product.core.uuid,
                                                                        _error))
+
+        return os.path.join(target_path, os.path.basename(product_path))
+
 
     def _strip(self, product):
         # Set the archive path to None to indicate the product has no data on disk associated with it.
