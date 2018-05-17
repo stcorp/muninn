@@ -140,13 +140,14 @@ class SQLiteConnection(object):
 
     def __exit__(self, type, value, traceback):
         # End a transaction, either by committing the transaction, or by rolling back in case an exception occured.
-        if type is None:
-            self._connection.commit()
-        else:
-            self._connection.rollback()
-
-        self._in_transaction = False
-        self.close()
+        try:
+            if type is None:
+                self._connection.commit()
+            else:
+                self._connection.rollback()
+        finally:
+            self._in_transaction = False
+            self.close()
 
     def _connect(self):
         # Re-establish the connection to the database.
