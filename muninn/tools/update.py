@@ -42,7 +42,6 @@ class Processor(object):
             if self.archive is None:
                 self.archive = muninn.open(self.archive_name)
 
-            """Do something with the cursor and data"""
             if self.action == 'ingest':
                 logger.debug('running update:ingest on %s ' % product.core.product_name)
                 self.archive.rebuild_properties(product.core.uuid, disable_hooks=self.disable_hooks,
@@ -65,6 +64,7 @@ class Processor(object):
                 if hasattr(plugin, "post_pull_hook"):
                     logger.debug('running update:post_pull on %s ' % product.core.product_name)
                     plugin.post_pull_hook(archive, product)
+
         except KeyboardInterrupt:
             # don't capture keyboard interrupts inside sub-processes (only the main process should handle it)
             if not self.ignore_keyboard_interrupt:
