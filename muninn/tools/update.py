@@ -5,6 +5,7 @@
 from __future__ import absolute_import, division, print_function
 
 import logging
+import multiprocessing
 
 try:
     from tqdm import tqdm as bar
@@ -25,6 +26,50 @@ ACTIONS = [
     'post_pull',
 ]
 
+class Processor(object):
+
+    def __init__(self, args, archive=None):
+        self.archive_name = args.archive
+        self.action = args.action
+        self.disable_hooks = args.disable_hooks
+        self.use_current_path = args.keep
+        self.verify_hash = args.verify_hash
+        self.archive = archive
+        self.ignore_keyboard_interrupt = archive is None  # archive is None -> we are using multiprocessing
+
+    def __call__(self, product):
+        try:
+            if self.archive is None:
+                self.archive = muninn.open(self.archive_name)
+
+            """Do something with the cursor and data"""
+            if self.action == 'ingest':
+                logger.debug('running update:ingest on %s ' % product.core.product_name)
+                self.archive.rebuild_properties(product.core.uuid, disable_hooks=self.disable_hooks,
+                                                use_current_path=self.use_current_path)
+
+            elif self.action == 'post_ingest':
+                plugin = self.archive.product_type_plugin(product.core.product_type)
+                if hasattr(plugin, "post_ingest_hook"):
+                    logger.debug('running update:post_ingest on %s ' % product.core.product_name)
+                    plugin.post_ingest_hook(archive, product)
+
+            elif self.action == 'pull':
+                logger.debug('running update:pull on %s ' % product.core.product_name)
+                self.archive.rebuild_pull_properties(product.core.uuid, verify_hash=self.verify_hash,
+                                                     disable_hooks=self.disable_hooks,
+                                                     use_current_path=self.use_current_path)
+
+            elif self.action == 'post_pull':
+                plugin = self.archive.product_type_plugin(product.core.product_type)
+                if hasattr(plugin, "post_pull_hook"):
+                    logger.debug('running update:post_pull on %s ' % product.core.product_name)
+                    plugin.post_pull_hook(archive, product)
+        except KeyboardInterrupt:
+            # don't capture keyboard interrupts inside sub-processes (only the main process should handle it)
+            if not self.ignore_keyboard_interrupt:
+                raise
+
 
 def update(args):
     expression = "is_defined(core.archive_path)"
@@ -36,53 +81,25 @@ def update(args):
         for namespace in args.namespaces:
             namespaces += namespace.split(' ')
 
-    if args.action == 'ingest':
-        with muninn.open(args.archive) as archive:
-            products = archive.search(expression)
-            for product in bar(products):
-                logger.debug('running update:ingest on %s ' % product.core.product_name)
-                archive.rebuild_properties(product.core.uuid, disable_hooks=args.disable_hooks, use_current_path=args.keep)
-        logger.debug('update:ingest was run on %d product(s)' % len(products))
-
-    elif args.action == 'post_ingest':
-        with muninn.open(args.archive) as archive:
-            products = archive.search(expression, namespaces=namespaces)
-            count = 0
-            for product in bar(products):
-                plugin = archive.product_type_plugin(product.core.product_type)
-                if hasattr(plugin, "post_ingest_hook"):
-                    count += 1
-                    logger.debug('running update:post_ingest on %s ' % product.core.product_name)
-                    plugin.post_ingest_hook(archive, product)
-        logger.debug('update:post_ingest was run on %d product(s)' % count)
-
-    elif args.action == 'pull':
+    if args.action == 'pull':
         # only get products with a remote_url
         if expression:
             expression = "is_defined(remote_url) and (%s)" % expression
         else:
             expression = "is_defined(remote_url)"
-        with muninn.open(args.archive) as archive:
-            products = archive.search(expression)
-            for product in bar(products):
-                logger.debug('running update:pull on %s ' % product.core.product_name)
-                archive.rebuild_pull_properties(product.core.uuid, verify_hash=args.verify_hash, disable_hooks=args.disable_hooks, use_current_path=args.keep)
-        logger.debug('update:pull was run on %d product(s)' % len(products))
 
-    elif args.action == 'post_pull':
-        with muninn.open(args.archive) as archive:
-            products = archive.search(expression)
-            count = 0
+    with muninn.open(args.archive) as archive:
+        products = archive.search(expression)
+        if args.parallel:
+            update_func = Processor(args)
+            pool = multiprocessing.Pool()
+            list(bar(pool.imap(Processor(args), products), total=len(products)))
+            pool.close()
+            pool.join()
+        else:
+            update_func = Processor(args, archive)
             for product in bar(products):
-                plugin = archive.product_type_plugin(product.core.product_type)
-                if hasattr(plugin, "post_pull_hook"):
-                    count += 1
-                    logger.debug('running update:post_pull on %s ' % product.core.product_name)
-                    plugin.post_pull_hook(archive, product)
-        logger.debug('update:post_pull was run on %d product(s)' % count)
-
-    else:
-        return 1
+                update_func(product)
 
     return 0
 
@@ -96,6 +113,8 @@ def main():
                         help="do not run the hooks associated with the action")
     parser.add_argument("--namespaces", action="append",
                         help="white space separated list of namespaces to make available for `post_ingest`")
+    parser.add_argument("--parallel", action="store_true",
+                        help="use multi-processing to perform update")
     parser.add_argument("--verify-hash", action="store_true",
                         help="verify the hash of the product after a `pull` update")
     parser.add_argument("-k", "--keep", action="store_true",

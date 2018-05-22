@@ -4,6 +4,8 @@
 
 * Add optional progress bars to muninn-update (requires 'tqdm' package).
 
+* Add --parallel option to muninn-update to use multiprocessing.
+
 * export() now returns the list of paths of the exported products. The 
   `export_` functions in the product type plugins must return the path of the
   exported product.
