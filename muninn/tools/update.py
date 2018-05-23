@@ -91,7 +91,6 @@ def update(args):
     with muninn.open(args.archive) as archive:
         products = archive.search(expression)
         if args.parallel:
-            update_func = Processor(args)
             pool = multiprocessing.Pool()
             list(bar(pool.imap(Processor(args), products), total=len(products)))
             pool.close()
