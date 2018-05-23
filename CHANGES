@@ -2,13 +2,19 @@
 
 * Improved formatting of duration in muninn-search summary output.
 
-* Add optional progress bars to muninn-update (requires 'tqdm' package).
+* Added optional progress bars to muninn-update (requires 'tqdm' package).
 
-* Add --parallel option to muninn-update to use multiprocessing.
+* Added --parallel and --keep options to muninn-update.
 
-* export() now returns the list of paths of the exported products. The 
+* Archive.export() now returns the list of paths of the exported products. The
   `export_` functions in the product type plugins must return the path of the
   exported product.
+
+* Fixed issue where the database connection was not properly cleaned up when
+  an error was raised during a database commit/rollback.
+
+* Fixed issue where muninn-prepare --dryrun would not produce output for
+  sqlite if the database file did not exist yet.
 
 4.1 2017-11-16
 ~~~~~~~~~~~~~~
