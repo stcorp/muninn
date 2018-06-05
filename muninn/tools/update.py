@@ -51,7 +51,7 @@ class Processor(object):
                 plugin = self.archive.product_type_plugin(product.core.product_type)
                 if hasattr(plugin, "post_ingest_hook"):
                     logger.debug('running update:post_ingest on %s ' % product.core.product_name)
-                    plugin.post_ingest_hook(archive, product)
+                    plugin.post_ingest_hook(self.archive, product)
 
             elif self.action == 'pull':
                 logger.debug('running update:pull on %s ' % product.core.product_name)
@@ -63,7 +63,7 @@ class Processor(object):
                 plugin = self.archive.product_type_plugin(product.core.product_type)
                 if hasattr(plugin, "post_pull_hook"):
                     logger.debug('running update:post_pull on %s ' % product.core.product_name)
-                    plugin.post_pull_hook(archive, product)
+                    plugin.post_pull_hook(self.archive, product)
 
         except KeyboardInterrupt:
             # don't capture keyboard interrupts inside sub-processes (only the main process should handle it)
