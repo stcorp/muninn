@@ -184,10 +184,6 @@ Attributes
     operation, it is useful to set this attribute to False if storing a hash
     is not required.
 
-``is_auxiliary_product``
-    Should be set to ``True`` if products of the type the plug-in is designed
-    to handle can be considered to be auxiliary, ``False`` otherwise.
-
 ``cascade_rule``
     Determines what should happen to products of the type the plug-in is
     designed to handle when all products linked to these products (as source
