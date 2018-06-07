@@ -204,6 +204,17 @@ class Archive(object):
         if product_type in self._product_type_plugins:
             raise Error("redefinition of product type: \"%s\"" % product_type)
 
+        # Quick verify of the plugin interface
+        for attr in ['use_enclosing_directory', 'use_hash']:
+            if not hasattr(plugin, attr):
+                raise Error("missing '%s' attribute in plugin for product type \"%s\"" % (attr, product_type))
+        methods = ['identify', 'analyze', 'archive_path']
+        if plugin.use_enclosing_directory:
+            methods += ['enclosing_directory']
+        for method in methods:
+            if not hasattr(plugin, method):
+                raise Error("missing '%s' method in plugin for product type \"%s\"" % (method, product_type))
+
         self._product_type_plugins[product_type] = plugin
         self._update_export_formats(plugin)
 
