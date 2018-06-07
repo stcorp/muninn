@@ -165,9 +165,6 @@ considered a bug.
 
 Attributes
 ----------
-``product_type``
-    Product type this plug-in is designed to handle.
-
 ``use_enclosing_directory``
     This variable should equal True if products of the type the plug-in is
     designed to handle consist of multiple files, False otherwise.
