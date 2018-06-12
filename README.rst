@@ -38,6 +38,7 @@ Optional dependencies:
   - argparse: mandatory when using Python 2.6
   - requests: to perform a muninn-pull on http/https urls
   - tabulate: provides more output format options for muninn-search
+  - tqdm: to show a progress bar for muninn-update
 
 
 Muninn is distributed as a source distribution created using setuptools version
@@ -47,12 +48,12 @@ in most cases.
 
 Using pip: ::
 
-  $ pip install muninn-4.1.tar.gz
+  $ pip install muninn-4.2.tar.gz
 
 Using setup.py: ::
 
-  $ tar xvfz muninn-4.1.tar.gz
-  $ cd muninn-4.1
+  $ tar xvfz muninn-4.2.tar.gz
+  $ cd muninn-4.2
   $ python setup.py install
 
 The muninn distribution contains a generic archiving framework that cannot be

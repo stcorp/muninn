@@ -1,3 +1,6 @@
+4.2 2018-06-12
+~~~~~~~~~~~~~~
+
 * Added -f/--force option to muninn-ingest.
 
 * Improved formatting of duration in muninn-search summary output.
@@ -5,6 +8,8 @@
 * Added optional progress bars to muninn-update (requires 'tqdm' package).
 
 * Added --parallel and --keep options to muninn-update.
+
+* Several fixes for muninn-search --paths.
 
 * Archive.export() now returns the list of paths of the exported products. The
   `export_` functions in the product type plugins must return the path of the
@@ -15,6 +20,17 @@
 
 * Fixed issue where muninn-prepare --dryrun would not produce output for
   sqlite if the database file did not exist yet.
+
+* Fixed issue where 'active' state was not always reset when a muninn-pull
+  failed.
+
+* Improve handling of creating tags/links that already exist
+  (postgresql will now only raise an exception for contention cases).
+
+* Added check on startup to verify that all mandatory attributes/methods are
+  available for each product type plugin.
+
+* Several smaller fixes (including Python3 compatibility).
 
 4.1 2017-11-16
 ~~~~~~~~~~~~~~
