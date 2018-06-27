@@ -89,7 +89,7 @@ def update(args):
             expression = "is_defined(remote_url)"
 
     with muninn.open(args.archive) as archive:
-        products = archive.search(expression)
+        products = archive.search(expression, namespaces=namespaces)
         if args.parallel:
             pool = multiprocessing.Pool()
             list(bar(pool.imap(Processor(args), products), total=len(products)))
@@ -111,7 +111,7 @@ def main():
     parser.add_argument("--disable-hooks", action="store_true",
                         help="do not run the hooks associated with the action")
     parser.add_argument("--namespaces", action="append",
-                        help="white space separated list of namespaces to make available for `post_ingest`")
+                        help="white space separated list of namespaces to make available")
     parser.add_argument("--parallel", action="store_true",
                         help="use multi-processing to perform update")
     parser.add_argument("--verify-hash", action="store_true",
