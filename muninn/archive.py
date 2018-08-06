@@ -1300,9 +1300,11 @@ class Archive(object):
                                                                      _error))
 
     def _establish_invariants(self):
-        done, cycle = False, 0
-        while not done and cycle < self._max_cascade_cycles:
-            done, cycle = True, cycle + 1
+        repeat = True
+        cycle = 0
+        while repeat and cycle < self._max_cascade_cycles:
+            repeat = False
+            cycle += 1
             for product_type in self.product_types():
                 plugin = self.product_type_plugin(product_type)
 
@@ -1312,7 +1314,8 @@ class Archive(object):
 
                 strip = cascade_rule in (CascadeRule.CASCADE_PURGE_AS_STRIP, CascadeRule.STRIP)
                 products = self._backend.find_products_without_source(product_type, self._cascade_grace_period, strip)
-                done = done and not products
+                if products:
+                    repeat = True
 
                 if strip:
                     for product in products:
@@ -1325,7 +1328,8 @@ class Archive(object):
                     continue
 
                 products = self._backend.find_products_without_available_source(product_type)
-                done = done and not products
+                if products:
+                    repeat = True
 
                 if cascade_rule in (CascadeRule.STRIP, CascadeRule.CASCADE):
                     for product in products:
