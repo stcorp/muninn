@@ -925,7 +925,10 @@ class Archive(object):
                         failure occured during ingestion, as well as products in the process of being ingested. Use this
                         option with care.
         """
-        products = self.search(where=where, parameters=parameters)
+        query = "is_defined(archive_path)"
+        if where:
+            query += " and (" + where + ")"
+        products = self.search(where=query, parameters=parameters)
         for product in products:
             if not product.core.active and not force:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
