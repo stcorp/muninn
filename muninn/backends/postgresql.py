@@ -374,7 +374,7 @@ class PostgresqlBackend(object):
 
     @translate_psycopg_errors
     def find_products_without_source(self, product_type=None, grace_period=datetime.timedelta(),
-                                     force_available=False):
+                                     archived_only=False):
         """Return the core properties of all products that are not linked to any source products.
 
            Keyword arguments:
@@ -382,7 +382,7 @@ class PostgresqlBackend(object):
 
         """
         with self._connection:
-            return self._find_products_without_source(product_type, grace_period, force_available)
+            return self._find_products_without_source(product_type, grace_period, archived_only)
 
     @translate_psycopg_errors
     def find_products_without_available_source(self, product_type=None, grace_period=datetime.timedelta()):
@@ -578,7 +578,7 @@ class PostgresqlBackend(object):
             cursor.close()
 
     def _find_products_without_source(self, product_type=None, grace_period=datetime.timedelta(),
-                                      force_available=False):
+                                      archived_only=False):
         core_properties = list(self._namespace_schema("core"))
         select_list = ["%s.%s" % (self._core_table_name, name) for name in core_properties]
         query = "SELECT %s FROM %s WHERE %s.active AND now() AT TIME ZONE 'UTC' - %s.archive_date > %s AND NOT " \
@@ -591,7 +591,7 @@ class PostgresqlBackend(object):
         if product_type is not None:
             query = "%s AND product_type = %s" % (query, self._placeholder())
 
-        if force_available:
+        if archived_only:
             query = "%s AND archive_path IS NOT NULL" % query
 
         cursor = self._connection.cursor()
