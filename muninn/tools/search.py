@@ -162,25 +162,6 @@ def count(args):
     return 0
 
 
-def summary(args):
-    with muninn.open(args.archive) as archive:
-        summary = archive.summary0(args.expression)
-
-    if summary.count == 0:
-        print("no products found")
-        return 0
-
-    print("count:         ", summary.count)
-    if summary.size is None:
-        print("size:           N/A")
-    else:
-        print("size:          ", format_size(summary.size, args.human_readable))
-    print("validity start:", format_attribute(summary.validity_start))
-    print("validity stop: ", format_attribute(summary.validity_stop))
-    print("duration:      ", format_duration(summary.duration))
-    return 0
-
-
 def uuid(args):
     with muninn.open(args.archive) as archive:
         # Collect possibly multiple sort order specifier lists into a single list.
@@ -313,8 +294,6 @@ def order_by_list(text):
 def run(args):
     if args.count:
         return count(args)
-    elif args.summary:
-        return summary(args)
     elif args.uuid:
         return uuid(args)
     elif args.paths:
@@ -333,13 +312,9 @@ def main():
     parser.add_argument("-p", "--property", action="append", type=property_list, dest="properties",
                         help="white space separated list of properties to output; use `<namespace>.*` to include all "
                         "properties of a namespace, e.g. core.*; use `*` to include all namespaces")
-    parser.add_argument("-H", "--human-readable", action="store_true", help="output human readable size in product "
-                        "summary (see -s, --summary option)")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-c", "--count", action="store_true", help="supress normal output; instead print the "
                        "number of products matching the search expression")
-    group.add_argument("-s", "--summary", action="store_true", help="supress normal output; instead print a short "
-                       "summary of the products matching the search expression")
     group.add_argument("-u", "--uuid", action="store_true", help="supress normal output; instead print the uuid "
                        "of each product found")
     group.add_argument("--paths", action="store_true", help="supress normal output; instead print the physical "

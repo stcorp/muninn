@@ -583,16 +583,6 @@ class Archive(object):
         """
         return self._backend.search(where, order_by, limit, parameters, namespaces)
 
-    def summary0(self, where="", parameters={}):
-        """Return a summary of the products matching the specified search expression.
-
-        Keyword arguments:
-        where       --  Search expression.
-        parameters  --  Parameters referenced in the search expression (if any).
-
-        """
-        return self._backend.summary0(where, parameters)
-
     def summary(self, where="", parameters=None, aggregates=None, group_by=None, group_by_tag=False, order_by=None):
         """Return a summary of the products matching the specified search expression.
 

@@ -398,50 +398,6 @@ class SQLBuilder(object):
 
         return query, where_parameters
 
-    def build_summary0_query(self, where="", parameters={}):
-        # Namespaces that appear in the "where" expression are combined via inner joins. This ensures that only those
-        # products that actually have a defined value for a given attribute will be considered by the "where"
-        # expression. This also means that products that do not occur in all of the namespaces referred to in the
-        # "where" expression will be ignored.
-        #
-        inner_join_set = set()
-
-        # Parse the where clause.
-        where_clause, where_parameters = "", {}
-        if where:
-            ast = parse_and_analyze(where, self._namespace_schemas, parameters)
-            visitor = _WhereExpressionVisitor(self._rewriter_table, self._column_name, self._named_placeholder)
-            where_expr, where_parameters, where_namespaces = visitor.visit(ast)
-            if where_expr:
-                inner_join_set.update(where_namespaces)
-                where_clause = "WHERE %s" % where_expr
-
-        # Generate the SELECT clause.
-        select_list = []
-        select_list.append("COUNT(*) AS count")
-        select_list.append("SUM(%s) AS size" % self._column_name("core", "size"))
-        start_column = self._column_name("core", "validity_start")
-        stop_column = self._column_name("core", "validity_stop")
-        select_list.append("MIN(%s) AS validity_start" % start_column)
-        select_list.append("MAX(%s) AS validity_stop" % stop_column)
-        duration = self._rewriter_table[Prototype("-", (Timestamp, Timestamp), Real)](stop_column, start_column)
-        select_list.append("SUM(%s) AS duration" % duration)
-        select_clause = "SELECT %s" % ", ".join(select_list)
-
-        # Generate the FROM clause.
-        from_clause = "FROM %s" % self._table_name("core")
-
-        inner_join_set.discard("core")
-        for namespace in inner_join_set:
-            from_clause = "%s INNER JOIN %s USING (uuid)" % (from_clause, self._table_name(namespace))
-
-        # Generate the complete query.
-        query = "%s %s" % (select_clause, from_clause)
-        if where_clause:
-            query = "%s %s" % (query, where_clause)
-
-        return query, where_parameters
-
     def build_summary_query(self, where='', parameters=None, aggregates=None, group_by=None, group_by_tag=False, order_by=None):
         # Namespaces that appear in the "where" expression are combined via inner joins. This ensures that only those
         # products that actually have a defined value for a given attribute will be considered by the "where"

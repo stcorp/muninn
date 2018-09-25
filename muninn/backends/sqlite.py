@@ -374,23 +374,6 @@ class SQLiteBackend(object):
                 cursor.close()
 
     @translate_sqlite_errors
-    def summary0(self, where="", parameters={}):
-        query, query_parameters = self._sql_builder.build_summary0_query(where, parameters)
-
-        with self._connection:
-            cursor = self._connection.cursor()
-            try:
-                cursor.execute(query, query_parameters)
-                row = cursor.fetchone()
-
-                summary = Struct()
-                for index, value in enumerate(row):
-                    summary[cursor.description[index][0]] = value
-                return summary
-            finally:
-                cursor.close()
-
-    @translate_sqlite_errors
     def summary(self, where="", parameters=None, aggregates=None, group_by=None, group_by_tag=False, order_by=None):
         query, query_parameters, query_description = self._sql_builder.build_summary_query(
             where, parameters, aggregates, group_by, group_by_tag, order_by)
