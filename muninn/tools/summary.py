@@ -242,6 +242,6 @@ def main():
                         (AGGREGATE_FUNCTIONS, ' '.join(DEFAULT_STATS)))
     parser.add_argument("-H", "--human-readable", action="store_true", help="output human readable core.size")
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
-    parser.add_argument("expression", metavar="EXPRESSION", help="expression used to search for products")
+    parser.add_argument("expression", metavar="EXPRESSION", nargs='?', help="expression used to search for products")
 
     return parse_args_and_run(parser, run)
