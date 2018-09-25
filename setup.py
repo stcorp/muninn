@@ -36,6 +36,7 @@ setup(
         "muninn-retrieve = muninn.tools.retrieve:main",
         "muninn-search = muninn.tools.search:main",
         "muninn-strip = muninn.tools.strip:main",
+        "muninn-summary = muninn.tools.summary:main",
         "muninn-tag = muninn.tools.tag:main",
         "muninn-untag = muninn.tools.untag:main",
         "muninn-update = muninn.tools.update:main",

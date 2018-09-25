@@ -164,7 +164,7 @@ def count(args):
 
 def summary(args):
     with muninn.open(args.archive) as archive:
-        summary = archive.summary(args.expression)
+        summary = archive.summary0(args.expression)
 
     if summary.count == 0:
         print("no products found")

@@ -242,12 +242,12 @@ class SQLiteBackend(object):
 
         self._namespace_schemas = {}
         self._sql_builder = sql.SQLBuilder({}, sql.TypeMap(), {}, self._table_name, self._placeholder,
-                                           self._placeholder)
+                                           self._placeholder, self._rewriter_property)
 
     def initialize(self, namespace_schemas):
         self._namespace_schemas = namespace_schemas
         self._sql_builder = sql.SQLBuilder(self._namespace_schemas, self._type_map(), self._rewriter_table(),
-                                           self._table_name, self._placeholder, self._placeholder)
+                                           self._table_name, self._placeholder, self._placeholder, self._rewriter_property)
 
     @translate_sqlite_errors
     def disconnect(self):
@@ -374,8 +374,8 @@ class SQLiteBackend(object):
                 cursor.close()
 
     @translate_sqlite_errors
-    def summary(self, where="", parameters={}):
-        query, query_parameters = self._sql_builder.build_summary_query(where, parameters)
+    def summary0(self, where="", parameters={}):
+        query, query_parameters = self._sql_builder.build_summary0_query(where, parameters)
 
         with self._connection:
             cursor = self._connection.cursor()
@@ -387,6 +387,19 @@ class SQLiteBackend(object):
                 for index, value in enumerate(row):
                     summary[cursor.description[index][0]] = value
                 return summary
+            finally:
+                cursor.close()
+
+    @translate_sqlite_errors
+    def summary(self, where="", parameters=None, aggregates=None, group_by=None, group_by_tag=False, order_by=None):
+        query, query_parameters, query_description = self._sql_builder.build_summary_query(
+            where, parameters, aggregates, group_by, group_by_tag, order_by)
+
+        with self._connection:
+            cursor = self._connection.cursor()
+            try:
+                cursor.execute(query, query_parameters)
+                return [row for row in cursor], query_description
             finally:
                 cursor.close()
 
@@ -852,3 +865,18 @@ class SQLiteBackend(object):
             sql.as_is("datetime(\"now\")")
 
         return rewriter_table
+
+    def _rewriter_property(self, column_name, subscript):
+        # timestamp
+        if subscript == 'year':
+            return "STRFTIME('%%Y', %s)" % column_name
+        if subscript == 'month':
+            return "STRFTIME('%%m', %s)" % column_name
+        if subscript == 'yearmonth':
+            return "STRFTIME('%%Y-%%m', %s)" % column_name
+        if subscript == 'date':
+            return "STRFTIME('%%Y-%%m-%%d', %s)" % column_name
+        # text
+        if subscript == 'length':
+            return "LENGTH(%s)" % column_name
+        raise ValueError('Unsupported subscript: %s' % subscript)

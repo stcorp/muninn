@@ -221,6 +221,7 @@ These tools are:
   - muninn-retrieve
   - muninn-search
   - muninn-strip
+  - muninn-summary
   - muninn-tag
   - muninn-untag
 

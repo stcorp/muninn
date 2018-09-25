@@ -583,7 +583,7 @@ class Archive(object):
         """
         return self._backend.search(where, order_by, limit, parameters, namespaces)
 
-    def summary(self, where="", parameters={}):
+    def summary0(self, where="", parameters={}):
         """Return a summary of the products matching the specified search expression.
 
         Keyword arguments:
@@ -591,7 +591,25 @@ class Archive(object):
         parameters  --  Parameters referenced in the search expression (if any).
 
         """
-        return self._backend.summary(where, parameters)
+        return self._backend.summary0(where, parameters)
+
+    def summary(self, where="", parameters=None, aggregates=None, group_by=None, group_by_tag=False, order_by=None):
+        """Return a summary of the products matching the specified search expression.
+
+        Keyword arguments:
+        where         --  Search expression.
+        parameters    --  Parameters referenced in the search expression (if any).
+        aggregates    --  A list of property names + function subscript to aggregate.
+        group_by      --  A list of property names that determines the aggregation of the results.
+        group_by_tag  --  If set to True, tag values will be added to the group_by. Note that products will be counted
+                          multiple times if they have multiple tags.
+        order_by      --  A list of property names that determines the ordering of the results. If the list is empty, the
+                          order of the results in undetermined and can very between calls to this function. Each property
+                          name in this list can be provided with a '+' or '-' prefix, or without a prefix. A '+' prefix,
+                          or no predix denotes ascending sort order, a '-' prefix denotes decending sort order.
+
+        """
+        return self._backend.summary(where, parameters, aggregates, group_by, group_by_tag, order_by)
 
     def count(self, where="", parameters={}):
         """Return the number of products matching the specified search expression.

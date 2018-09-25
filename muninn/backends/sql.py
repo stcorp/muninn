@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, print_function
 
 import collections
 import inspect
+import re
 
 from muninn.exceptions import *
 from muninn.function import Prototype
@@ -13,6 +14,12 @@ from muninn.language import parse_and_analyze
 from muninn.schema import *
 from muninn.visitor import Visitor
 
+
+AGGREGATE_FUNCTIONS = ['sum', 'min', 'max', 'avg']
+GROUP_BY_FUNCTIONS = {
+    Timestamp: ['year', 'month', 'yearmonth', 'date'],
+    # Text: [None, 'length'],
+}
 
 class TypeMap(collections.MutableMapping):
     def __init__(self):
@@ -284,15 +291,68 @@ class _WhereExpressionVisitor(Visitor):
         raise Error("unsupported abstract syntax tree node type: %r" % type(visitable).__name__)
 
 
+class Identifier(object):
+
+    # @staticmethod
+    def __init__(self, canonical_identifier, namespace_schemas):
+        self.canonical_identifier = canonical_identifier
+        if canonical_identifier == 'tag':
+            # the rules to get the namespace database table name also apply to 'tag'
+            self.namespace = canonical_identifier
+            self.attribute = canonical_identifier
+            self.subscript = None
+            self.muninn_type = Text
+        elif canonical_identifier == 'count':
+            self.namespace = None
+            self.attribute = canonical_identifier
+            self.subscript = None
+            self.muninn_type = Long
+        elif not re.match(r'[\w]+\.[\w.]+', canonical_identifier):
+            raise Error("cannot resolve identifier: %r" % canonical_identifier)
+        else:
+            split = canonical_identifier.split('.')
+            if len(split) > 3:
+                raise Error("cannot resolve identifier: %r" % canonical_identifier)
+            namespace = split[0]
+            attribute = split[1]
+            subscript = split[2] if len(split) > 2 else None
+
+            # check if namespace is valid
+            if namespace not in namespace_schemas:
+                raise Error("undefined namespace: \"%s\"" % namespace)
+            # check if attribute is valid
+            if attribute not in namespace_schemas[namespace]:
+                if (namespace, attribute) != ('core', 'validity_duration'):
+                    raise Error("no attribute: %r defined within namespace: %r" % (attribute, namespace))
+            # note: not checking if subscript is valid; the list of possible subscripts varies depending on context
+
+            muninn_type = None
+            if (namespace, attribute) != ('core', 'validity_duration'):
+                muninn_type = namespace_schemas[namespace][attribute]
+
+            self.namespace = namespace
+            self.attribute = attribute
+            self.muninn_type = muninn_type
+            self.subscript = subscript
+
+    @property
+    def property(self):
+        return '%s.%s' % (self.namespace, self.attribute)
+
+    def __repr__(self):
+        return self.canonical_identifier
+
+
 class SQLBuilder(object):
     def __init__(self, namespace_schemas, type_map, rewriter_table, table_name_func, _named_placeholder_func,
-                 _placeholder_func):
+                 _placeholder_func, rewriter_property_func):
         self._namespace_schemas = namespace_schemas
         self._type_map = type_map
         self._rewriter_table = rewriter_table
         self._table_name = table_name_func
         self._named_placeholder = _named_placeholder_func
         self._placeholder = _placeholder_func
+        self._rewriter_property = rewriter_property_func
 
     def build_create_table_query(self, namespace):
         column_sql = []
@@ -338,7 +398,7 @@ class SQLBuilder(object):
 
         return query, where_parameters
 
-    def build_summary_query(self, where="", parameters={}):
+    def build_summary0_query(self, where="", parameters={}):
         # Namespaces that appear in the "where" expression are combined via inner joins. This ensures that only those
         # products that actually have a defined value for a given attribute will be considered by the "where"
         # expression. This also means that products that do not occur in all of the namespaces referred to in the
@@ -361,10 +421,10 @@ class SQLBuilder(object):
         select_list.append("COUNT(*) AS count")
         select_list.append("SUM(%s) AS size" % self._column_name("core", "size"))
         start_column = self._column_name("core", "validity_start")
-        stop_colum = self._column_name("core", "validity_stop")
+        stop_column = self._column_name("core", "validity_stop")
         select_list.append("MIN(%s) AS validity_start" % start_column)
-        select_list.append("MAX(%s) AS validity_stop" % stop_colum)
-        duration = self._rewriter_table[Prototype("-", (Timestamp, Timestamp), Real)](stop_colum, start_column)
+        select_list.append("MAX(%s) AS validity_stop" % stop_column)
+        duration = self._rewriter_table[Prototype("-", (Timestamp, Timestamp), Real)](stop_column, start_column)
         select_list.append("SUM(%s) AS duration" % duration)
         select_clause = "SELECT %s" % ", ".join(select_list)
 
@@ -381,6 +441,110 @@ class SQLBuilder(object):
             query = "%s %s" % (query, where_clause)
 
         return query, where_parameters
+
+    def build_summary_query(self, where='', parameters=None, aggregates=None, group_by=None, group_by_tag=False, order_by=None):
+        # Namespaces that appear in the "where" expression are combined via inner joins. This ensures that only those
+        # products that actually have a defined value for a given attribute will be considered by the "where"
+        # expression. This also means that products that do not occur in all of the namespaces referred to in the
+        # "where" expression will be ignored.
+        #
+        # Other namespaces are combined via (left) outer joins, with the core namespace as the leftmost namespace. This
+        # ensures that attributes will be returned of any product that occurs in zero or more of the requested
+        # namespaces.
+
+        aggregates = aggregates or []
+        if group_by_tag:
+            group_by = group_by + ['tag']
+        result_fields = group_by + ['count'] + aggregates
+        outer_join_set, inner_join_set = set(item.split('.')[0] for item in group_by), set()
+
+        # Parse the WHERE clause.
+        where_clause, where_parameters = '', {}
+        if where:
+            ast = parse_and_analyze(where, self._namespace_schemas, parameters)
+            visitor = _WhereExpressionVisitor(self._rewriter_table, self._column_name, self._named_placeholder)
+            where_expr, where_parameters, where_namespaces = visitor.visit(ast)
+            if where_expr:
+                inner_join_set.update(where_namespaces)
+                where_clause = 'WHERE %s' % where_expr
+
+        # Generate the GROUP BY clause.
+        group_by_clause = ''
+        group_by_list = [str(i) for i in range(1, len(group_by)+1)]
+        if group_by_list:
+            group_by_clause = 'GROUP BY %s' % ', '.join(group_by_list)
+
+        # Parse the ORDER BY clause.
+        order_by_clause = ''
+        order_by_list = []
+        for item in order_by:
+            direction = 'DESC' if item.startswith('-') else 'ASC'
+            name = item[1:] if item.startswith('+') or item.startswith('-') else item
+            Identifier(name, self._namespace_schemas)  # check if the identifier is valid
+            if name not in result_fields:
+                raise Error("cannot order result by %r; field is not present in result" % name)
+            order_by_list.append('"%s" %s' % (name, direction))
+        order_by_list += [str(i) for i in range(1, len(group_by)+1)]
+        if order_by_list:
+            order_by_clause = 'ORDER BY %s' % ', '.join(order_by_list)
+
+        # Generate the SELECT clause.
+        select_list = []
+        # group by fields
+        for item in group_by:
+            item = Identifier(item, self._namespace_schemas)
+            column_name = self._column_name(item.namespace, item.attribute)
+            group_by_functions = GROUP_BY_FUNCTIONS.get(item.muninn_type)
+            if item.subscript:
+                if not group_by_functions:
+                    raise Error("group field specification subscript of %r is not allowed" % item)
+                if item.subscript not in group_by_functions:
+                    raise Error("group field specification subscript of %r should be one of %r" % (item, group_by_functions))
+                column_name = self._rewriter_property(column_name, item.subscript)
+            else:
+                if item.muninn_type in GROUP_BY_FUNCTIONS and item.subscript not in group_by_functions:
+                    raise Error(
+                        "property %r of type %r must specify a subscript (one of %r) to be part of the group_by field specification" %
+                        (item.property, item.muninn_type.name(), group_by_functions)
+                    )
+                if item.muninn_type not in (Text, Boolean, Long, Integer):
+                    raise Error("property %r of type %r cannot be part of the group_by field specification" % (item.property, item.muninn_type.name()))
+            select_list.append('%s AS "%s"' % (column_name, item))
+        # aggregated fields
+        select_list.append('COUNT(*) AS count')  # always aggregate row count
+        for item in aggregates:
+            item = Identifier(item, self._namespace_schemas)
+            if item.subscript not in AGGREGATE_FUNCTIONS:
+                raise Error("summary field specification: %r must include a subscript (one of %r)" % (item, AGGREGATE_FUNCTIONS))
+            if item.property == 'core.validity_duration':
+                start_column = self._column_name(item.namespace, 'validity_start')
+                stop_column = self._column_name(item.namespace, 'validity_stop')
+                column_name = self._rewriter_table[Prototype('-', (Timestamp, Timestamp), Real)](stop_column, start_column)
+            else:
+                column_name = self._column_name(item.namespace, item.attribute)
+            select_list.append('%s(%s) AS "%s"' % (item.subscript.upper(), column_name, item))
+        select_clause = 'SELECT %s' % ', '.join(select_list)
+
+        # Generate the FROM clause.
+        from_clause = 'FROM %s' % self._table_name('core')
+
+        outer_join_set.discard('core')
+        inner_join_set.discard('core')
+        for namespace in outer_join_set - inner_join_set:
+            from_clause = '%s LEFT OUTER JOIN %s USING (uuid)' % (from_clause, self._table_name(namespace))
+        for namespace in inner_join_set:
+            from_clause = '%s INNER JOIN %s USING (uuid)' % (from_clause, self._table_name(namespace))
+
+        # Generate the complete query.
+        query = '%s\n%s' % (select_clause, from_clause)
+        if where_clause:
+            query = '%s\n%s' % (query, where_clause)
+        if group_by_clause:
+            query = '%s\n%s' % (query, group_by_clause)
+        if order_by_clause:
+            query = '%s\n%s' % (query, order_by_clause)
+
+        return query, where_parameters, result_fields
 
     def build_search_query(self, where="", order_by=[], limit=None, parameters={}, namespaces=[]):
         # Namespaces are combined via (left) outer joins, with the core namespace as the leftmost namespace. This
