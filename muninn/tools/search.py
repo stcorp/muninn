@@ -336,13 +336,13 @@ def main():
     parser.add_argument("-H", "--human-readable", action="store_true", help="output human readable size in product "
                         "summary (see -s, --summary option)")
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("-c", "--count", action="store_true", help="supress normal output; instead print the "
+    group.add_argument("-c", "--count", action="store_true", help="suppress normal output; instead print the "
                        "number of products matching the search expression")
-    group.add_argument("-s", "--summary", action="store_true", help="supress normal output; instead print a short "
+    group.add_argument("-s", "--summary", action="store_true", help="suppress normal output; instead print a short "
                        "summary of the products matching the search expression")
-    group.add_argument("-u", "--uuid", action="store_true", help="supress normal output; instead print the uuid "
+    group.add_argument("-u", "--uuid", action="store_true", help="suppress normal output; instead print the uuid "
                        "of each product found")
-    group.add_argument("--paths", action="store_true", help="supress normal output; instead print the physical "
+    group.add_argument("--paths", action="store_true", help="suppress normal output; instead print the physical "
                        "path of each product found")
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
     parser.add_argument("expression", metavar="EXPRESSION", help="expression used to search for products")
