@@ -167,15 +167,22 @@ class SQLiteConnection(object):
 
         # ensure that spatial metadata init has been done
         with self._connection:
+            # enter auto-commit mode, to have complete control the transaction state
+            # see https://docs.python.org/3/library/sqlite3.html#controlling-transactions
+            isolation_level = self._connection.isolation_level
+            self._connection.isolation_level = None
             cursor = self._connection.cursor()
             cursor.execute("SELECT CheckSpatialMetaData();")
-            if cursor.fetchone()[0] == 0:
-                try:
+            try:
+                if cursor.fetchone()[0] == 0:
+                    # execute InitSpatialMetadata inside a transaction, to make it faster
                     cursor.execute("BEGIN")
                     cursor.execute("SELECT InitSpatialMetadata()")
                     cursor.execute("COMMIT")
-                finally:
-                    cursor.close()
+            finally:
+                cursor.close()
+                # restore isolation level
+                self._connection.isolation_level = isolation_level
 
         # create the tables if necessary
         if need_prepare:
