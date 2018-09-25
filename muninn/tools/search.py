@@ -313,11 +313,11 @@ def main():
                         help="white space separated list of properties to output; use `<namespace>.*` to include all "
                         "properties of a namespace, e.g. core.*; use `*` to include all namespaces")
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("-c", "--count", action="store_true", help="supress normal output; instead print the "
+    group.add_argument("-c", "--count", action="store_true", help="suppress normal output; instead print the "
                        "number of products matching the search expression")
-    group.add_argument("-u", "--uuid", action="store_true", help="supress normal output; instead print the uuid "
+    group.add_argument("-u", "--uuid", action="store_true", help="suppress normal output; instead print the uuid "
                        "of each product found")
-    group.add_argument("--paths", action="store_true", help="supress normal output; instead print the physical "
+    group.add_argument("--paths", action="store_true", help="suppress normal output; instead print the physical "
                        "path of each product found")
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
     parser.add_argument("expression", metavar="EXPRESSION", help="expression used to search for products")
