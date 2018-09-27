@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, print_function
 
 import re
 from datetime import timedelta
+import argparse
 
 import muninn
 from muninn.schema import Timestamp
@@ -225,29 +226,58 @@ def run(args):
 
 
 def main():
-    aggregate_functions = set()
-    for value in AGGREGATE_FUNCTIONS.values():
-        aggregate_functions.update(value)
-    aggregate_functions = sorted(list(aggregate_functions))
-    aggregate_functions = ', '.join(['%r' % x for x in aggregate_functions])
+    # aggregate_functions = set()
+    aggregate_functions_str = []
+    for muninn_type, functions in AGGREGATE_FUNCTIONS.items():
+        # aggregate_functions.update(functions)
+        if muninn_type:
+            aggregate_functions_str.append('    %s %s' % (muninn_type.name().ljust(12), ', '.join(functions)))
 
-    group_by_functions_timestamp = ', '.join(['%r' % x for x in GROUP_BY_FUNCTIONS[Timestamp]])
+    parser = create_parser(
+        description="Summary of the products matching the search expression.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+ 
+GROUP_BY specification
+  Properties of the following types can be used to aggregate on:
+    %s
+  Any namespace can be used. Timestamp properties must be suffixed with one of:
+    %s
+  Examples:
+    product_type
+    creation_date.year
 
-    parser = create_parser(description="Summary of the products matching the search expression.")
+STATS specification
+  Properties can be aggregated using the following functions:
+%s
+  Any namespace can be used. A special calculated property 'validity_duration'
+  (defined as validity_stop - validity_stop) can be aggregated using:
+                 %s
+  Examples:
+    size.sum
+    size.avg
+    validity_start.min
+    validity_duration.sum
+
+ORDER_BY specification
+  Any column in the result can be used for ordering. This includes 'count'.
+    """ % (
+        ', '.join([x.name() for x in GROUP_BY_FUNCTIONS.keys() if x]),
+        ', '.join([x for x in GROUP_BY_FUNCTIONS[Timestamp]]),
+        '\n'.join(aggregate_functions_str),
+        ', '.join(AGGREGATE_FUNCTIONS[None]),
+    ))
     parser.add_argument("-f", "--output-format", choices=OUTPUT_FORMATS, default=DEFAULT_FORMAT,
                         help="output format")
     parser.add_argument("-o", "--order-by", action="append", dest="order_by", help="white space "
                         "separated list of sort order specifiers; a \"+\" prefix denotes ascending order; no prefix "
                         "denotes descending order")
     parser.add_argument("-g", "--group-by", action="append", dest="group_by",
-                        help="white space separated list of (text, boolean, long, integer, timestamp) properties to "
-                        "aggregate on; timestamp properties must be suffixed (with one of %s)" %
-                        group_by_functions_timestamp)
+                        help="white space separated list of properties to aggregate on")
     parser.add_argument("-t", "--group-by-tag", action="store_true", help="group by tag; note that products will be "
                         "counted multiple times if they have multiple tags")
     parser.add_argument("-s", "--stats", action="append", dest="stats", help="white space separated list of properties "
-                        "to aggregate, suffixed by an aggregation function (one of %s); defaults to: %r" %
-                        (aggregate_functions, ' '.join(DEFAULT_STATS)))
+                        "to aggregate, suffixed by an aggregation function; defaults to: %r" % ' '.join(DEFAULT_STATS))
     parser.add_argument("-H", "--human-readable", action="store_true", help="output human readable core.size")
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
     parser.add_argument("expression", metavar="EXPRESSION", nargs='?', help="expression used to search for products")

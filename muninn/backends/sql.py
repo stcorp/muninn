@@ -15,28 +15,27 @@ from muninn.schema import *
 from muninn.visitor import Visitor
 
 
-AGGREGATE_FUNCTIONS = {
-    Long: ['min', 'max', 'sum', 'avg'],
-    Integer: ['min', 'max', 'sum', 'avg'],
-    Real: ['min', 'max', 'sum', 'avg'],
-    # Boolean: [],
-    Text: ['min', 'max'],
-    Timestamp: ['min', 'max'],
-    # UUID: [],
-    # Geometry: [],
-    None: ['min', 'max', 'sum', 'avg'],  # special case: validity_duration
-}
-GROUP_BY_FUNCTIONS = {
-    Long: [None, ],
-    Integer: [None, ],
-    # Real: [],
-    Boolean: [None, ],
-    #Text: [None, ],  
-    Text: [None],  # Text: [None, 'length'],
-    Timestamp: ['year', 'month', 'yearmonth', 'date'],
-    # UUID: [],
-    # Geometry: [],
-}
+AGGREGATE_FUNCTIONS = collections.OrderedDict([
+    (Long, ['min', 'max', 'sum', 'avg']),
+    (Integer, ['min', 'max', 'sum', 'avg']),
+    (Real, ['min', 'max', 'sum', 'avg']),
+    # (Boolean, []),
+    (Text, ['min', 'max']),
+    (Timestamp, ['min', 'max']),
+    # (UUID, []),
+    # (Geometry, []),
+    (None, ['min', 'max', 'sum', 'avg']),  # special case: validity_duration
+])
+GROUP_BY_FUNCTIONS = collections.OrderedDict([
+    (Long, [None, ]),
+    (Integer, [None, ]),
+    # (Real, []),
+    (Boolean, [None, ]),
+    (Text, [None]),  # (Text, [None, 'length']),
+    (Timestamp, ['year', 'month', 'yearmonth', 'date']),
+    # (UUID, []),
+    # (Geometry, []),
+])
 
 class TypeMap(collections.MutableMapping):
     def __init__(self):
