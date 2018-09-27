@@ -27,8 +27,15 @@ AGGREGATE_FUNCTIONS = {
     None: ['min', 'max', 'sum', 'avg'],  # special case: validity_duration
 }
 GROUP_BY_FUNCTIONS = {
+    Long: [None, ],
+    Integer: [None, ],
+    # Real: [],
+    Boolean: [None, ],
+    #Text: [None, ],  
+    Text: [None],  # Text: [None, 'length'],
     Timestamp: ['year', 'month', 'yearmonth', 'date'],
-    # Text: [None, 'length'],
+    # UUID: [],
+    # Geometry: [],
 }
 
 class TypeMap(collections.MutableMapping):
@@ -456,23 +463,22 @@ class SQLBuilder(object):
             item = Identifier(item, self._namespace_schemas)
             column_name = self._column_name(item.namespace, item.attribute)
             group_by_functions = GROUP_BY_FUNCTIONS.get(item.muninn_type)
-            if item.subscript:
-                if not group_by_functions:
-                    raise Error("group field specification subscript %r of %r is not allowed" % (item.subscript, item.canonical))
-                if item.subscript not in group_by_functions:
-                    raise Error("group field specification subscript of %r should be one of %r" % (item.canonical, group_by_functions))
-                column_name = self._rewriter_property(column_name, item.subscript)
-            else:
-                if item.muninn_type in GROUP_BY_FUNCTIONS and item.subscript not in group_by_functions:
+            if not group_by_functions:  # item.muninn_type not in (Text, Boolean, Long, Integer):
+                if item.muninn_type:
+                    raise Error("property %r of type %r cannot be part of the group_by field specification" % (item.property, item.muninn_type.name()))
+                else:
+                    raise Error("property %r cannot be part of the group_by field specification" % (item.property, ))
+            if item.subscript not in group_by_functions:
+                if item.subscript:
+                    allowed_message = "; it can be one of %r" % group_by_functions if group_by_functions != [None] else ""
+                    raise Error(("group field specification subscript %r of %r is not allowed" + allowed_message) % (item.subscript, item.canonical))
+                else:
                     raise Error(
                         "property %r of type %r must specify a subscript (one of %r) to be part of the group_by field specification" %
                         (item.property, item.muninn_type.name(), group_by_functions)
                     )
-                if item.muninn_type not in (Text, Boolean, Long, Integer):
-                    if item.muninn_type:
-                        raise Error("property %r of type %r cannot be part of the group_by field specification" % (item.property, item.muninn_type.name()))
-                    else:
-                        raise Error("property %r cannot be part of the group_by field specification" % (item.property, ))
+            if item.subscript:
+                column_name = self._rewriter_property(column_name, item.subscript)
             select_list.append('%s AS "%s"' % (column_name, item.canonical))
         # aggregated fields
         select_list.append('COUNT(*) AS count')  # always aggregate row count
