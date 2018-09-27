@@ -469,7 +469,10 @@ class SQLBuilder(object):
         for item in aggregates:
             item = Identifier(item, self._namespace_schemas)
             if item.subscript not in AGGREGATE_FUNCTIONS:
-                raise Error("summary field specification: %r must include a subscript (one of %r)" % (item.canonical, AGGREGATE_FUNCTIONS))
+                if item.subscript:
+                    raise Error("summary field specification subscript %r of %r should be one of %r" % (item.subscript, item.canonical, AGGREGATE_FUNCTIONS))
+                else:
+                    raise Error("summary field specification %r must specify a subscript (one of %r)" % (item.canonical, AGGREGATE_FUNCTIONS))
             if item.property == 'core.validity_duration':
                 start_column = self._column_name(item.namespace, 'validity_start')
                 stop_column = self._column_name(item.namespace, 'validity_stop')
