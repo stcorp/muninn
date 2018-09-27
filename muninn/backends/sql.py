@@ -295,7 +295,7 @@ class Identifier(object):
 
     # @staticmethod
     def __init__(self, canonical_identifier, namespace_schemas):
-        self.canonical_identifier = canonical_identifier
+        self.canonical = canonical_identifier
         if canonical_identifier == 'tag':
             # the rules to get the namespace database table name also apply to 'tag'
             self.namespace = canonical_identifier
@@ -310,9 +310,7 @@ class Identifier(object):
         elif not re.match(r'[\w]+\.[\w.]+', canonical_identifier):
             raise Error("cannot resolve identifier: %r" % canonical_identifier)
         else:
-            split = canonical_identifier.split('.')
-            if len(split) > 3:
-                raise Error("cannot resolve identifier: %r" % canonical_identifier)
+            split = canonical_identifier.split('.', 2)
             namespace = split[0]
             attribute = split[1]
             subscript = split[2] if len(split) > 2 else None
@@ -338,9 +336,6 @@ class Identifier(object):
     @property
     def property(self):
         return '%s.%s' % (self.namespace, self.attribute)
-
-    def __repr__(self):
-        return self.canonical_identifier
 
 
 class SQLBuilder(object):
@@ -453,9 +448,9 @@ class SQLBuilder(object):
             group_by_functions = GROUP_BY_FUNCTIONS.get(item.muninn_type)
             if item.subscript:
                 if not group_by_functions:
-                    raise Error("group field specification subscript of %r is not allowed" % item)
+                    raise Error("group field specification subscript %r of %r is not allowed" % (item.subscript, item.canonical))
                 if item.subscript not in group_by_functions:
-                    raise Error("group field specification subscript of %r should be one of %r" % (item, group_by_functions))
+                    raise Error("group field specification subscript of %r should be one of %r" % (item.canonical, group_by_functions))
                 column_name = self._rewriter_property(column_name, item.subscript)
             else:
                 if item.muninn_type in GROUP_BY_FUNCTIONS and item.subscript not in group_by_functions:
@@ -468,20 +463,20 @@ class SQLBuilder(object):
                         raise Error("property %r of type %r cannot be part of the group_by field specification" % (item.property, item.muninn_type.name()))
                     else:
                         raise Error("property %r cannot be part of the group_by field specification" % (item.property, ))
-            select_list.append('%s AS "%s"' % (column_name, item))
+            select_list.append('%s AS "%s"' % (column_name, item.canonical))
         # aggregated fields
         select_list.append('COUNT(*) AS count')  # always aggregate row count
         for item in aggregates:
             item = Identifier(item, self._namespace_schemas)
             if item.subscript not in AGGREGATE_FUNCTIONS:
-                raise Error("summary field specification: %r must include a subscript (one of %r)" % (item, AGGREGATE_FUNCTIONS))
+                raise Error("summary field specification: %r must include a subscript (one of %r)" % (item.canonical, AGGREGATE_FUNCTIONS))
             if item.property == 'core.validity_duration':
                 start_column = self._column_name(item.namespace, 'validity_start')
                 stop_column = self._column_name(item.namespace, 'validity_stop')
                 column_name = self._rewriter_table[Prototype('-', (Timestamp, Timestamp), Real)](stop_column, start_column)
             else:
                 column_name = self._column_name(item.namespace, item.attribute)
-            select_list.append('%s(%s) AS "%s"' % (item.subscript.upper(), column_name, item))
+            select_list.append('%s(%s) AS "%s"' % (item.subscript.upper(), column_name, item.canonical))
         select_clause = 'SELECT %s' % ', '.join(select_list)
 
         # Generate the FROM clause.
