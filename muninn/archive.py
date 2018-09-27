@@ -589,15 +589,23 @@ class Archive(object):
         Keyword arguments:
         where         --  Search expression.
         parameters    --  Parameters referenced in the search expression (if any).
-        aggregates    --  A list of property names + function subscript to aggregate.
-        group_by      --  A list of property names that determines the aggregation of the results.
+        aggregates    --  A list of property names + function subscript to aggregate. A special calculated property 
+                          'validity_duration' (defined as validity_stop - validity_stop) can also be aggregated.
+                          Subscripts are added as "<property_name>.<subscript>". Not all property types can be 
+                          aggregated. For a list of possible combinations, run `muninn-summary --help` or see
+                          muninn.backends.sql.AGGREGATE_FUNCTIONS.
+        group_by      --  A list of property names that determines the aggregation of the results. Not all property
+                          types can be aggregated on. Timestamps, in particular, require a subscript. For a list of
+                          possible combinations, run `muninn-summary --help` or see
+                          muninn.backends.sql.GROUP_BY_FUNCTIONS.
         group_by_tag  --  If set to True, tag values will be added to the group_by. Note that products will be counted
                           multiple times if they have multiple tags.
-        order_by      --  A list of property names that determines the ordering of the results. If the list is empty, the
-                          order of the results in undetermined and can very between calls to this function. Each property
+        order_by      --  A list of result column names that determines the ordering of the results. If the list is
+                          empty, the order of the results in ordered by the `group_by` specification. Each column
                           name in this list can be provided with a '+' or '-' prefix, or without a prefix. A '+' prefix,
                           or no predix denotes ascending sort order, a '-' prefix denotes decending sort order.
 
+        Note that the property names must always include the namespace. 'core' is not assumed.
         """
         return self._backend.summary(where, parameters, aggregates, group_by, group_by_tag, order_by)
 
