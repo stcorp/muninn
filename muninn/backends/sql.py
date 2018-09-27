@@ -15,7 +15,17 @@ from muninn.schema import *
 from muninn.visitor import Visitor
 
 
-AGGREGATE_FUNCTIONS = ['sum', 'min', 'max', 'avg']
+AGGREGATE_FUNCTIONS = {
+    Long: ['min', 'max', 'sum', 'avg'],
+    Integer: ['min', 'max', 'sum', 'avg'],
+    Real: ['min', 'max', 'sum', 'avg'],
+    # Boolean: [],
+    Text: ['min', 'max'],
+    Timestamp: ['min', 'max'],
+    # UUID: [],
+    # Geometry: [],
+    None: ['min', 'max', 'sum', 'avg'],  # special case: validity_duration
+}
 GROUP_BY_FUNCTIONS = {
     Timestamp: ['year', 'month', 'yearmonth', 'date'],
     # Text: [None, 'length'],
@@ -468,11 +478,13 @@ class SQLBuilder(object):
         select_list.append('COUNT(*) AS count')  # always aggregate row count
         for item in aggregates:
             item = Identifier(item, self._namespace_schemas)
-            if item.subscript not in AGGREGATE_FUNCTIONS:
+            if not AGGREGATE_FUNCTIONS.get(item.muninn_type):
+                raise Error("property %r of type %r cannot be part of the summary field specification" % (item.property, item.muninn_type.name()))
+            elif item.subscript not in AGGREGATE_FUNCTIONS[item.muninn_type]:
                 if item.subscript:
-                    raise Error("summary field specification subscript %r of %r should be one of %r" % (item.subscript, item.canonical, AGGREGATE_FUNCTIONS))
+                    raise Error("summary field specification subscript %r of %r should be one of %r" % (item.subscript, item.canonical, AGGREGATE_FUNCTIONS[item.muninn_type]))
                 else:
-                    raise Error("summary field specification %r must specify a subscript (one of %r)" % (item.canonical, AGGREGATE_FUNCTIONS))
+                    raise Error("summary field specification %r must specify a subscript (one of %r)" % (item.canonical, AGGREGATE_FUNCTIONS[item.muninn_type]))
             if item.property == 'core.validity_duration':
                 start_column = self._column_name(item.namespace, 'validity_start')
                 stop_column = self._column_name(item.namespace, 'validity_stop')

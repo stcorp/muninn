@@ -225,6 +225,14 @@ def run(args):
 
 
 def main():
+    aggregate_functions = set()
+    for value in AGGREGATE_FUNCTIONS.values():
+        aggregate_functions.update(value)
+    aggregate_functions = sorted(list(aggregate_functions))
+    aggregate_functions = ', '.join(['%r' % x for x in aggregate_functions])
+
+    group_by_functions_timestamp = ', '.join(['%r' % x for x in GROUP_BY_FUNCTIONS[Timestamp]])
+
     parser = create_parser(description="Summary of the products matching the search expression.")
     parser.add_argument("-f", "--output-format", choices=OUTPUT_FORMATS, default=DEFAULT_FORMAT,
                         help="output format")
@@ -234,12 +242,12 @@ def main():
     parser.add_argument("-g", "--group-by", action="append", dest="group_by",
                         help="white space separated list of (text, boolean, long, integer, timestamp) properties to "
                         "aggregate on; timestamp properties must be suffixed (with one of %s)" %
-                        GROUP_BY_FUNCTIONS[Timestamp])
+                        group_by_functions_timestamp)
     parser.add_argument("-t", "--group-by-tag", action="store_true", help="group by tag; note that products will be "
                         "counted multiple times if they have multiple tags")
     parser.add_argument("-s", "--stats", action="append", dest="stats", help="white space separated list of properties "
                         "to aggregate, suffixed by an aggregation function (one of %s); defaults to: %r" %
-                        (AGGREGATE_FUNCTIONS, ' '.join(DEFAULT_STATS)))
+                        (aggregate_functions, ' '.join(DEFAULT_STATS)))
     parser.add_argument("-H", "--human-readable", action="store_true", help="output human readable core.size")
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
     parser.add_argument("expression", metavar="EXPRESSION", nargs='?', help="expression used to search for products")
