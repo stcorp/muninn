@@ -464,7 +464,10 @@ class SQLBuilder(object):
                         (item.property, item.muninn_type.name(), group_by_functions)
                     )
                 if item.muninn_type not in (Text, Boolean, Long, Integer):
-                    raise Error("property %r of type %r cannot be part of the group_by field specification" % (item.property, item.muninn_type.name()))
+                    if item.muninn_type:
+                        raise Error("property %r of type %r cannot be part of the group_by field specification" % (item.property, item.muninn_type.name()))
+                    else:
+                        raise Error("property %r cannot be part of the group_by field specification" % (item.property, ))
             select_list.append('%s AS "%s"' % (column_name, item))
         # aggregated fields
         select_list.append('COUNT(*) AS count')  # always aggregate row count
