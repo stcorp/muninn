@@ -1,5 +1,11 @@
-* Added muninn-summary to display aggregate statistics. Removed 
-  `muninn-search -s` as it became redundant.
+* Added muninn-summary to display aggregate statistics.
+
+* Removed muninn-search '-s' option in favor of muninn-summary.
+
+* Fixed initialization of database when using sqlite backend.
+
+* Strip operation now automatically restricts itself to products with a
+  non-empty archive_path.
 
 4.2 2018-06-12
 ~~~~~~~~~~~~~~
