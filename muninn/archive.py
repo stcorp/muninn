@@ -589,21 +589,22 @@ class Archive(object):
         Keyword arguments:
         where         --  Search expression.
         parameters    --  Parameters referenced in the search expression (if any).
-        aggregates    --  A list of property names + function subscript to aggregate. A special calculated property 
-                          'validity_duration' (defined as validity_stop - validity_stop) can also be aggregated.
-                          Subscripts are added as "<property_name>.<subscript>". Not all property types can be 
-                          aggregated. For a list of possible combinations, run `muninn-summary --help` or see
-                          muninn.backends.sql.AGGREGATE_FUNCTIONS.
-        group_by      --  A list of property names that determines the aggregation of the results. Not all property
-                          types can be aggregated on. Timestamps, in particular, require a subscript. For a list of
-                          possible combinations, run `muninn-summary --help` or see
-                          muninn.backends.sql.GROUP_BY_FUNCTIONS.
-        group_by_tag  --  If set to True, tag values will be added to the group_by. Note that products will be counted
-                          multiple times if they have multiple tags.
+        aggregates    --  A list of property aggregates defined as "<property_name>.<reduce_fn>".
+                          Properties need to be of type long, integer, real, text or timestamp.
+                          The reduce function can be 'min', 'max', 'sum', or 'avg'.
+                          'sum' and 'avg' are not possible for text and timestamp properties.
+                          A special property 'validity_duration' (defined as validity_stop - validity_start) can also
+                          be used.
+        group_by      --  A list of property names whose values are used for grouping the aggregation results.
+                          There will be a separate result row for each combination of group_by property values.
+                          Properties need to be of type long, integer, boolean, text or timestamp.
+                          Timestamps require a binning subscript which can be 'year', 'month', 'yearmonth', or 'date'
+                          (e.g. 'validity_start.yearmonth').
+        group_by_tag  --  If set to True, results will also be grouped by available tag values.
+                          Note that products will be counted multiple times if they have multiple tags.
         order_by      --  A list of result column names that determines the ordering of the results. If the list is
-                          empty, the order of the results in ordered by the `group_by` specification. Each column
-                          name in this list can be provided with a '+' or '-' prefix, or without a prefix. A '+' prefix,
-                          or no predix denotes ascending sort order, a '-' prefix denotes decending sort order.
+                          empty, the order of the results is ordered by the `group_by` specification. Each name in the
+                          list can have a '+' (ascending) or '-' (descending) prefix, or no prefix (ascending).
 
         Note that the property names must always include the namespace. 'core' is not assumed.
         """
