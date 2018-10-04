@@ -17,7 +17,7 @@ if sys.version_info[0] == 2 and sys.version_info[1] == 6:
 
 setup(
     name="muninn",
-    version="4.2",
+    version="4.3",
     description="Configurable product archive",
     url="http://stcorp.nl/",
     author="S[&]T",
