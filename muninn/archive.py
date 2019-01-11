@@ -845,7 +845,6 @@ class Archive(object):
         parameters    --  Parameters referenced in the search expression (if any).
         verify_hash   --  If set to True then, after the pull, the product in the archive will be matched against
                           the hash from the metadata (only if the metadata contained a hash).
-        disable_hooks --  Disable product type hooks (not meant for routine operation).
 
         """
         queue = self.search(where=where, parameters=parameters)
