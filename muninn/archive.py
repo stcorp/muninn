@@ -1394,7 +1394,7 @@ class Archive(object):
         return util.product_hash(paths)
 
     def _update_metadata_date(self, properties):
-        """ add a core.metadata_date field if it did net yet exist and set it to the current date """
+        """ add a core.metadata_date field if it did not yet exist and set it to the current date """
         if "core" not in properties:
             properties.core = Struct()
         properties.core.metadata_date = self._backend.server_time_utc()
