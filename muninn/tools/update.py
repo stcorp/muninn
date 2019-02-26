@@ -111,7 +111,8 @@ def main():
     parser.add_argument("--disable-hooks", action="store_true",
                         help="do not run the hooks associated with the action")
     parser.add_argument("--namespaces", action="append",
-                        help="white space separated list of namespaces to make available")
+                        help="white space separated list of namespaces to make available "
+                             "(for post_ingest and post_pull actions)")
     parser.add_argument("--parallel", action="store_true",
                         help="use multi-processing to perform update")
     parser.add_argument("--verify-hash", action="store_true",
