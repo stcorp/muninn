@@ -10,7 +10,7 @@ import multiprocessing
 try:
     from tqdm import tqdm as bar
 except:
-    def bar(range):
+    def bar(range, total=None):
         return range
 
 import muninn
