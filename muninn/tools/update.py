@@ -91,7 +91,10 @@ def update(args):
     with muninn.open(args.archive) as archive:
         products = archive.search(expression, namespaces=namespaces)
         if args.parallel:
-            pool = multiprocessing.Pool()
+            if args.processes is not None:
+                pool = multiprocessing.Pool(args.processes)
+            else:
+                pool = multiprocessing.Pool()
             list(bar(pool.imap(Processor(args), products), total=len(products)))
             pool.close()
             pool.join()
@@ -115,6 +118,8 @@ def main():
                              "(for post_ingest and post_pull actions)")
     parser.add_argument("--parallel", action="store_true",
                         help="use multi-processing to perform update")
+    parser.add_argument("--processes", type=int,
+                        help="use a specific amount of processes for --parallel")
     parser.add_argument("--verify-hash", action="store_true",
                         help="verify the hash of the product after a `pull` update")
     parser.add_argument("-k", "--keep", action="store_true",
