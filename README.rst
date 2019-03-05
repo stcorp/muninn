@@ -6,7 +6,7 @@ data product catalogues and archives. It can function as a pure product
 metadata catalogue or it can manage a product archive together with its
 metadata catalogue.
 
-When using a product archive, muninn can automatically extracted attributes
+When using a product archive, muninn can automatically extract attributes
 from the products when products get added to the archive. Automatic attribute
 extraction is handled through product type specific plug-ins
 (see section "Extensions"_), which are *not* included in the muninn
