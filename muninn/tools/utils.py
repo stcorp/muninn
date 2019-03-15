@@ -11,6 +11,30 @@ import os
 import sys
 
 
+# This is a base class for operations on a list of items that can be performed in parallel using multiprocessing.
+# If you use the processor object as a callable then it is assumed that the operation is performed using subprocesses.
+# It will then create its own muninn archive instance per sub-process and prevents KeyboardInterrupt handling.
+# For non-parallel execution just invoke the perform_operation method directly on the processor object using a valid
+# archive handle.
+class Processor(object):
+
+    def __init__(self, archive_name):
+        self._archive_name = archive_name
+        self._archive = None
+
+    def perform_operation(self, archive, item):
+        pass
+
+    def __call__(self, item):
+        try:
+            if self._archive is None:
+                self._archive = muninn.open(self._archive_name)
+            return self.perform_operation(self._archive, item)
+        except KeyboardInterrupt:
+            # don't capture keyboard interrupts inside sub-processes (only the main process should handle it)
+            pass
+
+
 # This parser is used in combination with the parse_known_args() function as a way to implement a "--version"
 # option that prints version information and exits, and is included in the help message.
 #

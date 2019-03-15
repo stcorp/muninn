@@ -15,7 +15,7 @@ except ImportError:
 
 import muninn
 
-from .utils import create_parser, parse_args_and_run
+from .utils import Processor, create_parser, parse_args_and_run
 
 logger = logging.getLogger(__name__)
 
@@ -27,49 +27,38 @@ ACTIONS = [
 ]
 
 
-class Processor(object):
+class UpdateProcessor(Processor):
 
-    def __init__(self, args, archive=None):
-        self.archive_name = args.archive
+    def __init__(self, args):
+        super(UpdateProcessor, self).__init__(args.archive)
         self.action = args.action
         self.disable_hooks = args.disable_hooks
         self.use_current_path = args.keep
         self.verify_hash = args.verify_hash
-        self.archive = archive
-        self.ignore_keyboard_interrupt = archive is None  # archive is None -> we are using multiprocessing
 
-    def __call__(self, product):
-        try:
-            if self.archive is None:
-                self.archive = muninn.open(self.archive_name)
+    def perform_operation(self, archive, product):
+        if self.action == 'ingest':
+            logger.debug('running update:ingest on %s ' % product.core.product_name)
+            archive.rebuild_properties(product.core.uuid, disable_hooks=self.disable_hooks,
+                                       use_current_path=self.use_current_path)
 
-            if self.action == 'ingest':
-                logger.debug('running update:ingest on %s ' % product.core.product_name)
-                self.archive.rebuild_properties(product.core.uuid, disable_hooks=self.disable_hooks,
-                                                use_current_path=self.use_current_path)
+        elif self.action == 'post_ingest':
+            plugin = archive.product_type_plugin(product.core.product_type)
+            if hasattr(plugin, "post_ingest_hook"):
+                logger.debug('running update:post_ingest on %s ' % product.core.product_name)
+                plugin.post_ingest_hook(archive, product)
 
-            elif self.action == 'post_ingest':
-                plugin = self.archive.product_type_plugin(product.core.product_type)
-                if hasattr(plugin, "post_ingest_hook"):
-                    logger.debug('running update:post_ingest on %s ' % product.core.product_name)
-                    plugin.post_ingest_hook(self.archive, product)
+        elif self.action == 'pull':
+            logger.debug('running update:pull on %s ' % product.core.product_name)
+            archive.rebuild_pull_properties(product.core.uuid, verify_hash=self.verify_hash,
+                                            disable_hooks=self.disable_hooks,
+                                            use_current_path=self.use_current_path)
 
-            elif self.action == 'pull':
-                logger.debug('running update:pull on %s ' % product.core.product_name)
-                self.archive.rebuild_pull_properties(product.core.uuid, verify_hash=self.verify_hash,
-                                                     disable_hooks=self.disable_hooks,
-                                                     use_current_path=self.use_current_path)
-
-            elif self.action == 'post_pull':
-                plugin = self.archive.product_type_plugin(product.core.product_type)
-                if hasattr(plugin, "post_pull_hook"):
-                    logger.debug('running update:post_pull on %s ' % product.core.product_name)
-                    plugin.post_pull_hook(self.archive, product)
-
-        except KeyboardInterrupt:
-            # don't capture keyboard interrupts inside sub-processes (only the main process should handle it)
-            if not self.ignore_keyboard_interrupt:
-                raise
+        elif self.action == 'post_pull':
+            plugin = archive.product_type_plugin(product.core.product_type)
+            if hasattr(plugin, "post_pull_hook"):
+                logger.debug('running update:post_pull on %s ' % product.core.product_name)
+                plugin.post_pull_hook(archive, product)
 
 
 def update(args):
@@ -89,6 +78,7 @@ def update(args):
         else:
             expression = "is_defined(remote_url)"
 
+    processor = UpdateProcessor(args)
     with muninn.open(args.archive) as archive:
         products = archive.search(expression, namespaces=namespaces)
         if args.parallel:
@@ -96,13 +86,12 @@ def update(args):
                 pool = multiprocessing.Pool(args.processes)
             else:
                 pool = multiprocessing.Pool()
-            list(bar(pool.imap(Processor(args), products), total=len(products)))
+            list(bar(pool.imap(processor, products), total=len(products)))
             pool.close()
             pool.join()
         else:
-            update_func = Processor(args, archive)
             for product in bar(products):
-                update_func(product)
+                processor.perform_operation(archive, product)
 
     return 0
 
@@ -117,10 +106,8 @@ def main():
     parser.add_argument("--namespaces", action="append",
                         help="white space separated list of namespaces to make available "
                              "(for post_ingest and post_pull actions)")
-    parser.add_argument("--parallel", action="store_true",
-                        help="use multi-processing to perform update")
-    parser.add_argument("--processes", type=int,
-                        help="use a specific amount of processes for --parallel")
+    parser.add_argument("--parallel", action="store_true", help="use multi-processing to perform update")
+    parser.add_argument("--processes", type=int, help="use a specific amount of processes for --parallel")
     parser.add_argument("--verify-hash", action="store_true",
                         help="verify the hash of the product after a `pull` update")
     parser.add_argument("-k", "--keep", action="store_true",

@@ -1,3 +1,7 @@
+* Added optional progress bars to muninn-ingest (requires 'tqdm' package).
+
+* Added --parallel and --processes options to muninn-ingest.
+
 * Added --processes option to muninn-update.
 
 4.3 2018-10-04

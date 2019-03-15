@@ -8,12 +8,19 @@ import argparse
 import fnmatch
 import glob
 import logging
+import multiprocessing
 import os
 import sys
 
+try:
+    from tqdm import tqdm as bar
+except ImportError:
+    def bar(range, total=None):
+        return range
+
 import muninn
 
-from .utils import create_parser, parse_args_and_run
+from .utils import Processor, create_parser, parse_args_and_run
 
 
 class Error(muninn.Error):
@@ -63,51 +70,79 @@ def get_path_expansion_function(is_stem=False, is_enclosing_directory=False):
     return expand_identity
 
 
-def ingest(args):
-    with muninn.open(args.archive) as archive:
-        path_expansion_function = get_path_expansion_function(args.path_is_stem, args.path_is_enclosing_directory)
+class IngestProcessor(Processor):
+
+    def __init__(self, args):
+        super(IngestProcessor, self).__init__(args.archive)
         assert not args.link or not args.copy or not args.keep
-        use_symlinks = True if args.link else False if args.copy else None
-        verify_hash = True if args.verify_hash else False
+        self.path_expansion_function = get_path_expansion_function(args.path_is_stem, args.path_is_enclosing_directory)
+        self.use_symlinks = True if args.link else False if args.copy else None
+        self.verify_hash = True if args.verify_hash else False
+        self.exclude = args.exclude
+        self.product_type = args.product_type
+        self.keep = args.keep
+        self.force = args.force
+        self.tag = args.tag
 
-        errors_encountered = False
-        paths = sys.stdin if "-" in args.path else args.path
-        for path in paths:
-            path = os.path.abspath(path.strip())
+    def perform_operation(self, archive, path):
+        path = os.path.abspath(path.strip())
 
-            # Expand path into multiple files and/or directories that belong to the same product.
+        # Expand path into multiple files and/or directories that belong to the same product.
+        try:
+            product_paths = self.path_expansion_function(path)
+        except Error as error:
+            logging.error("%s: unable to determine which files or directories belong to product [%s]" % (path, error))
+            return 0
+
+        # Discard paths matching any of the user supplied exclude patterns.
+        if self.exclude:
+            product_paths = filter_paths(product_paths, self.exclude)
+
+        if not product_paths:
+            logging.error("%s: path does not match any files or directories" % path)
+            return 0
+
+        try:
+            properties = archive.ingest(product_paths, self.product_type, use_symlinks=self.use_symlinks,
+                                        verify_hash=self.verify_hash, use_current_path=self.keep, force=self.force)
+        except muninn.Error as error:
+            logging.error("%s: unable to ingest product [%s]" % (path, error))
+            return 0
+        if self.tag:
             try:
-                product_paths = path_expansion_function(path)
-            except Error as error:
-                logging.error("%s: unable to determine which files or directories belong to product [%s]" % (path, error))
-                errors_encountered = True
-                continue
-
-            # Discard paths matching any of the user supplied exclude patterns.
-            if args.exclude:
-                product_paths = filter_paths(product_paths, args.exclude)
-
-            if not product_paths:
-                logging.error("%s: path does not match any files or directories" % path)
-                errors_encountered = True
-                continue
-
-            try:
-                properties = archive.ingest(product_paths, args.product_type, use_symlinks=use_symlinks,
-                                            verify_hash=verify_hash, use_current_path=args.keep, force=args.force)
+                archive.tag(properties.core.uuid, self.tag)
             except muninn.Error as error:
-                logging.error("%s: unable to ingest product [%s]" % (path, error))
-                errors_encountered = True
-                continue
+                logging.error("%s: unable to tag product [%s]" % (path, error))
+                return 0
 
-            if args.tag:
-                try:
-                    archive.tag(properties.core.uuid, args.tag)
-                except muninn.Error as error:
-                    logging.error("%s: unable to tag product [%s]" % (path, error))
-                    errors_encountered = True
+        return 1
 
-    return 0 if not errors_encountered else 1
+
+def ingest(args):
+    processor = IngestProcessor(args)
+    with muninn.open(args.archive) as archive:
+        if "-" in args.path:
+            paths = [path for path in sys.stdin]
+        else:
+            paths = args.path
+        total = len(paths)
+        num_success = 0
+        if args.parallel:
+            if args.processes is not None:
+                pool = multiprocessing.Pool(args.processes)
+            else:
+                pool = multiprocessing.Pool()
+            num_success = sum(list(bar(pool.imap(processor, paths), total=total)))
+            pool.close()
+            pool.join()
+        elif total > 1:
+            for path in bar(paths):
+                num_success += processor.perform_operation(archive, path)
+        elif total == 1:
+            # don't show progress bar if we ingest just one item
+            num_success = processor.perform_operation(archive, paths[0])
+
+    return 0 if num_success == total else 1
 
 
 def main():
@@ -135,6 +170,8 @@ def main():
                                                                    "name before ingesting the new product")
     parser.add_argument("--verify-hash", action="store_true",
                         help="verify the hash of the product after it has been put in the archive")
+    parser.add_argument("--parallel", action="store_true", help="use multi-processing to perform ingestion")
+    parser.add_argument("--processes", type=int, help="use a specific amount of processes for --parallel")
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
     parser.add_argument("path", metavar="PATH", nargs="+", action=CheckProductListAction,
                         help="products to ingest, or \"-\" to read the list of products from standard input")
