@@ -14,6 +14,7 @@ import tempfile
 import json
 import ftplib
 
+
 class crc16(object):
     """Implementation of the CRC-16 algorithm that complies to the hashlib interface."""
     def _create_crc16_table():
@@ -397,7 +398,7 @@ class Downloader(object):
             credentials = json.loads(open(self.auth_file).read())
             if self.url.hostname in credentials:
                 return credentials[self.url.hostname]['username'], \
-                       credentials[self.url.hostname]['password']
+                    credentials[self.url.hostname]['password']
             else:
                 return '', ''
         except:
@@ -427,6 +428,7 @@ class Downloader(object):
             ftp.quit()
         except Exception as e:
             raise DownloadError('Error downloading %s (Reason: %s)' % (self.remote_url, e))
+
 
 def quoted_list(lst, quote_text='"', join_text=", "):
     '''returns a string where all items are surrounded by quotes and joined'''

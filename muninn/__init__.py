@@ -35,7 +35,7 @@ def _merge_configuration(configuration, other_configuration):
 def _read_archive_config_file(path):
     try:
         from ConfigParser import SafeConfigParser
-    except:
+    except ImportError:
         from configparser import SafeConfigParser
 
     parser = SafeConfigParser()

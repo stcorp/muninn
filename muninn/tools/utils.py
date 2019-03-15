@@ -26,6 +26,7 @@ def create_parser(*args, **kwargs):
     parser.add_argument("--verbose", action="store_true", help="display debug information")
     return parser
 
+
 def version(program_name):
     print("%s %s" % (program_name, muninn.__version__))
     print(muninn.__copyright__)

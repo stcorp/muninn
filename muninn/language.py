@@ -212,8 +212,8 @@ class TokenStream(object):
     _pattern = r"""(?:%s)""" % ("|".join(["(%s)" % sub_pattern for sub_pattern in _sub_patterns]))
     _re_token = re.compile(_pattern)
 
-    _re_datemin = re.compile("0000-00-00(?:T00:00:00(?:\.0{0,6})?)?$")
-    _re_datemax = re.compile("9999-99-99(?:T99:99:99(?:\.9{0,6})?)?$")
+    _re_datemin = re.compile(r"0000-00-00(?:T00:00:00(?:\.0{0,6})?)?$")
+    _re_datemax = re.compile(r"9999-99-99(?:T99:99:99(?:\.9{0,6})?)?$")
 
     def __init__(self, text):
         self.text = text

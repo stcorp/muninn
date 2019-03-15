@@ -16,7 +16,7 @@ from .utils import create_parser, parse_args_and_run
 
 try:
     import tabulate
-except:
+except ImportError:
     tabulate = None
 
 OWN_OUTPUT_FORMATS = ['psv', 'csv']
@@ -132,7 +132,7 @@ class TabulateWriter(PlainWriter):
         self._data.append(self._format_items(values))
 
     def footer(self):
-        ## align core.size fields to the right (only available in tabulate > 0.8.2)
+        # align core.size fields to the right (only available in tabulate > 0.8.2)
         # colalign = ['right' if i in self._size_fields else None for i in range(len(self._header))]
         # print(tabulate.tabulate(self._data, headers=self._header, tablefmt=self._format), colalign=colalign)
         print(tabulate.tabulate(self._data, headers=self._header, tablefmt=self._format))
@@ -184,6 +184,7 @@ def coalesce_identifier_arguments(arg, archive):
     else:
         result = []
     return result
+
 
 def coalesce_order_by_args(arg, archive):
     # An order specifier without a "+" (ascending) prefix is interpreted as descending. Otherwise, it would be

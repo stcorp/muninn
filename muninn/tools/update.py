@@ -9,7 +9,7 @@ import multiprocessing
 
 try:
     from tqdm import tqdm as bar
-except:
+except ImportError:
     def bar(range, total=None):
         return range
 
@@ -25,6 +25,7 @@ ACTIONS = [
     'pull',
     'post_pull',
 ]
+
 
 class Processor(object):
 

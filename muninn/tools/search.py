@@ -11,7 +11,7 @@ from datetime import timedelta
 import muninn
 try:
     import tabulate
-except:
+except ImportError:
     tabulate = None
 
 from .utils import create_parser, parse_args_and_run
@@ -290,7 +290,6 @@ def order_by_list(text):
     return order_by_list
 
 
-
 def run(args):
     if args.count:
         return count(args)
@@ -300,6 +299,7 @@ def run(args):
         return paths(args)
     else:
         return search(args)
+
 
 def main():
     parser = create_parser(description="Search a muninn archive for products.")
@@ -323,4 +323,3 @@ def main():
     parser.add_argument("expression", metavar="EXPRESSION", help="expression used to search for products")
 
     return parse_args_and_run(parser, run)
-

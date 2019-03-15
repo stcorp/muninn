@@ -9,6 +9,7 @@ import muninn
 
 from .utils import create_parser, parse_args_and_run
 
+
 def ask_yes_no(question, default=True):
     prompt = "[y/n]" if default is None else "[Y/n]" if default else "[y/N]"
     while True:
@@ -29,10 +30,10 @@ def destroy(args):
     with muninn.open(args.archive) as archive:
         if not args.yes:
             if args.catalogue_only:
-                print(("You are about to remove the catalogue database for the archive \"%s\". " +
+                print(("You are about to remove the catalogue database for the archive \"%s\". "
                        "This operation cannot be undone!") % args.archive)
             else:
-                print(("You are about to completely remove the archive \"%s\". " +
+                print(("You are about to completely remove the archive \"%s\". "
                        "This operation cannot be undone!") % args.archive)
             if not ask_yes_no("Do you want to continue?", False):
                 return 1

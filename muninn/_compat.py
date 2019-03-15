@@ -14,10 +14,16 @@ if PY3:
     long = int
 
     string_types = (str, )
-    def is_python2_unicode(x): return False
 
-    def dictkeys(d): return list(d.keys())
-    def dictvalues(d): return list(d.values())
+    def is_python2_unicode(x):
+        return False
+
+    def dictkeys(d):
+        return list(d.keys())
+
+    def dictvalues(d):
+        return list(d.values())
+
     itervalues = operator.methodcaller("values")
 
     imap = map
@@ -33,7 +39,9 @@ else:
     long = long
 
     string_types = (basestring, )
-    def is_python2_unicode(x): return type(x) is unicode
+
+    def is_python2_unicode(x):
+        return type(x) is unicode
 
     dictkeys = operator.methodcaller("keys")
     dictvalues = operator.methodcaller("values")
@@ -47,6 +55,7 @@ else:
     urlparse = urlparse_mod
 
     input = raw_input
+
 
 def with_metaclass(meta, *bases):
     """
@@ -67,11 +76,14 @@ def with_metaclass(meta, *bases):
     This has the advantage over six.with_metaclass of not introducing
     dummy classes into the final MRO.
     """
+
     class metaclass(meta):
         __call__ = type.__call__
         __init__ = type.__init__
+
         def __new__(cls, name, this_bases, d):
             if this_bases is None:
                 return type.__new__(cls, name, (), d)
             return meta(name, bases, d)
+
     return metaclass('temporary_class', None, {})

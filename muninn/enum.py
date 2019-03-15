@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, print_function
 
 from muninn._compat import with_metaclass
 
+
 class MetaEnum(type):
     def __new__(meta, name, bases, dct):
         for value, item in enumerate(dct["_items"]):
