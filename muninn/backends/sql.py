@@ -37,6 +37,7 @@ GROUP_BY_FUNCTIONS = collections.OrderedDict([
     # (Geometry, []),
 ])
 
+
 class TypeMap(collections.MutableMapping):
     def __init__(self):
         self._types = {}
@@ -253,7 +254,8 @@ def default_rewriter_table():
         lambda left0, right0, left1, right1: "(%s) >= (%s) AND (%s) >= (%s) AND (%s) >= (%s) AND (%s) <= (%s)" % \
         (right0, left0, right1, left1, right0, left1, left0, right1)
 
-    is_defined_rewriter = lambda arg: "(%s) IS NOT NULL" % arg
+    def is_defined_rewriter(arg):
+        return "(%s) IS NOT NULL" % arg
     rewriter_table[Prototype("is_defined", (Long,), Boolean)] = is_defined_rewriter
     rewriter_table[Prototype("is_defined", (Integer,), Boolean)] = is_defined_rewriter
     rewriter_table[Prototype("is_defined", (Real,), Boolean)] = is_defined_rewriter
@@ -431,7 +433,7 @@ class SQLBuilder(object):
 
         # Generate the GROUP BY clause.
         group_by_clause = ''
-        group_by_list = [str(i) for i in range(1, len(group_by)+1)]
+        group_by_list = [str(i) for i in range(1, len(group_by) + 1)]
         if group_by_list:
             group_by_clause = 'GROUP BY %s' % ', '.join(group_by_list)
 
@@ -445,7 +447,7 @@ class SQLBuilder(object):
             if name not in result_fields:
                 raise Error("cannot order result by %r; field is not present in result" % name)
             order_by_list.append('"%s" %s' % (name, direction))
-        order_by_list += [str(i) for i in range(1, len(group_by)+1)]
+        order_by_list += [str(i) for i in range(1, len(group_by) + 1)]
         if order_by_list:
             order_by_clause = 'ORDER BY %s' % ', '.join(order_by_list)
 
@@ -529,7 +531,7 @@ class SQLBuilder(object):
             namespaces = []
             namespace_properties = {}
             for item in properties:
-                if not '.' in item:
+                if '.' not in item:
                     item = "core." + item
                 Identifier(item, self._namespace_schemas)  # check if the identifier is valid
                 namespace, name = item.split('.')

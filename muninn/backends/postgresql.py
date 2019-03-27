@@ -200,7 +200,7 @@ class PostgresqlBackend(object):
     def __init__(self, connection_string="", table_prefix=""):
         self._connection = PostgresqlConnection(connection_string)
 
-        if table_prefix and not re.match("[a-z][_a-z]*(\.[a-z][_a-z]*)*", table_prefix):
+        if table_prefix and not re.match(r"[a-z][_a-z]*(\.[a-z][_a-z]*)*", table_prefix):
             raise ValueError("invalid table_prefix %s" % table_prefix)
         self._table_prefix = table_prefix
 
@@ -472,7 +472,7 @@ class PostgresqlBackend(object):
 
     def _tag(self, uuid, tags):
         query = "INSERT INTO %s (uuid, tag) SELECT %s, %s" % (self._tag_table_name, self._placeholder(),
-                                                                self._placeholder())
+                                                              self._placeholder())
         query += " WHERE NOT EXISTS (SELECT 1 FROM %s WHERE uuid=%s and tag=%s)" % (self._tag_table_name,
                                                                                     self._placeholder(),
                                                                                     self._placeholder())
@@ -517,7 +517,7 @@ class PostgresqlBackend(object):
 
     def _link(self, uuid, source_uuids):
         query = "INSERT INTO %s (uuid, source_uuid) SELECT %s, %s" % (self._link_table_name, self._placeholder(),
-                                                                        self._placeholder())
+                                                                      self._placeholder())
 
         query += " WHERE NOT EXISTS (SELECT 1 FROM %s WHERE uuid=%s and source_uuid=%s)" % (self._link_table_name,
                                                                                             self._placeholder(),
@@ -678,18 +678,18 @@ class PostgresqlBackend(object):
         # Create the table for the core namespace.
         result.append(self._sql_builder.build_create_table_query("core"))
         result.append("ALTER TABLE %s ADD PRIMARY KEY (uuid)" % self._core_table_name)
-        result.append("ALTER TABLE %s ADD CONSTRAINT %s_archive_path_uniq UNIQUE (archive_path, physical_name)"
-                       % (self._core_table_name, self._core_table_name))
-        result.append("ALTER TABLE %s ADD CONSTRAINT %s_product_name_uniq UNIQUE (product_type, product_name)"
-                       % (self._core_table_name, self._core_table_name))
+        result.append("ALTER TABLE %s ADD CONSTRAINT %s_archive_path_uniq UNIQUE (archive_path, physical_name)" %
+                      (self._core_table_name, self._core_table_name))
+        result.append("ALTER TABLE %s ADD CONSTRAINT %s_product_name_uniq UNIQUE (product_type, product_name)" %
+                      (self._core_table_name, self._core_table_name))
         for field in ['active', 'hash', 'size', 'archive_date', 'product_type', 'product_name', 'physical_name',
                       'validity_start', 'validity_stop', 'creation_date']:
-            result.append("CREATE INDEX idx_%s_%s ON %s (%s)"
-                           % (self._core_table_name, field, self._core_table_name, field))
+            result.append("CREATE INDEX idx_%s_%s ON %s (%s)" %
+                          (self._core_table_name, field, self._core_table_name, field))
 
         # For the geospatial footprint we need to use a special GIST index
-        result.append("CREATE INDEX idx_%s_footprint ON %s USING GIST (footprint)"
-                       % (self._core_table_name, self._core_table_name))
+        result.append("CREATE INDEX idx_%s_footprint ON %s USING GIST (footprint)" %
+                      (self._core_table_name, self._core_table_name))
 
         # Create the tables for all non-core namespaces.
         for namespace in self._namespace_schemas:
@@ -700,37 +700,32 @@ class PostgresqlBackend(object):
 
             result.append("ALTER TABLE %s ADD COLUMN uuid UUID PRIMARY KEY" % self._table_name(namespace))
             result.append("ALTER TABLE %s ADD CONSTRAINT %s_uuid_fkey FOREIGN KEY (uuid) REFERENCES %s (uuid) ON "
-                           "DELETE CASCADE" % (self._table_name(namespace), self._table_name(namespace),
-                                               self._core_table_name))
+                          "DELETE CASCADE" % (self._table_name(namespace), self._table_name(namespace),
+                                              self._core_table_name))
 
         # We use explicit 'id' primary keys for the links and tags tables so the entries can be managed using
         # other front-ends that may not support tuples as primary keys.
 
         # Create the table for links.
-        result.append("CREATE TABLE %s (id SERIAL PRIMARY KEY, uuid UUID NOT NULL, source_uuid UUID NOT NULL)"
-                       % self._link_table_name)
-        result.append("ALTER TABLE %s ADD CONSTRAINT %s_link_uuid_source_uuid_uniq UNIQUE (uuid, source_uuid)"
-                       % (self._link_table_name, self._link_table_name))
+        result.append("CREATE TABLE %s (id SERIAL PRIMARY KEY, uuid UUID NOT NULL, source_uuid UUID NOT NULL)" %
+                      self._link_table_name)
+        result.append("ALTER TABLE %s ADD CONSTRAINT %s_link_uuid_source_uuid_uniq UNIQUE (uuid, source_uuid)" %
+                      (self._link_table_name, self._link_table_name))
         result.append("ALTER TABLE %s ADD CONSTRAINT %s_uuid_fkey FOREIGN KEY (uuid) REFERENCES %s (uuid) ON "
-                       "DELETE CASCADE" % (self._link_table_name, self._link_table_name,
-                                           self._core_table_name))
-        result.append("CREATE INDEX idx_%s_uuid ON %s (uuid)"
-                       % (self._link_table_name, self._link_table_name))
-        result.append("CREATE INDEX idx_%s_source_uuid ON %s (source_uuid)"
-                       % (self._link_table_name, self._link_table_name))
+                      "DELETE CASCADE" % (self._link_table_name, self._link_table_name, self._core_table_name))
+        result.append("CREATE INDEX idx_%s_uuid ON %s (uuid)" % (self._link_table_name, self._link_table_name))
+        result.append("CREATE INDEX idx_%s_source_uuid ON %s (source_uuid)" %
+                      (self._link_table_name, self._link_table_name))
 
         # Create the table for tags.
-        result.append("CREATE TABLE %s (id SERIAL PRIMARY KEY, uuid UUID NOT NULL, tag TEXT NOT NULL)"
-                       % self._tag_table_name)
-        result.append("ALTER TABLE %s ADD CONSTRAINT %s_tag_uuid_tag_uniq UNIQUE (uuid, tag)"
-                       % (self._tag_table_name, self._tag_table_name))
+        result.append("CREATE TABLE %s (id SERIAL PRIMARY KEY, uuid UUID NOT NULL, tag TEXT NOT NULL)" %
+                      self._tag_table_name)
+        result.append("ALTER TABLE %s ADD CONSTRAINT %s_tag_uuid_tag_uniq UNIQUE (uuid, tag)" %
+                      (self._tag_table_name, self._tag_table_name))
         result.append("ALTER TABLE %s ADD CONSTRAINT %s_uuid_fkey FOREIGN KEY (uuid) REFERENCES %s (uuid) ON "
-                       "DELETE CASCADE" % (self._tag_table_name, self._tag_table_name,
-                                           self._core_table_name))
-        result.append("CREATE INDEX idx_%s_uuid ON %s (uuid)"
-                       % (self._tag_table_name, self._tag_table_name))
-        result.append("CREATE INDEX idx_%s_tag ON %s (tag)"
-                       % (self._tag_table_name, self._tag_table_name))
+                      "DELETE CASCADE" % (self._tag_table_name, self._tag_table_name, self._core_table_name))
+        result.append("CREATE INDEX idx_%s_uuid ON %s (uuid)" % (self._tag_table_name, self._tag_table_name))
+        result.append("CREATE INDEX idx_%s_tag ON %s (tag)" % (self._tag_table_name, self._tag_table_name))
         return result
 
     def _drop_tables(self):

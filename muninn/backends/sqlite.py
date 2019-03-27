@@ -162,7 +162,7 @@ class SQLiteConnection(object):
             self._connection.enable_load_extension(True)
             self._connection.execute("select load_extension(\"%s\");" % (self._mod_spatialite))
         except Exception as e:
-            raise Error("loading mod_spatialite extension failed (mod_spatialite_path='%s'): %s" % \
+            raise Error("loading mod_spatialite extension failed (mod_spatialite_path='%s'): %s" %
                         (self._mod_spatialite, str(e)))
 
         # ensure that spatial metadata init has been done
@@ -239,7 +239,7 @@ class SQLiteBackend(object):
         self._connection_string = connection_string
         self._connection = SQLiteConnection(connection_string, mod_spatialite_path, self)
 
-        if table_prefix and not re.match("[a-z][_a-z]*(\.[a-z][_a-z]*)*", table_prefix):
+        if table_prefix and not re.match(r"[a-z][_a-z]*(\.[a-z][_a-z]*)*", table_prefix):
             raise ValueError("invalid table_prefix %s" % table_prefix)
         self._table_prefix = table_prefix
 
@@ -713,11 +713,11 @@ class SQLiteBackend(object):
         for name in schema:
             if self._type_map()[schema[name]] == "GEOMETRY":
                 result.append("SELECT AddGeometryColumn('%s', '%s', 4326, 'GEOMETRY', 2)" %
-                               (self._core_table_name, name,))
+                              (self._core_table_name, name,))
         for field in ['active', 'hash', 'size', 'archive_date', 'product_type', 'product_name', 'physical_name',
                       'validity_start', 'validity_stop', 'creation_date']:
-            result.append("CREATE INDEX idx_%s_%s ON %s (%s)"
-                           % (self._core_table_name, field, self._core_table_name, field))
+            result.append("CREATE INDEX idx_%s_%s ON %s (%s)" %
+                          (self._core_table_name, field, self._core_table_name, field))
 
         # For the geospatial footprint we need to use a special spatial index
         result.append("SELECT CreateSpatialIndex('%s', '%s')" % (self._core_table_name, 'footprint'))
@@ -742,27 +742,26 @@ class SQLiteBackend(object):
             for name in schema:
                 if self._type_map()[schema[name]] == "GEOMETRY":
                     result.append("SELECT AddGeometryColumn('%s', '%s', 4326, 'GEOMETRY', 2)" %
-                                   (self._table_name(namespace), name))
+                                  (self._table_name(namespace), name))
 
         # We use explicit 'id' primary keys for the links and tags tables so the entries can be managed using
         # other front-ends that may not support tuples as primary keys.
 
         # Create the table for links.
-        result.append("CREATE TABLE %s (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, uuid UUID REFERENCES %s(uuid) ON DELETE CASCADE, "
-                       "source_uuid UUID NOT NULL, UNIQUE (uuid, source_uuid))" %
-                       (self._link_table_name, self._core_table_name))
-        result.append("CREATE INDEX idx_%s_uuid ON %s (uuid)"
-                       % (self._link_table_name, self._link_table_name))
-        result.append("CREATE INDEX idx_%s_source_uuid ON %s (source_uuid)"
-                       % (self._link_table_name, self._link_table_name))
+        result.append("CREATE TABLE %s (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
+                      "uuid UUID REFERENCES %s(uuid) ON DELETE CASCADE, "
+                      "source_uuid UUID NOT NULL, UNIQUE (uuid, source_uuid))" %
+                      (self._link_table_name, self._core_table_name))
+        result.append("CREATE INDEX idx_%s_uuid ON %s (uuid)" % (self._link_table_name, self._link_table_name))
+        result.append("CREATE INDEX idx_%s_source_uuid ON %s (source_uuid)" %
+                      (self._link_table_name, self._link_table_name))
 
         # Create the table for tags.
-        result.append("CREATE TABLE %s (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, uuid UUID REFERENCES %s(uuid) ON DELETE CASCADE, "
-                       "tag TEXT NOT NULL, UNIQUE (uuid, tag))" % (self._tag_table_name, self._core_table_name))
-        result.append("CREATE INDEX idx_%s_uuid ON %s (uuid)"
-                       % (self._tag_table_name, self._tag_table_name))
-        result.append("CREATE INDEX idx_%s_tag ON %s (tag)"
-                       % (self._tag_table_name, self._tag_table_name))
+        result.append("CREATE TABLE %s (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
+                      "uuid UUID REFERENCES %s(uuid) ON DELETE CASCADE, "
+                      "tag TEXT NOT NULL, UNIQUE (uuid, tag))" % (self._tag_table_name, self._core_table_name))
+        result.append("CREATE INDEX idx_%s_uuid ON %s (uuid)" % (self._tag_table_name, self._tag_table_name))
+        result.append("CREATE INDEX idx_%s_tag ON %s (tag)" % (self._tag_table_name, self._tag_table_name))
         return result
 
     def _drop_tables(self):
