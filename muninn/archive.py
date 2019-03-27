@@ -426,7 +426,8 @@ class Archive(object):
 
         result = []
         products = self.search(where=where, parameters=parameters,
-                               properties=['uuid', 'active', 'product_name',])
+                               properties=['uuid', 'active', 'product_type', 'product_name', 'archive_path',
+                                           'physical_name'])
         for product in products:
             if not product.core.active:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
