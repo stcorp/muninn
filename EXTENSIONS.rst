@@ -15,7 +15,7 @@ extensions (that contain namespace definitions), product type extensions
 (that contain product type plug-ins) and remote backend extensions (that
 contain remote backend plug-ins).
 
-A namespace is a set of related attributes, i.e. a set of (key, value) pairs.
+A namespace is a set of related properties, i.e. a set of (key, value) pairs.
 The namespace definition specifies the keys (field names) available within the
 namespace, their type, and whether or not they are optional.
 
@@ -43,30 +43,30 @@ also the file ``core.py`` included in the muninn source distribution): ::
 
 A product type plug-in is an instance of a class that handles all product type
 specific details. The most important function of a product type plug-in is to
-extract attributes from a product and return them in a form the archiving
+extract properties from a product and return them in a form the archiving
 framework understands.
 
-To represent product attributes, a class called ``muninn.Struct`` is used,
-which is essentially an empty class derived from object. Product attributes are
+To represent product properties, a class called ``muninn.Struct`` is used,
+which is essentially an empty class derived from object. Product properties are
 added to this class via injection. Think of it as a dictionary, except that you
-can also use ``.`` to access the value bound to a specific product attribute.
+can also use ``.`` to access the value bound to a specific product property.
 A ``muninn.Struct`` can be initialized with a python dictionary. This will also
 convert all members that are dictionaries into ``muninn.Struct`` objects.
 
-By convention, product attributes are named <namespace name>.<attribute name>.
+By convention, product properties are named <namespace name>.<property name>.
 This means you usually have a single top-level Struct instance, that contains a
 separate Struct instance for each namespace. For example: ::
 
   from muninn import Struct
 
-  attributes = Struct()
-  attributes.core = Struct()
-  attributes.core.product_type = "ABCD"
-  attributes.core.creation_date = datetime.datetime.utcnow()
+  properties = Struct()
+  properties.core = Struct()
+  properties.core.product_type = "ABCD"
+  properties.core.creation_date = datetime.datetime.utcnow()
   ... more of the same ...
 
-  attributes.xml_pi = Struct()
-  attributes.xml_pi.startTime = datetime.datetime.utcnow()
+  properties.xml_pi = Struct()
+  properties.xml_pi.startTime = datetime.datetime.utcnow()
   ... more of the same ...
 
 A remote backend plug-in adds the hability of an archive to pull products
@@ -232,12 +232,12 @@ Methods
     the product type the plug-in is designed to handle, ``False`` otherwise.
 
     Note that a return value of ``True`` does not necessarily imply that
-    attributes can be extracted from the product without errors. For example,
+    properties can be extracted from the product without errors. For example,
     a valid implementation of this method could be as simple as checking the
     (base) names of the specified paths against an expected pattern.
 
 ``analyze(self, paths)``
-    Return attributes extracted from the product that consists of the specified
+    Return properties extracted from the product that consists of the specified
     list of paths as a nested ``Struct`` (key, value) pair structure.
     Note that muninn will itself set the core metadata properties for ``uuid``,
     ``active``, ``hash``, ``size``, ``metadata_date``, ``archive_date``,
@@ -246,15 +246,15 @@ Methods
     provided).
 
     Optionally, a list of tags can be returned from this method in addition to
-    the extracted product attributes. Any tags returned will be applied to the
+    the extracted product properties. Any tags returned will be applied to the
     product once it has been successfully ingested.
 
     To include a list of tags, the method should return a tuple (or list) of
     two elements. The first element should be the nested Struct (key, value)
-    pair structure containing product attributes, and the second element should
+    pair structure containing product properties, and the second element should
     be the list of tags.
 
-``enclosing_directory(self, attributes)``
+``enclosing_directory(self, properties)``
     Return the name to be used for the enclosing directory.
 
     Within the archive, any product is represented by a single path. For
@@ -262,17 +262,17 @@ Methods
     wrapping everything in an enclosing directory inside the archive.
 
     A commonly used implementation of this method is to return the product
-    name, i.e. ``attributes.core.product_name``.
+    name, i.e. ``properties.core.product_name``.
 
     This method is optional if ``use_enclosing_directory`` is ``False``.
 
-``archive_path(self, attributes)``
+``archive_path(self, properties)``
     Return the path, relative to the root of the archive, where the product, of
     the product type this plug-in is designed to handle, should be stored,
-    based on the product attributes passed in as a nested ``Struct``
+    based on the product properties passed in as a nested ``Struct``
     (key, value) pair structure.
 
-    That is, this method uses the product attributes passed in to generate a
+    That is, this method uses the product properties passed in to generate a
     relative path inside the archive where the product will be stored.
 
     A commonly used implementation is to return <product type>/<year>/<month>/
@@ -283,11 +283,11 @@ Methods
     products cannot be said to cover a time range, as is the case for some
     auxiliary products.
 
-``post_ingest_hook(self, archive, attributes)``
+``post_ingest_hook(self, archive, properties)``
     This function is optional. If it exists, it will be called after a
     successful ingest of the product.
 
-``post_pull_hook(self, archive, attributes)``
+``post_pull_hook(self, archive, properties)``
     This function is optional. If it exists, it will be called after a
     successful pull of the product.
 

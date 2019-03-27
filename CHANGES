@@ -6,6 +6,9 @@
 
 * Added properties argument to archive.search().
 
+* Cleaned up terminology: we now use 'properties' instead of 'attributes'
+  everywhere when refering to product metadata.
+
 4.3 2018-10-04
 ~~~~~~~~~~~~~~
 
@@ -235,7 +238,7 @@
 2.0 2015-09-08
 ~~~~~~~~~~~~~~
 
-* Renamed attribute core.logical_name to core.product_name.
+* Renamed property core.logical_name to core.product_name.
 
 * Which namespaces and product types are available is now configured per
   archive (in the archive configuration file) instead of globally.
@@ -247,7 +250,7 @@
 * Extensions should now be reachable via the PYTHONPATH, the
   MUNINN_EXTENSION_PATH is no longer in use.
 
-* Added core.size attribute to contain the product size on disk (in bytes).
+* Added core.size property to contain the product size on disk (in bytes).
   When a product is ingested, the size of the product will be computed and
   stored automatically.
 
@@ -315,16 +318,16 @@
   - Added a has_tag() function that can be used in query expressions to
     select products that have been tagged with the specified tag.
   - Changed the muninn plug-in API: The analyze() function should return
-    a tuple or list of two elements: The product attributes and a list of
+    a tuple or list of two elements: The product properties and a list of
     product tags. To ensure backward compatibility, if a plug-in returns
-    an instance of muninn.Struct, this is used as the product attributes,
+    an instance of muninn.Struct, this is used as the product properties,
     and the product tags default to the empty list. New plug-in
     implementations should conform to the updated API.
 
 * Changes to the query expression language:
   - Added support for \timestamps that only contain a date, e.g.
     "2012-01-01".
-  - For attributes from the core namespace, the "core." prefix may now be
+  - For properties from the core namespace, the "core." prefix may now be
     omitted, e.g. "uuid" is equivalent to "core.uuid".
   - The is_source_of() and is_derived_from() functions have been changed
     from two argument (binary) to single argument (unary) functions. The
@@ -377,7 +380,7 @@
 ~~~~~~~~~~~~~~
 
 * Fixed issue where failure during product ingestion could lead to stale
-  entries in the product catalogue with the "core.active" attribute set to
+  entries in the product catalogue with the "core.active" property set to
   false.
 
 * Changed ingest and remove operations to use temporary directories located

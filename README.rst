@@ -6,11 +6,17 @@ data product catalogues and archives. It can function as a pure product
 metadata catalogue or it can manage a product archive together with its
 metadata catalogue.
 
-When using a product archive, muninn can automatically extract attributes
-from the products when products get added to the archive. Automatic attribute
+When using a product archive, muninn can automatically extract properties
+from the products when products get added to the archive. Automatic property
 extraction is handled through product type specific plug-ins
 (see section "Extensions"_), which are *not* included in the muninn
 distribution.
+
+Muninn uses the concept of namespaces to group different sets of properties
+for a product together within the catalogue. Muninn itself provides a 'core'
+namespace that covers the most common properties for data products.
+Support for additional namespaces are handled through external plug-ins
+(see section "Extensions"_).
 
 In Norse mythology, Muninn is a raven that, together with another raven called
 Huggin, gather information for the god Odin. Muninn is Old Norse for "memory".
@@ -239,7 +245,7 @@ The steps to create an archive are:
   3. Run muninn-prepare to initialize the archive for use.
 
 When using the PostgreSQL backend, you need to create a PostGIS enabled
-database that muninn can use to store product attributes. Multiple archives can
+database that muninn can use to store product properties. Multiple archives can
 share the same database, as long as they use a different schema name.
 
 Depending on your PostgreSQL installation, creating a database could be as
@@ -270,13 +276,13 @@ products using the corresponding command-line tools.
 Removing an archive
 -------------------
 The steps to completely remove an archive are:
-  1. Run muninn-destroy to remove all products and product attributes
+  1. Run muninn-destroy to remove all products and product properties
      contained in the archive.
   2. Remove the archive configuration file (optional).
   3. Perform backend specific clean-up (if required).
 
 The first step is to run the "muninn-destroy" command-line tool to remove all
-products and product attributes contained in the archive: ::
+products and product properties contained in the archive: ::
 
   $ muninn-destroy [archive id]
 
@@ -301,23 +307,24 @@ extension interface. Muninn defines two types of extensions: namespace
 extensions (that contain namespace definitions) and product type extensions
 (that contain product type plug-ins).
 
-A namespace is a named set of product attributes (see section "Namespaces"_).
+A namespace is a named set of product properties (see section "Namespaces"_).
 Muninn defines a namespace called ``core`` that contains a small set of
-attributes that muninn needs to archive a product. For example, it contains the
+properties that muninn needs to archive a product. For example, it contains the
 name of the product, its SHA1 hash, UUID, and archive date.
+The core namespace also contains several optional common properties for
+spatiotemporal data such as time stamps and geolocation footprint.
 
 Namespace extensions contain additional namespace definitions to allow storage
-of other product attributes of interest. For example, an extension for
-archiving satellite products could define a namespace that contains attributes
-such as satellite instrument, measurement footprint on Earth, satellite
-orientation, and so on. An extension for archiving music could define a
-namespace that contains attributes such as artist, genre, duration, and so
-forth.
+of other product properties of interest. For example, an extension for
+archiving satellite products could define a namespace that contains properties
+such as satellite instrument, measurement mode, orbit number, file version,
+and so on. An extension for archiving music could define a namespace that
+contains properties such as artist, genre, duration, and so forth.
 
 A product type plug-in is an instance of a class that implements the muninn
 product type plug-in interface. The main responsibility of a product type plug-
-in is to extract product attributes and tags from products of the type that it
-supports. At the minimum, this involves extracting all the required attributes
+in is to extract product properties and tags from products of the type that it
+supports. At the minimum, this involves extracting all the required properties
 defined in the "core" namespace. Without this information, muninn cannot
 archive the product.
 
@@ -343,7 +350,7 @@ settings:
 
 - ``root``: The root path on disk of the archive.
 
-- ``backend``: The backend used for storing product attributes. The currently
+- ``backend``: The backend used for storing product properties. The currently
   supported backends are ``postgresql`` and ``sqlite``.
 
 - ``use_symlinks``: If set to ``true``, an archived product will consist of
@@ -382,7 +389,7 @@ This sections contains backend specific settings for the postgresql backend and
 may contain the following settings:
 
 - connection_string: Mandatory. A postgresql connection string of the database
-  containing product attributes. The default is the empty string, which will
+  containing product properties. The default is the empty string, which will
   connect to the default database for the user invoking muninn. See psycopg
   documentation for the syntax.
 
@@ -398,7 +405,7 @@ This sections contains backend specific settings for the postgresql backend and
 may contain the following settings:
 
 - connection_string: Mandatory. A full path to the sqlite database file
-  containing the product attributes. This file will be automatically created by
+  containing the product properties. This file will be automatically created by
   muninn when it first tries to access the database.
 
 - table_prefix: Prefix that should be used for all table names, indices, and
@@ -443,7 +450,7 @@ Example credentials file
 
 Data types
 ==========
-Each product attribute can be of one of the following supported types: boolean,
+Each product property can be of one of the following supported types: boolean,
 integer, long, real, text, timestamp, uuid, and geometry. These types are
 described in detail below.
 
@@ -501,7 +508,7 @@ The timestamp type represents an instance in time with microsecond resolution.
 Time zone information is not included. Although throughout muninn all
 timestamps are expressed in UTC, users (and especially product type plug-in
 developers) can choose a different convention (e.g. local time) for custom
-product attributes.
+product properties.
 
 The minimum and maximum timestamp values are ``0001-01-01T00:00:00.000000`` and
 ``9999-12-31T23:59:59.999999`` respectively, which may also be written as
@@ -570,13 +577,13 @@ Some examples of literal geometry values:
 
 Namespaces
 ==========
-A namespace is a named set of product attributes. The concept of a namespace is
-used to group related product attributes and to avoid name clashes. Any product
-attribute can be defined to be either optional or mandatory.
+A namespace is a named set of product properties. The concept of a namespace is
+used to group related product properties and to avoid name clashes. Any product
+property can be defined to be either optional or mandatory.
 
 For example, the definition of the ``core`` namespace includes the mandatory
-attribute ``uuid``, and the optional attributes ``validity_start`` and
-``validity_stop``. The full name of these product attributes is ``core.uuid``,
+property ``uuid``, and the optional properties ``validity_start`` and
+``validity_stop``. The full name of these product properties is ``core.uuid``,
 ``core.validity_start``, and ``core.validity_stop``.
 
 
@@ -601,20 +608,20 @@ To make it easy to search for products in an archive, muninn implements its own
 expression language. The expression language is somewhat similar to the WHERE
 clause in an SQL SELECT statement.
 
-When a muninn extension includes namespace definitions, all product attributes
+When a muninn extension includes namespace definitions, all product properties
 defined in these namespaces can be used in expressions.
 
 The details of the expression language are described below. See the section
 "Data types"_ for more information about the data types supported by muninn.
 
-Attribute references
---------------------
-A product attribute ``x`` defined in namespace ``y`` is referred to using
+Property references
+-------------------
+A product property ``x`` defined in namespace ``y`` is referred to using
 ``y.x``. If the namespace prefix ``y`` is omitted, it defaults to ``core``.
-This means that any attribute from the ``core`` namespace may be referenced
+This means that any property from the ``core`` namespace may be referenced
 directly.
 
-Some examples of attribute references:
+Some examples of property references:
 
   ``uuid``
 
@@ -687,7 +694,7 @@ sqlite backend.
 
 The unary function ``is_defined`` is supported for all data types and returns
 true if its argument is defined. This can be used to check if optional
-attributes are defined or not.
+properties are defined or not.
 
 The function ``covers(timestamp, timestamp, timestamp, timestamp)`` returns
 true if the time range formed by the pair of timestamps covers the time range

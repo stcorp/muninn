@@ -317,12 +317,12 @@ class Identifier(object):
         if canonical_identifier == 'tag':
             # the rules to get the namespace database table name also apply to 'tag'
             self.namespace = canonical_identifier
-            self.attribute = canonical_identifier
+            self.identifier = canonical_identifier
             self.subscript = None
             self.muninn_type = Text
         elif canonical_identifier == 'count':
             self.namespace = None
-            self.attribute = canonical_identifier
+            self.identifier = canonical_identifier
             self.subscript = None
             self.muninn_type = Long
         elif not re.match(r'[\w]+\.[\w.]+', canonical_identifier):
@@ -330,24 +330,24 @@ class Identifier(object):
         else:
             split = canonical_identifier.split('.', 2)
             self.namespace = split[0]
-            self.attribute = split[1]
+            self.identifier = split[1]
             self.subscript = split[2] if len(split) > 2 else None
             # check if namespace is valid
             if self.namespace not in namespace_schemas:
                 raise Error("undefined namespace: \"%s\"" % self.namespace)
-            # check if attribute is valid
-            if self.attribute not in namespace_schemas[self.namespace]:
+            # check if property is valid
+            if self.identifier not in namespace_schemas[self.namespace]:
                 if self.property != 'core.validity_duration':
-                    raise Error("no property: %r defined within namespace: %r" % (self.attribute, self.namespace))
+                    raise Error("no property: %r defined within namespace: %r" % (self.identifier, self.namespace))
             # note: not checking if subscript is valid; the list of possible subscripts varies depending on context
             if self.property == 'core.validity_duration':
                 self.muninn_type = None
             else:
-                self.muninn_type = namespace_schemas[self.namespace][self.attribute]
+                self.muninn_type = namespace_schemas[self.namespace][self.identifier]
 
     @property
     def property(self):
-        return '%s.%s' % (self.namespace, self.attribute)
+        return '%s.%s' % (self.namespace, self.identifier)
 
 
 class SQLBuilder(object):
@@ -365,9 +365,9 @@ class SQLBuilder(object):
         column_sql = []
 
         schema = self._namespace_schema(namespace)
-        for name in schema:
-            sql = name + " " + self._type(schema[name])
-            if not schema.is_optional(name):
+        for identifier in schema:
+            sql = identifier + " " + self._type(schema[identifier])
+            if not schema.is_optional(identifier):
                 sql = sql + " " + "NOT NULL"
             column_sql.append(sql)
 
@@ -375,7 +375,7 @@ class SQLBuilder(object):
 
     def build_count_query(self, where="", parameters={}):
         # Namespaces that appear in the "where" expression are combined via inner joins. This ensures that only those
-        # products that actually have a defined value for a given attribute will be considered by the "where"
+        # products that actually have a defined value for a given property will be considered by the "where"
         # expression. This also means that products that do not occur in all of the namespaces referred to in the
         # "where" expression will be ignored.
         #
@@ -407,12 +407,12 @@ class SQLBuilder(object):
 
     def build_summary_query(self, where='', parameters=None, aggregates=None, group_by=None, group_by_tag=False, order_by=None):
         # Namespaces that appear in the "where" expression are combined via inner joins. This ensures that only those
-        # products that actually have a defined value for a given attribute will be considered by the "where"
+        # products that actually have a defined value for a given property will be considered by the "where"
         # expression. This also means that products that do not occur in all of the namespaces referred to in the
         # "where" expression will be ignored.
         #
         # Other namespaces are combined via (left) outer joins, with the core namespace as the leftmost namespace. This
-        # ensures that attributes will be returned of any product that occurs in zero or more of the requested
+        # ensures that properties will be returned of any product that occurs in zero or more of the requested
         # namespaces.
 
         aggregates = aggregates or []
@@ -456,7 +456,7 @@ class SQLBuilder(object):
         # group by fields
         for item in group_by:
             item = Identifier(item, self._namespace_schemas)
-            column_name = self._column_name(item.namespace, item.attribute)
+            column_name = self._column_name(item.namespace, item.identifier)
             group_by_functions = GROUP_BY_FUNCTIONS.get(item.muninn_type)
             if not group_by_functions:  # item.muninn_type not in (Text, Boolean, Long, Integer):
                 if item.muninn_type:
@@ -491,7 +491,7 @@ class SQLBuilder(object):
                 stop_column = self._column_name(item.namespace, 'validity_stop')
                 column_name = self._rewriter_table[Prototype('-', (Timestamp, Timestamp), Real)](stop_column, start_column)
             else:
-                column_name = self._column_name(item.namespace, item.attribute)
+                column_name = self._column_name(item.namespace, item.identifier)
             select_list.append('%s(%s) AS "%s"' % (item.subscript.upper(), column_name, item.canonical))
         select_clause = 'SELECT %s' % ', '.join(select_list)
 
@@ -518,11 +518,11 @@ class SQLBuilder(object):
 
     def build_search_query(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], properties=[]):
         # Namespaces are combined via (left) outer joins, with the core namespace as the leftmost namespace. This
-        # ensures that attributes will be returned of any product that occurs in zero or more of the requested
+        # ensures that properties will be returned of any product that occurs in zero or more of the requested
         # namespaces.
         #
         # Namespaces that appear in the "where" and "order by" expressions, in contrast, are combined via inner joins.
-        # This ensures that only those products that actually have a defined value for a given attribute will be
+        # This ensures that only those products that actually have a defined value for a given property will be
         # considered by the "where" and "order by" expressions. This also means that products that do not occur in all
         # of the namespaces referred to in the "where" and "order by" expressions will be ignored.
         #
@@ -534,12 +534,12 @@ class SQLBuilder(object):
                 if '.' not in item:
                     item = "core." + item
                 Identifier(item, self._namespace_schemas)  # check if the identifier is valid
-                namespace, name = item.split('.')
+                namespace, identifier = item.split('.')
                 if namespace not in namespaces:
                     namespaces.append(namespace)
                     namespace_properties[namespace] = ['uuid']  # always add uuid to determine if namespace exists
-                if name != 'uuid':
-                    namespace_properties[namespace].append(name)
+                if identifier != 'uuid':
+                    namespace_properties[namespace].append(identifier)
             outer_join_set, inner_join_set = set(namespaces), set()
             description = [(namespace, namespace_properties[namespace]) for namespace in namespaces]
         else:
@@ -581,8 +581,8 @@ class SQLBuilder(object):
 
         # Generate the SELECT clause.
         select_list = []
-        for namespace, attributes in description:
-            select_list.extend([self._column_name(namespace, attribute) for attribute in attributes])
+        for namespace, identifiers in description:
+            select_list.extend([self._column_name(namespace, identifier) for identifier in identifiers])
         select_clause = "SELECT %s" % ", ".join(select_list)
 
         # Generate the FROM clause.
@@ -613,20 +613,20 @@ class SQLBuilder(object):
             name = item[1:] if item.startswith("+") or item.startswith("-") else item
 
             try:
-                namespace, attribute = name.split(".")
+                namespace, name = name.split(".")
             except ValueError:
                 raise Error("invalid property name: %r" % name)
 
-            if attribute not in self._namespace_schema(namespace):
-                raise Error("no property: %r defined within namespace: %r" % (attribute, namespace))
+            if name not in self._namespace_schema(namespace):
+                raise Error("no property: %r defined within namespace: %r" % (name, namespace))
 
             namespaces.add(namespace)
-            order_by_list.append(self._column_name(namespace, attribute) + " " + direction)
+            order_by_list.append(self._column_name(namespace, name) + " " + direction)
 
         return order_by_list, namespaces
 
-    def _column_name(self, namespace, attribute):
-        return self._table_name(namespace) + "." + attribute
+    def _column_name(self, namespace, identifier):
+        return self._table_name(namespace) + "." + identifier
 
     def _namespace_schema(self, namespace):
         try:
