@@ -338,7 +338,7 @@ class Identifier(object):
             # check if attribute is valid
             if self.attribute not in namespace_schemas[self.namespace]:
                 if self.property != 'core.validity_duration':
-                    raise Error("no attribute: %r defined within namespace: %r" % (self.attribute, self.namespace))
+                    raise Error("no property: %r defined within namespace: %r" % (self.attribute, self.namespace))
             # note: not checking if subscript is valid; the list of possible subscripts varies depending on context
             if self.property == 'core.validity_duration':
                 self.muninn_type = None
@@ -615,10 +615,10 @@ class SQLBuilder(object):
             try:
                 namespace, attribute = name.split(".")
             except ValueError:
-                raise Error("invalid attribute name: %r" % name)
+                raise Error("invalid property name: %r" % name)
 
             if attribute not in self._namespace_schema(namespace):
-                raise Error("no attribute: %r defined within namespace: %r" % (attribute, namespace))
+                raise Error("no property: %r defined within namespace: %r" % (attribute, namespace))
 
             namespaces.add(namespace)
             order_by_list.append(self._column_name(namespace, attribute) + " " + direction)
