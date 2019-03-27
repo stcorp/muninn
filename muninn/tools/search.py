@@ -101,10 +101,6 @@ def parse_property_name(name):
     raise ValueError("invalid property name: %r" % name)
 
 
-def format_attribute(value):
-    return "<unknown>" if value is None else str(value)
-
-
 def count(args):
     with muninn.open(args.archive) as archive:
         print(archive.count(args.expression))
