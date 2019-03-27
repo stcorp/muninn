@@ -514,7 +514,7 @@ class SQLBuilder(object):
 
         return query, where_parameters, result_fields
 
-    def build_search_query(self, where="", order_by=[], limit=None, parameters={}, namespaces=[]):
+    def build_search_query(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], properties=[]):
         # Namespaces are combined via (left) outer joins, with the core namespace as the leftmost namespace. This
         # ensures that attributes will be returned of any product that occurs in zero or more of the requested
         # namespaces.
@@ -524,11 +524,27 @@ class SQLBuilder(object):
         # considered by the "where" and "order by" expressions. This also means that products that do not occur in all
         # of the namespaces referred to in the "where" and "order by" expressions will be ignored.
         #
-        outer_join_set, inner_join_set = set(namespaces), set()
 
-        description = [("core", list(self._namespace_schema("core")))]
-        for namespace in outer_join_set:
-            description.append((namespace, ["uuid"] + list(self._namespace_schema(namespace))))
+        if properties:
+            namespaces = []
+            namespace_properties = {}
+            for item in properties:
+                if not '.' in item:
+                    item = "core." + item
+                Identifier(item, self._namespace_schemas)  # check if the identifier is valid
+                namespace, name = item.split('.')
+                if namespace not in namespaces:
+                    namespaces.append(namespace)
+                    namespace_properties[namespace] = ['uuid']  # always add uuid to determine if namespace exists
+                if name != 'uuid':
+                    namespace_properties[namespace].append(name)
+            outer_join_set, inner_join_set = set(namespaces), set()
+            description = [(namespace, namespace_properties[namespace]) for namespace in namespaces]
+        else:
+            outer_join_set, inner_join_set = set(namespaces), set()
+            description = [("core", list(self._namespace_schema("core")))]
+            for namespace in outer_join_set:
+                description.append((namespace, ["uuid"] + list(self._namespace_schema(namespace))))
 
         # Parse the where clause.
         where_clause, where_parameters = "", {}

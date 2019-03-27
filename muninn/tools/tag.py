@@ -11,7 +11,7 @@ from .utils import create_parser, parse_args_and_run
 
 def tag(args):
     with muninn.open(args.archive) as archive:
-        for product in archive.search(where=args.expression):
+        for product in archive.search(where=args.expression, properties=['uuid']):
             archive.tag(product.core.uuid, args.tag)
 
     return 0

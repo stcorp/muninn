@@ -425,7 +425,8 @@ class Archive(object):
             export_method_name = export_method_name + "_" + format
 
         result = []
-        products = self.search(where=where, parameters=parameters)
+        products = self.search(where=where, parameters=parameters,
+                               properties=['uuid', 'active', 'product_name',])
         for product in products:
             if not product.core.active:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
@@ -465,11 +466,8 @@ class Archive(object):
 
         """
         paths = self.export("product_name == @product_name", {"product_name": product_name}, target_path, format)
-        assert(len(paths) >= 0)
-
         if not paths:
             raise Error("no products found with name '%s'" % product_name)
-
         return paths
 
     def export_by_uuid(self, uuid, target_path=os.path.curdir, format=None):
@@ -483,11 +481,8 @@ class Archive(object):
 
         """
         paths = self.export("uuid == @uuid", {"uuid": uuid}, target_path, format)
-        assert(len(paths) <= 1)
-
         if not paths:
             raise Error("product with uuid '%s' not found" % uuid)
-
         return paths
 
     def export_formats(self):
@@ -806,16 +801,16 @@ class Archive(object):
         if isinstance(uuid_or_name_or_properties, Struct):
             product = uuid_or_name_or_properties
         elif isinstance(uuid_or_name_or_properties, uuid.UUID):
-            products = self.search(where="uuid == @uuid", parameters={"uuid": uuid_or_name_or_properties})
+            products = self.search(where="uuid == @uuid", parameters={"uuid": uuid_or_name_or_properties},
+                                   properties=['archive_path', 'physical_name'])
             if len(products) == 0:
                 raise Error("product with uuid '%s' not found" % uuid_or_name_or_properties)
             assert len(products) == 1
             product = products[0]
         else:
-            products = self.search(
-                where="product_name == @product_name",
-                parameters={"product_name": uuid_or_name_or_properties}
-            )
+            products = self.search(where="product_name == @product_name",
+                                   parameters={"product_name": uuid_or_name_or_properties},
+                                   properties=['archive_path', 'physical_name'])
             if len(products) == 0:
                 raise Error("product with name '%s' not found" % uuid_or_name_or_properties)
             if len(products) != 1:
@@ -1080,7 +1075,8 @@ class Archive(object):
                         failure occured during ingestion, as well as products in the process of being ingested. Use this
                         option with care.
         """
-        products = self.search(where=where, parameters=parameters)
+        products = self.search(where=where, parameters=parameters,
+                               properties=['uuid', 'active', 'product_name', 'archive_path', 'physical_name'])
         for product in products:
             if not product.core.active and not force:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
@@ -1107,11 +1103,8 @@ class Archive(object):
 
         """
         count = self.remove("product_name == @product_name", {"product_name": product_name}, force)
-        assert(count >= 0)
-
         if count == 0:
             raise Error("no products found with name '%s'" % product_name)
-
         return count
 
     def remove_by_uuid(self, uuid, force=False):
@@ -1125,11 +1118,8 @@ class Archive(object):
 
         """
         count = self.remove("uuid == @uuid", {"uuid": uuid}, force)
-        assert(count <= 1)
-
         if count == 0:
             raise Error("product with uuid '%s' not found" % uuid)
-
         return count
 
     def retrieve(self, where="", parameters={}, target_path=os.path.curdir, use_symlinks=False):
@@ -1144,7 +1134,9 @@ class Archive(object):
                             By default, products will be retrieved as copies.
 
         """
-        products = self.search(where=where, parameters=parameters)
+        products = self.search(where=where, parameters=parameters,
+                               properties=['uuid', 'active', 'product_type', 'product_name', 'archive_path',
+                                           'physical_name'])
         for product in products:
             if not product.core.active or 'archive_path' not in product.core:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
@@ -1168,11 +1160,8 @@ class Archive(object):
         """
         count = self.retrieve("product_name == @product_name", {"product_name": product_name}, target_path,
                               use_symlinks)
-        assert(count >= 0)
-
         if count == 0:
             raise Error("no products found with name '%s'" % product_name)
-
         return count
 
     def retrieve_by_uuid(self, uuid, target_path=os.path.curdir, use_symlinks=False):
@@ -1186,11 +1175,8 @@ class Archive(object):
 
         """
         count = self.retrieve("uuid == @uuid", {"uuid": uuid}, target_path, use_symlinks)
-        assert(count <= 1)
-
         if count == 0:
             raise Error("product with uuid '%s' not found" % uuid)
-
         return count
 
     def retrieve_properties(self, uuid, namespaces=[]):
@@ -1207,13 +1193,13 @@ class Archive(object):
         if len(products) == 0:
             raise Error("product with uuid '%s' not found" % uuid)
 
-        return products.pop()
+        return products[0]
 
     def root(self):
         """Return the archive root path."""
         return self._root
 
-    def search(self, where="", order_by=[], limit=None, parameters={}, namespaces=[]):
+    def search(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], properties=[]):
         """Search the product catalogue for products matching the specified search expression.
 
         Keyword arguments:
@@ -1226,9 +1212,14 @@ class Archive(object):
         parameters  --  Parameters referenced in the search expression (if any).
         namespaces  --  List of namespaces of which the properties should be retrieved. By default, only properties
                         defined in the "core" namespace will be retrieved.
-
+        properties  --  List of property names that should be returned. By default all properties of the "core"
+                        namespace and those of the namespaces in the namespaces argument are included.
+                        If this parameter is a non-empty list then only the referenced properties will be returned.
+                        Properties are specified as '<namespace>.<property_name>'
+                        (the namespace can be omitted for the 'core' namespace).
+                        If the properties parameter is provided then the namespaces parameter is ignored.
         """
-        return self._backend.search(where, order_by, limit, parameters, namespaces)
+        return self._backend.search(where, order_by, limit, parameters, namespaces, properties)
 
     def source_products(self, uuid):
         """Return the UUIDs of the products that are linked to the given product as source products."""
@@ -1251,7 +1242,8 @@ class Archive(object):
         query = "is_defined(archive_path)"
         if where:
             query += " and (" + where + ")"
-        products = self.search(where=query, parameters=parameters)
+        products = self.search(where=query, parameters=parameters,
+                               properties=['uuid', 'active', 'product_name', 'archive_path', 'physical_name'])
         for product in products:
             if not product.core.active and not force:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
@@ -1278,11 +1270,8 @@ class Archive(object):
 
         """
         count = self.strip("product_name == @product_name", {"product_name": product_name})
-        assert(count >= 0)
-
         if count == 0:
             raise Error("no products found with name '%s'" % product_name)
-
         return count
 
     def strip_by_uuid(self, uuid):
@@ -1296,11 +1285,8 @@ class Archive(object):
 
         """
         count = self.strip("uuid == @uuid", {"uuid": uuid})
-        assert(count <= 1)
-
         if count == 0:
             raise Error("product with uuid '%s' not found" % uuid)
-
         return count
 
     def summary(self, where="", parameters=None, aggregates=None, group_by=None, group_by_tag=False, order_by=None):
@@ -1375,7 +1361,8 @@ class Archive(object):
                 uuid = properties.core.uuid if uuid is None else uuid
                 if uuid != properties.core.uuid:
                     raise Error("specified uuid does not match uuid included in the specified product properties")
-            existing_product = self.search(where='uuid == @uuid', parameters={'uuid': uuid}, namespaces=self.namespaces())[0]
+            existing_product = self.search(where='uuid == @uuid', parameters={'uuid': uuid},
+                                           namespaces=self.namespaces())[0]
             new_namespaces = list(set(vars(properties).keys()) - set(vars(existing_product).keys()))
         else:
             new_namespaces = None
@@ -1396,7 +1383,8 @@ class Archive(object):
 
         """
         failed_products = []
-        products = self.search(where=where, parameters=parameters)
+        products = self.search(where=where, parameters=parameters,
+                               properties=['uuid', 'active', 'product_name', 'archive_path', 'physical_name', 'hash'])
         for product in products:
             if product.core.active and 'archive_path' in product.core:
                 if 'hash' not in product.core:

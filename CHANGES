@@ -4,6 +4,8 @@
 
 * Added --processes option to muninn-update.
 
+* Added properties argument to archive.search().
+
 4.3 2018-10-04
 ~~~~~~~~~~~~~~
 

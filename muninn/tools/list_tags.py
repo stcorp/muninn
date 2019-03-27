@@ -11,7 +11,7 @@ from .utils import create_parser, parse_args_and_run
 
 def list_tags(args):
     with muninn.open(args.archive) as archive:
-        for product in archive.search(where=args.expression):
+        for product in archive.search(where=args.expression, properties=['uuid', 'product_name']):
             tags = archive.tags(product.core.uuid)
             print("%s (%s): %s" % (product.core.product_name, product.core.uuid, ", ".join(tags)))
 

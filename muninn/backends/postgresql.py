@@ -355,9 +355,9 @@ class PostgresqlBackend(object):
                 cursor.close()
 
     @translate_psycopg_errors
-    def search(self, where="", order_by=[], limit=None, parameters={}, namespaces=[]):
-        query, query_parameters, query_description = self._sql_builder.build_search_query(where, order_by, limit,
-                                                                                          parameters, namespaces)
+    def search(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], properties=[]):
+        query, query_parameters, query_description = \
+            self._sql_builder.build_search_query(where, order_by, limit, parameters, namespaces, properties)
 
         with self._connection:
             cursor = self._connection.cursor()
@@ -642,7 +642,7 @@ class PostgresqlBackend(object):
                 ns_description = ns_description[1:]
 
             unpacked_ns_properties = self._unpack_namespace_properties(ns_name, ns_description, values[start:end])
-            self._validate_namespace_properties(ns_name, unpacked_ns_properties)
+            self._validate_namespace_properties(ns_name, unpacked_ns_properties, partial=True)
             unpacked_properties[ns_name] = unpacked_ns_properties
             start = end
 
