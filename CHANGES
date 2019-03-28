@@ -9,6 +9,9 @@
 * Cleaned up terminology: we now use 'properties' instead of 'attributes'
   everywhere when refering to product metadata.
 
+* Fixed issue in sqlite backend where geometry covers()/intersects()
+  operations returned true if geometry property was not defined.
+
 4.3 2018-10-04
 ~~~~~~~~~~~~~~
 
