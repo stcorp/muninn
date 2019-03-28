@@ -335,18 +335,18 @@ class Identifier(object):
             # check if namespace is valid
             if self.namespace not in namespace_schemas:
                 raise Error("undefined namespace: \"%s\"" % self.namespace)
-            # check if property is valid
+            # check if property name is valid
             if self.identifier not in namespace_schemas[self.namespace]:
-                if self.property != 'core.validity_duration':
+                if self.property_name != 'core.validity_duration':
                     raise Error("no property: %r defined within namespace: %r" % (self.identifier, self.namespace))
             # note: not checking if subscript is valid; the list of possible subscripts varies depending on context
-            if self.property == 'core.validity_duration':
+            if self.property_name == 'core.validity_duration':
                 self.muninn_type = None
             else:
                 self.muninn_type = namespace_schemas[self.namespace][self.identifier]
 
     @property
-    def property(self):
+    def property_name(self):
         return '%s.%s' % (self.namespace, self.identifier)
 
 
@@ -462,9 +462,10 @@ class SQLBuilder(object):
             if not group_by_functions:  # item.muninn_type not in (Text, Boolean, Long, Integer):
                 if item.muninn_type:
                     raise Error("property %r of type %r cannot be part of the group_by field specification" %
-                                (item.property, item.muninn_type.name()))
+                                (item.property_name, item.muninn_type.name()))
                 else:
-                    raise Error("property %r cannot be part of the group_by field specification" % (item.property, ))
+                    raise Error("property %r cannot be part of the group_by field specification" %
+                                (item.property_name, ))
             if item.subscript not in group_by_functions:
                 if item.subscript:
                     allowed_message = "; it can be one of %r" % group_by_functions if group_by_functions != [None] \
@@ -473,7 +474,7 @@ class SQLBuilder(object):
                                 (item.subscript, item.canonical))
                 else:
                     raise Error("property %r of type %r must specify a subscript (one of %r) to be part of the "
-                                "group_by field specification" % (item.property, item.muninn_type.name(),
+                                "group_by field specification" % (item.property_name, item.muninn_type.name(),
                                                                   group_by_functions))
             if item.subscript:
                 column_name = self._rewriter_property(column_name, item.subscript)
@@ -484,7 +485,7 @@ class SQLBuilder(object):
             item = Identifier(item, self._namespace_schemas)
             if not AGGREGATE_FUNCTIONS.get(item.muninn_type):
                 raise Error("property %r of type %r cannot be part of the summary field specification" %
-                            (item.property, item.muninn_type.name()))
+                            (item.property_name, item.muninn_type.name()))
             elif item.subscript not in AGGREGATE_FUNCTIONS[item.muninn_type]:
                 if item.subscript:
                     raise Error("summary field specification subscript %r of %r should be one of %r" %
@@ -492,7 +493,7 @@ class SQLBuilder(object):
                 else:
                     raise Error("summary field specification %r must specify a subscript (one of %r)" %
                                 (item.canonical, AGGREGATE_FUNCTIONS[item.muninn_type]))
-            if item.property == 'core.validity_duration':
+            if item.property_name == 'core.validity_duration':
                 start_column = self._column_name(item.namespace, 'validity_start')
                 stop_column = self._column_name(item.namespace, 'validity_stop')
                 column_name = self._rewriter_table[Prototype('-', (Timestamp, Timestamp), Real)](stop_column,
@@ -523,7 +524,7 @@ class SQLBuilder(object):
 
         return query, where_parameters, result_fields
 
-    def build_search_query(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], properties=[]):
+    def build_search_query(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], property_names=[]):
         # Namespaces are combined via (left) outer joins, with the core namespace as the leftmost namespace. This
         # ensures that properties will be returned of any product that occurs in zero or more of the requested
         # namespaces.
@@ -534,10 +535,10 @@ class SQLBuilder(object):
         # of the namespaces referred to in the "where" and "order by" expressions will be ignored.
         #
 
-        if properties:
+        if property_names:
             namespaces = []
             namespace_properties = {}
-            for item in properties:
+            for item in property_names:
                 if '.' not in item:
                     item = "core." + item
                 Identifier(item, self._namespace_schemas)  # check if the identifier is valid

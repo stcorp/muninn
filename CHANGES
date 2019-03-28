@@ -4,7 +4,7 @@
 
 * Added --processes option to muninn-update.
 
-* Added properties argument to archive.search().
+* Added property_names argument to archive.search().
 
 * Cleaned up terminology: we now use 'properties' instead of 'attributes'
   everywhere when refering to product metadata.

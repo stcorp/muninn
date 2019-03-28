@@ -356,9 +356,9 @@ class PostgresqlBackend(object):
                 cursor.close()
 
     @translate_psycopg_errors
-    def search(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], properties=[]):
+    def search(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], property_names=[]):
         query, query_parameters, query_description = \
-            self._sql_builder.build_search_query(where, order_by, limit, parameters, namespaces, properties)
+            self._sql_builder.build_search_query(where, order_by, limit, parameters, namespaces, property_names)
 
         with self._connection:
             cursor = self._connection.cursor()
@@ -652,15 +652,15 @@ class PostgresqlBackend(object):
     def _unpack_namespace_properties(self, namespace, description, values):
         unpacked_properties = Struct()
         schema = self._namespace_schema(namespace)
-        for property, value in zip(description, values):
+        for identifier, value in zip(description, values):
             # We may get unicode from the psycopg2 connection
             # if, possibly by a third party, the UNICODE adapter is loaded.
             # Muninn assumes strs
             if is_python2_unicode(value):
                 value = value.encode(self._connection.encoding)
 
-            if value is not None or not schema.is_optional(property):
-                unpacked_properties[property] = value
+            if value is not None or not schema.is_optional(identifier):
+                unpacked_properties[identifier] = value
         return unpacked_properties
 
     def _validate_namespace_properties(self, namespace, properties, partial=False):

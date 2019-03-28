@@ -82,7 +82,7 @@ def update(args):
     with muninn.open(args.archive) as archive:
         if args.action in ['ingest', 'pull']:
             # we only need the uuid and the product_name
-            products = archive.search(expression, properties=['uuid', 'product_name'])
+            products = archive.search(expression, property_names=['uuid', 'product_name'])
         else:
             products = archive.search(expression, namespaces=namespaces)
         if args.parallel:

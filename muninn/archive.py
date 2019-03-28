@@ -426,8 +426,8 @@ class Archive(object):
 
         result = []
         products = self.search(where=where, parameters=parameters,
-                               properties=['uuid', 'active', 'product_type', 'product_name', 'archive_path',
-                                           'physical_name'])
+                               property_names=['uuid', 'active', 'product_type', 'product_name', 'archive_path',
+                                               'physical_name'])
         for product in products:
             if not product.core.active:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
@@ -804,7 +804,7 @@ class Archive(object):
             product = uuid_or_name_or_properties
         elif isinstance(uuid_or_name_or_properties, uuid.UUID):
             products = self.search(where="uuid == @uuid", parameters={"uuid": uuid_or_name_or_properties},
-                                   properties=['archive_path', 'physical_name'])
+                                   property_names=['archive_path', 'physical_name'])
             if len(products) == 0:
                 raise Error("product with uuid '%s' not found" % uuid_or_name_or_properties)
             assert len(products) == 1
@@ -812,7 +812,7 @@ class Archive(object):
         else:
             products = self.search(where="product_name == @product_name",
                                    parameters={"product_name": uuid_or_name_or_properties},
-                                   properties=['archive_path', 'physical_name'])
+                                   property_names=['archive_path', 'physical_name'])
             if len(products) == 0:
                 raise Error("product with name '%s' not found" % uuid_or_name_or_properties)
             if len(products) != 1:
@@ -1078,7 +1078,7 @@ class Archive(object):
                         this option with care.
         """
         products = self.search(where=where, parameters=parameters,
-                               properties=['uuid', 'active', 'product_name', 'archive_path', 'physical_name'])
+                               property_names=['uuid', 'active', 'product_name', 'archive_path', 'physical_name'])
         for product in products:
             if not product.core.active and not force:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
@@ -1137,8 +1137,8 @@ class Archive(object):
 
         """
         products = self.search(where=where, parameters=parameters,
-                               properties=['uuid', 'active', 'product_type', 'product_name', 'archive_path',
-                                           'physical_name'])
+                               property_names=['uuid', 'active', 'product_type', 'product_name', 'archive_path',
+                                               'physical_name'])
         for product in products:
             if not product.core.active or 'archive_path' not in product.core:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
@@ -1201,7 +1201,7 @@ class Archive(object):
         """Return the archive root path."""
         return self._root
 
-    def search(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], properties=[]):
+    def search(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], property_names=[]):
         """Search the product catalogue for products matching the specified search expression.
 
         Keyword arguments:
@@ -1214,14 +1214,15 @@ class Archive(object):
         parameters  --  Parameters referenced in the search expression (if any).
         namespaces  --  List of namespaces of which the properties should be retrieved. By default, only properties
                         defined in the "core" namespace will be retrieved.
-        properties  --  List of property names that should be returned. By default all properties of the "core"
+        property_names
+                    --  List of property names that should be returned. By default all properties of the "core"
                         namespace and those of the namespaces in the namespaces argument are included.
                         If this parameter is a non-empty list then only the referenced properties will be returned.
-                        Properties are specified as '<namespace>.<property_name>'
+                        Properties are specified as '<namespace>.<identifier>'
                         (the namespace can be omitted for the 'core' namespace).
-                        If the properties parameter is provided then the namespaces parameter is ignored.
+                        If the property_names parameter is provided then the namespaces parameter is ignored.
         """
-        return self._backend.search(where, order_by, limit, parameters, namespaces, properties)
+        return self._backend.search(where, order_by, limit, parameters, namespaces, property_names)
 
     def source_products(self, uuid):
         """Return the UUIDs of the products that are linked to the given product as source products."""
@@ -1245,7 +1246,7 @@ class Archive(object):
         if where:
             query += " and (" + where + ")"
         products = self.search(where=query, parameters=parameters,
-                               properties=['uuid', 'active', 'product_name', 'archive_path', 'physical_name'])
+                               property_names=['uuid', 'active', 'product_name', 'archive_path', 'physical_name'])
         for product in products:
             if not product.core.active and not force:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
@@ -1386,7 +1387,8 @@ class Archive(object):
         """
         failed_products = []
         products = self.search(where=where, parameters=parameters,
-                               properties=['uuid', 'active', 'product_name', 'archive_path', 'physical_name', 'hash'])
+                               property_names=['uuid', 'active', 'product_name', 'archive_path', 'physical_name',
+                                               'hash'])
         for product in products:
             if product.core.active and 'archive_path' in product.core:
                 if 'hash' not in product.core:

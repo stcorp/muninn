@@ -12,7 +12,7 @@ from .utils import create_parser, parse_args_and_run
 def untag(args):
     with muninn.open(args.archive) as archive:
         tags = None if args.all else args.tag
-        for product in archive.search(where=args.expression, properties=['uuid']):
+        for product in archive.search(where=args.expression, property_names=['uuid']):
             archive.untag(product.core.uuid, tags)
 
     return 0
