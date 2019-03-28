@@ -405,14 +405,15 @@ class SQLBuilder(object):
 
         return query, where_parameters
 
-    def build_summary_query(self, where='', parameters=None, aggregates=None, group_by=None, group_by_tag=False, order_by=None):
+    def build_summary_query(self, where='', parameters=None, aggregates=None, group_by=None, group_by_tag=False,
+                            order_by=None):
         # Namespaces that appear in the "where" expression are combined via inner joins. This ensures that only those
         # products that actually have a defined value for a given property will be considered by the "where"
         # expression. This also means that products that do not occur in all of the namespaces referred to in the
         # "where" expression will be ignored.
         #
-        # Other namespaces are combined via (left) outer joins, with the core namespace as the leftmost namespace. This
-        # ensures that properties will be returned of any product that occurs in zero or more of the requested
+        # Other namespaces are combined via (left) outer joins, with the core namespace as the leftmost namespace.
+        # This ensures that properties will be returned of any product that occurs in zero or more of the requested
         # namespaces.
 
         aggregates = aggregates or []
@@ -460,18 +461,20 @@ class SQLBuilder(object):
             group_by_functions = GROUP_BY_FUNCTIONS.get(item.muninn_type)
             if not group_by_functions:  # item.muninn_type not in (Text, Boolean, Long, Integer):
                 if item.muninn_type:
-                    raise Error("property %r of type %r cannot be part of the group_by field specification" % (item.property, item.muninn_type.name()))
+                    raise Error("property %r of type %r cannot be part of the group_by field specification" %
+                                (item.property, item.muninn_type.name()))
                 else:
                     raise Error("property %r cannot be part of the group_by field specification" % (item.property, ))
             if item.subscript not in group_by_functions:
                 if item.subscript:
-                    allowed_message = "; it can be one of %r" % group_by_functions if group_by_functions != [None] else ""
-                    raise Error(("group field specification subscript %r of %r is not allowed" + allowed_message) % (item.subscript, item.canonical))
+                    allowed_message = "; it can be one of %r" % group_by_functions if group_by_functions != [None] \
+                        else ""
+                    raise Error(("group field specification subscript %r of %r is not allowed" + allowed_message) %
+                                (item.subscript, item.canonical))
                 else:
-                    raise Error(
-                        "property %r of type %r must specify a subscript (one of %r) to be part of the group_by field specification" %
-                        (item.property, item.muninn_type.name(), group_by_functions)
-                    )
+                    raise Error("property %r of type %r must specify a subscript (one of %r) to be part of the "
+                                "group_by field specification" % (item.property, item.muninn_type.name(),
+                                                                  group_by_functions))
             if item.subscript:
                 column_name = self._rewriter_property(column_name, item.subscript)
             select_list.append('%s AS "%s"' % (column_name, item.canonical))
@@ -480,16 +483,20 @@ class SQLBuilder(object):
         for item in aggregates:
             item = Identifier(item, self._namespace_schemas)
             if not AGGREGATE_FUNCTIONS.get(item.muninn_type):
-                raise Error("property %r of type %r cannot be part of the summary field specification" % (item.property, item.muninn_type.name()))
+                raise Error("property %r of type %r cannot be part of the summary field specification" %
+                            (item.property, item.muninn_type.name()))
             elif item.subscript not in AGGREGATE_FUNCTIONS[item.muninn_type]:
                 if item.subscript:
-                    raise Error("summary field specification subscript %r of %r should be one of %r" % (item.subscript, item.canonical, AGGREGATE_FUNCTIONS[item.muninn_type]))
+                    raise Error("summary field specification subscript %r of %r should be one of %r" %
+                                (item.subscript, item.canonical, AGGREGATE_FUNCTIONS[item.muninn_type]))
                 else:
-                    raise Error("summary field specification %r must specify a subscript (one of %r)" % (item.canonical, AGGREGATE_FUNCTIONS[item.muninn_type]))
+                    raise Error("summary field specification %r must specify a subscript (one of %r)" %
+                                (item.canonical, AGGREGATE_FUNCTIONS[item.muninn_type]))
             if item.property == 'core.validity_duration':
                 start_column = self._column_name(item.namespace, 'validity_start')
                 stop_column = self._column_name(item.namespace, 'validity_stop')
-                column_name = self._rewriter_table[Prototype('-', (Timestamp, Timestamp), Real)](stop_column, start_column)
+                column_name = self._rewriter_table[Prototype('-', (Timestamp, Timestamp), Real)](stop_column,
+                                                                                                 start_column)
             else:
                 column_name = self._column_name(item.namespace, item.identifier)
             select_list.append('%s(%s) AS "%s"' % (item.subscript.upper(), column_name, item.canonical))

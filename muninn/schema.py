@@ -133,7 +133,7 @@ class MetaMapping(type):
             else:
                 class_dct[key] = value
 
-        assert("_items" not in class_dct)
+        assert "_items" not in class_dct
         class_dct["_items"] = items
         return super(MetaMapping, meta).__new__(meta, name, bases, class_dct)
 

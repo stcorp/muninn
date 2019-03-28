@@ -37,7 +37,7 @@ class crc16(object):
                 tmp ^= 0x48C4
             if i & 128:
                 tmp ^= 0x9188
-            assert(tmp == tmp & 0xFFFF)
+            assert tmp == tmp & 0xFFFF
             table[i] = tmp
         return table
 
@@ -50,25 +50,25 @@ class crc16(object):
 
     @staticmethod
     def _update(digest, char):
-        assert(digest == digest & 0xFFFF)
-        assert(ord(char) == ord(char) & 0xFF)
+        assert digest == digest & 0xFFFF
+        assert ord(char) == ord(char) & 0xFF
 
         idx = digest >> 8 ^ ord(char)
-        assert(idx == idx & 0xFF)
+        assert idx == idx & 0xFF
 
         digest = digest << 8 & 0xFF00 ^ crc16._table[idx]
-        assert(digest == digest & 0xFFFF)
+        assert digest == digest & 0xFFFF
         return digest
 
     def update(self, buffer):
         self._digest = reduce(crc16._update, buffer, self._digest)
 
     def digest(self):
-        assert(self._digest == (self._digest & 0xFFFF))
+        assert self._digest == (self._digest & 0xFFFF)
         return chr(self._digest >> 8) + chr(self._digest & 0xFF)
 
     def hexdigest(self):
-        assert(self._digest == (self._digest & 0xFFFF))
+        assert self._digest == (self._digest & 0xFFFF)
         return "%04X" % self._digest
 
     def copy(self):
@@ -120,8 +120,8 @@ def is_sub_path(sub_path, path, allow_equal=False):
     The 'allow_equal' flag determines whether paths that are equal are considered sub paths of eachother or not.
 
     Both paths are split into separate segments using os.split(), and compared segment by segment. This avoids the
-    problem where "/a/bb/c" is considered a sub path of "/a/b", as would happen when comparing using str.startswith() or
-    os.path.commonprefix().
+    problem where "/a/bb/c" is considered a sub path of "/a/b", as would happen when comparing using str.startswith()
+    or os.path.commonprefix().
 
     """
     sub_path_segments = [segment for segment in split_path(sub_path)]
@@ -147,8 +147,8 @@ def make_path(path, mode=0o777):
     exception if the leaf directory exists.
 
     Keyword arguments:
-    mode -- On some systems, mode is ignored. Where it is used, the current umask value is first masked out. The default
-            mode is 0777 (octal). See also the documentation of os.mkdir().
+    mode -- On some systems, mode is ignored. Where it is used, the current umask value is first masked out.
+            The default mode is 0777 (octal). See also the documentation of os.mkdir().
 
     """
     try:
@@ -178,7 +178,7 @@ def copy_path(source, target, resolve_root=False, resolve_links=False):
 
     """
     def _copy_path_rec(source, target, resolve_root, resolve_links):
-        assert(os.path.exists(source) or os.path.islink(source))
+        assert os.path.exists(source) or os.path.islink(source)
 
         # Refuse to copy into a dangling symlink.
         if os.path.islink(target) and not os.path.exists(target):
@@ -236,7 +236,7 @@ def find(root, filter_=None, prune=None, resolve_root=False, resolve_links=False
     def _find_rec(root, depth, resolve_links):
         # If a plain file is passed to find(), this function will not be called. This function is called recursively
         # only for paths for which os.path.isdir() returns True.
-        assert(not os.path.isfile(root))
+        assert not os.path.isfile(root)
 
         # Yield all paths directly below the current root path that match the filter.
         paths = map(lambda path: os.path.join(root, path), os.listdir(root))
@@ -257,8 +257,8 @@ def find(root, filter_=None, prune=None, resolve_root=False, resolve_links=False
     if not os.path.exists(root):
         raise IOError("no such file or directory: %s" % root)
 
-    # If the root ends in a path separator and it is a symlink to a directory, then the symlink will be resolved even if
-    # resolve_root is set to False. Disallow a root that refers to a file and has a trailing path separator.
+    # If the root ends in a path separator and it is a symlink to a directory, then the symlink will be resolved even
+    # if resolve_root is set to False. Disallow a root that refers to a file and has a trailing path separator.
     if root.endswith(os.path.sep):
         if not os.path.isdir(os.path.dirname(root)):
             raise IOError("not a directory: %s" % root)

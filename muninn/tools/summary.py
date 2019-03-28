@@ -171,7 +171,8 @@ def canonical_property(archive, name):
         name = '*.*'
     else:
         split_name = name.split('.')
-        if split_name[0] not in metadata and (split_name[0] in metadata['core'] or split_name[0] == 'validity_duration'):
+        if split_name[0] not in metadata and (split_name[0] in metadata['core'] or
+                                              split_name[0] == 'validity_duration'):
             name = '%s.%s' % ('core', name)
 
     return name

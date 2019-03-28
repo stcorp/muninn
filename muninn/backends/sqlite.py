@@ -254,7 +254,8 @@ class SQLiteBackend(object):
     def initialize(self, namespace_schemas):
         self._namespace_schemas = namespace_schemas
         self._sql_builder = sql.SQLBuilder(self._namespace_schemas, self._type_map(), self._rewriter_table(),
-                                           self._table_name, self._placeholder, self._placeholder, self._rewriter_property)
+                                           self._table_name, self._placeholder, self._placeholder,
+                                           self._rewriter_property)
 
     @translate_sqlite_errors
     def disconnect(self):
@@ -422,8 +423,8 @@ class SQLiteBackend(object):
     def find_products_without_available_source(self, product_type=None, grace_period=datetime.timedelta()):
         """Return the core properties of all products that are linked to one or more source products, all of which are
            unavailable. A product is unavailable if there is no data associated with it, only properties. Products that
-           have links to external source products will not be selected by this function, because it cannot be determined
-           whether or not these products are available.
+           have links to external source products will not be selected by this function, because it cannot be
+           determined whether or not these products are available.
 
            Keyword arguments:
            product_type --  Only consider products of the specified product type.
@@ -434,7 +435,7 @@ class SQLiteBackend(object):
 
     def _insert_namespace_properties(self, uuid, name, properties):
         self._validate_namespace_properties(name, properties)
-        assert(uuid is not None and getattr(properties, "uuid", uuid) == uuid)
+        assert uuid is not None and getattr(properties, "uuid", uuid) == uuid
 
         # Split the properties into a list of (database) field names and a list of values. This assumes the database
         # field that corresponds to a given property has the same name. If the backend uses different field names, the
@@ -459,7 +460,7 @@ class SQLiteBackend(object):
 
     def _update_namespace_properties(self, uuid, name, properties):
         self._validate_namespace_properties(name, properties, partial=True)
-        assert(uuid is not None and getattr(properties, "uuid", uuid) == uuid)
+        assert uuid is not None and getattr(properties, "uuid", uuid) == uuid
 
         # Split the properties into a list of (database) field names and a list of values. This assumes the database
         # field that corresponds to a given property has the same name. If the backend uses different field names, the
@@ -469,8 +470,8 @@ class SQLiteBackend(object):
         if not fields:
             return  # nothing to do
 
-        # Remove the uuid field if present. This field needs to be included in the WHERE clause of the UPDATE query, not
-        # in the SET clause.
+        # Remove the uuid field if present. This field needs to be included in the WHERE clause of the UPDATE query,
+        # not in the SET clause.
         try:
             uuid_index = fields.index("uuid")
         except ValueError:
@@ -489,7 +490,7 @@ class SQLiteBackend(object):
         cursor = self._connection.cursor()
         try:
             cursor.execute(query, parameters)
-            assert(cursor.rowcount <= 1)
+            assert cursor.rowcount <= 1
 
             if cursor.rowcount != 1:
                 raise Error("could not update properties for namespace: %s for product: %s" % (name, uuid))
@@ -502,7 +503,7 @@ class SQLiteBackend(object):
             cursor.execute("DELETE FROM %s WHERE source_uuid = %s" % (self._link_table_name, self._placeholder()),
                            (uuid,))
             cursor.execute("DELETE FROM %s WHERE uuid = %s" % (self._core_table_name, self._placeholder()), (uuid,))
-            assert(cursor.rowcount <= 1)
+            assert cursor.rowcount <= 1
 
             if cursor.rowcount != 1:
                 raise Error("could not delete properties for product: %s" % (uuid,))
@@ -599,12 +600,10 @@ class SQLiteBackend(object):
                                       archived_only=False):
         core_properties = list(self._namespace_schema("core"))
         select_list = ["%s.%s" % (self._core_table_name, name) for name in core_properties]
-        query = "SELECT %s FROM %s WHERE %s.active AND strftime('%%s', 'now') - strftime('%%s', %s.archive_date) > %s AND NOT " \
-                "EXISTS (SELECT 1 FROM %s WHERE %s.uuid = %s.uuid)" % (", ".join(select_list),
-                                                                       self._core_table_name, self._core_table_name,
-                                                                       self._core_table_name, self._placeholder(),
-                                                                       self._link_table_name, self._link_table_name,
-                                                                       self._core_table_name)
+        query = "SELECT %s FROM %s WHERE %s.active AND strftime('%%s', 'now') - strftime('%%s', %s.archive_date) > " \
+                "%s AND NOT EXISTS (SELECT 1 FROM %s WHERE %s.uuid = %s.uuid)" % \
+                (", ".join(select_list), self._core_table_name, self._core_table_name, self._core_table_name,
+                 self._placeholder(), self._link_table_name, self._link_table_name, self._core_table_name)
 
         if product_type is not None:
             query = "%s AND product_type = %s" % (query, self._placeholder())
@@ -627,11 +626,11 @@ class SQLiteBackend(object):
         core_properties = list(self._namespace_schema("core"))
         select_list = ["%s.%s" % (self._core_table_name, name) for name in core_properties]
 
-        query = "SELECT %s FROM %s WHERE active AND strftime('%%s', 'now') - strftime('%%s', archive_date) > %s AND uuid IN (SELECT " \
-                "uuid FROM %s EXCEPT SELECT DISTINCT link.uuid FROM %s AS link LEFT JOIN %s AS source ON " \
-                "(link.source_uuid = source.uuid) WHERE source.uuid IS NULL OR source.archive_path IS NOT NULL)" % \
-                (", ".join(select_list), self._core_table_name, self._placeholder(), self._link_table_name,
-                 self._link_table_name, self._core_table_name)
+        query = "SELECT %s FROM %s WHERE active AND strftime('%%s', 'now') - strftime('%%s', archive_date) > %s AND " \
+                "uuid IN (SELECT uuid FROM %s EXCEPT SELECT DISTINCT link.uuid FROM %s AS link LEFT JOIN %s AS " \
+                "source ON (link.source_uuid = source.uuid) WHERE source.uuid IS NULL OR source.archive_path IS NOT " \
+                "NULL)" % (", ".join(select_list), self._core_table_name, self._placeholder(), self._link_table_name,
+                           self._link_table_name, self._core_table_name)
 
         if product_type is not None:
             query = "%s AND product_type = %s" % (query, self._placeholder())
@@ -658,7 +657,7 @@ class SQLiteBackend(object):
             # part of the namespace itself.
             #
             if ns_name != "core":
-                assert(ns_description[0] == "uuid")
+                assert ns_description[0] == "uuid"
                 if values[start] is None:
                     # Skip the entire namespace.
                     start = end
@@ -776,7 +775,8 @@ class SQLiteBackend(object):
                     schema = self._namespace_schema(namespace)
                     for name in schema:
                         if self._type_map()[schema[name]] == "GEOMETRY":
-                            cursor.execute("SELECT DiscardGeometryColumn('%s', '%s')" % (self._table_name(namespace), name))
+                            cursor.execute("SELECT DiscardGeometryColumn('%s', '%s')" %
+                                           (self._table_name(namespace), name))
                 # then remove the tables
                 cursor.execute("DROP TABLE IF EXISTS %s" % self._tag_table_name)
                 cursor.execute("DROP TABLE IF EXISTS %s" % self._link_table_name)

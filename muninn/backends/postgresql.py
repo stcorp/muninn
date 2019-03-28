@@ -215,7 +215,8 @@ class PostgresqlBackend(object):
     def initialize(self, namespace_schemas):
         self._namespace_schemas = namespace_schemas
         self._sql_builder = sql.SQLBuilder(self._namespace_schemas, self._type_map(), self._rewriter_table(),
-                                           self._table_name, self._placeholder, self._placeholder, self._rewriter_property)
+                                           self._table_name, self._placeholder, self._placeholder,
+                                           self._rewriter_property)
 
     @translate_psycopg_errors
     def disconnect(self):
@@ -253,7 +254,7 @@ class PostgresqlBackend(object):
             cursor = self._connection.cursor()
             try:
                 cursor.execute("SELECT timezone(%s, now())", ("UTC",))
-                assert(cursor.rowcount == 1)
+                assert cursor.rowcount == 1
                 return cursor.fetchone()[0]
             finally:
                 cursor.close()
@@ -336,7 +337,7 @@ class PostgresqlBackend(object):
             cursor = self._connection.cursor()
             try:
                 cursor.execute(query, query_parameters)
-                assert(cursor.rowcount == 1)
+                assert cursor.rowcount == 1
                 return cursor.fetchone()[0]
             finally:
                 cursor.close()
@@ -383,8 +384,8 @@ class PostgresqlBackend(object):
     def find_products_without_available_source(self, product_type=None, grace_period=datetime.timedelta()):
         """Return the core properties of all products that are linked to one or more source products, all of which are
            unavailable. A product is unavailable if there is no data associated with it, only properties. Products that
-           have links to external source products will not be selected by this function, because it cannot be determined
-           whether or not these products are available.
+           have links to external source products will not be selected by this function, because it cannot be
+           determined whether or not these products are available.
 
            Keyword arguments:
            product_type --  Only consider products of the specified product type.
@@ -395,7 +396,7 @@ class PostgresqlBackend(object):
 
     def _insert_namespace_properties(self, uuid, name, properties):
         self._validate_namespace_properties(name, properties)
-        assert(uuid is not None and getattr(properties, "uuid", uuid) == uuid)
+        assert uuid is not None and getattr(properties, "uuid", uuid) == uuid
 
         # Split the properties into a list of (database) field names and a list of values. This assumes the database
         # field that corresponds to a given property has the same name. If the backend uses different field names, the
@@ -420,7 +421,7 @@ class PostgresqlBackend(object):
 
     def _update_namespace_properties(self, uuid, name, properties):
         self._validate_namespace_properties(name, properties, partial=True)
-        assert(uuid is not None and getattr(properties, "uuid", uuid) == uuid)
+        assert uuid is not None and getattr(properties, "uuid", uuid) == uuid
 
         # Split the properties into a list of (database) field names and a list of values. This assumes the database
         # field that corresponds to a given property has the same name. If the backend uses different field names, the
@@ -430,8 +431,8 @@ class PostgresqlBackend(object):
         if not fields:
             return  # nothing to do
 
-        # Remove the uuid field if present. This field needs to be included in the WHERE clause of the UPDATE query, not
-        # in the SET clause.
+        # Remove the uuid field if present. This field needs to be included in the WHERE clause of the UPDATE query,
+        # not in the SET clause.
         try:
             uuid_index = fields.index("uuid")
         except ValueError:
@@ -450,7 +451,7 @@ class PostgresqlBackend(object):
         cursor = self._connection.cursor()
         try:
             cursor.execute(query, parameters)
-            assert(cursor.rowcount <= 1)
+            assert cursor.rowcount <= 1
 
             if cursor.rowcount != 1:
                 raise Error("could not update properties for namespace: %s for product: %s" % (name, uuid))
@@ -463,7 +464,7 @@ class PostgresqlBackend(object):
             cursor.execute("DELETE FROM %s WHERE source_uuid = %s" % (self._link_table_name, self._placeholder()),
                            (uuid,))
             cursor.execute("DELETE FROM %s WHERE uuid = %s" % (self._core_table_name, self._placeholder()), (uuid,))
-            assert(cursor.rowcount <= 1)
+            assert cursor.rowcount <= 1
 
             if cursor.rowcount != 1:
                 raise Error("could not delete properties for product: %s" % (uuid,))
@@ -631,7 +632,7 @@ class PostgresqlBackend(object):
             # part of the namespace itself.
             #
             if ns_name != "core":
-                assert(ns_description[0] == "uuid")
+                assert ns_description[0] == "uuid"
                 if values[start] is None:
                     # Skip the entire namespace.
                     start = end

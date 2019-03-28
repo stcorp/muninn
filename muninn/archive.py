@@ -267,7 +267,7 @@ class Archive(object):
 
                 # Move product into the temporary directory. When the temporary directory will be removed at the end of
                 # this scope, the product will be removed along with it.
-                assert(product.core.physical_name == os.path.basename(product_path))
+                assert product.core.physical_name == os.path.basename(product_path)
                 try:
                     os.rename(product_path, os.path.join(tmp_path, os.path.basename(product_path)))
                 except EnvironmentError as _error:
@@ -444,9 +444,8 @@ class Archive(object):
             if export_method is not None:
                 exported_path = export_method(self, product, target_path)
             elif format is not None:
-                raise Error("export format '%s' not supported for product '%s' (%s)" % (format,
-                                                                                        product.core.product_name,
-                                                                                        product.core.uuid))
+                raise Error("export format '%s' not supported for product '%s' (%s)" %
+                            (format, product.core.product_name, product.core.uuid))
             else:
                 exported_path = self._retrieve(product, target_path, False)
             result.append(exported_path)
@@ -460,8 +459,8 @@ class Archive(object):
 
             self.export("product_name == @product_name", {"product_name": product_name}, target_path, format)
 
-        NB. A product name is not guaranteed to be unique (only the combination of product type and product name is), so
-        this function may export one or more products.
+        NB. A product name is not guaranteed to be unique (only the combination of product type and product name is),
+        so this function may export one or more products.
 
         An exception will be raised if no products with the specified name can be found.
 
@@ -585,8 +584,9 @@ class Archive(object):
         else:
             properties, tags = copy.deepcopy(properties), []
 
-        assert(properties is not None and "core" in properties)
-        assert "product_name" in properties.core and properties.core.product_name, "product_name is required in core.properties"
+        assert properties is not None and "core" in properties
+        assert "product_name" in properties.core and properties.core.product_name, \
+            "product_name is required in core.properties"
 
         # Set core product properties that are not determined by the plugin.
         # Note that metadata_date is set automatically by create_properties()
@@ -611,10 +611,9 @@ class Archive(object):
 
         # Remove existing product with the same product type and name before ingesting
         if force:
-            self.remove(where="core.product_type == @product_type and core.product_name == @product_name", parameters={
-                'product_type': properties.core.product_type,
-                'product_name': properties.core.product_name,
-            }, force=True)
+            self.remove(where="core.product_type == @product_type and core.product_name == @product_name",
+                        parameters={'product_type': properties.core.product_type,
+                                    'product_name': properties.core.product_name}, force=True)
 
         self.create_properties(properties)
 
@@ -705,7 +704,8 @@ class Archive(object):
                                 if plugin.use_enclosing_directory:
                                     os.rename(tmp_path, abs_product_path)
                                 else:
-                                    assert(len(paths) == 1 and properties.core.physical_name == os.path.basename(paths[0]))
+                                    assert len(paths) == 1 and \
+                                        properties.core.physical_name == os.path.basename(paths[0])
                                     tmp_product_path = os.path.join(tmp_path, properties.core.physical_name)
                                     os.rename(tmp_product_path, abs_product_path)
 
@@ -755,7 +755,8 @@ class Archive(object):
         try:
             return self._namespace_schemas[namespace]
         except KeyError:
-            raise Error("undefined namespace: \"%s\"; defined namespaces: %s" % (namespace, util.quoted_list(self._namespace_schemas.keys())))
+            raise Error("undefined namespace: \"%s\"; defined namespaces: %s" %
+                        (namespace, util.quoted_list(self._namespace_schemas.keys())))
 
     def namespaces(self):
         """Return a list of supported namespaces."""
@@ -886,8 +887,8 @@ class Archive(object):
         return len(queue)
 
     def rebuild_properties(self, uuid, disable_hooks=False, use_current_path=False):
-        """Rebuilds product properties by re-extracting these properties (using product type plug-ins) from the products
-        stored in the archive.
+        """Rebuilds product properties by re-extracting these properties (using product type plug-ins) from the
+        products stored in the archive.
         Only properties and tags that are returned by the product type plug-in will be updated. Other properties or
         tags will remain as they were.
 
@@ -1073,8 +1074,8 @@ class Archive(object):
         where       --  Search expression that determines which products to remove.
         parameters  --  Parameters referenced in the search expression (if any).
         force       --  If set to True, also remove partially ingested products. This affects products for which a
-                        failure occured during ingestion, as well as products in the process of being ingested. Use this
-                        option with care.
+                        failure occured during ingestion, as well as products in the process of being ingested. Use
+                        this option with care.
         """
         products = self.search(where=where, parameters=parameters,
                                properties=['uuid', 'active', 'product_name', 'archive_path', 'physical_name'])
@@ -1097,8 +1098,8 @@ class Archive(object):
 
             self.remove("product_name == @product_name", {"product_name": product_name}, force)
 
-        NB. A product name is not guaranteed to be unique (only the combination of product type and product name is), so
-        this function may remove one or more products.
+        NB. A product name is not guaranteed to be unique (only the combination of product type and product name is),
+        so this function may remove one or more products.
 
         An exception will be raised if no products with the specified name can be found.
 
@@ -1153,8 +1154,8 @@ class Archive(object):
 
             self.retrieve("product_name == @product_name", {"product_name": product_name}, target_path, use_symlinks)
 
-        NB. A product name is not guaranteed to be unique (only the combination of product type and product name is), so
-        this function may retrieve one or more products.
+        NB. A product name is not guaranteed to be unique (only the combination of product type and product name is),
+        so this function may retrieve one or more products.
 
         An exception will be raised if no products with the specified name can be found.
 
@@ -1189,7 +1190,7 @@ class Archive(object):
 
         """
         products = self.search(where="uuid == @uuid", parameters={"uuid": uuid}, namespaces=namespaces)
-        assert(len(products) <= 1)
+        assert len(products) <= 1
 
         if len(products) == 0:
             raise Error("product with uuid '%s' not found" % uuid)
@@ -1237,8 +1238,8 @@ class Archive(object):
         where       --  Search expression that determines which products to stip.
         parameters  --  Parameters referenced in the search expression (if any).
         force       --  If set to True, also strip partially ingested products. This affects products for which a
-                        failure occured during ingestion, as well as products in the process of being ingested. Use this
-                        option with care.
+                        failure occured during ingestion, as well as products in the process of being ingested. Use
+                        this option with care.
         """
         query = "is_defined(archive_path)"
         if where:
@@ -1264,8 +1265,8 @@ class Archive(object):
 
             self.strip("product_name == @product_name", {"product_name": product_name})
 
-        NB. A product name is not guaranteed to be unique (only the combination of product type and product name is), so
-        this function may strip one or more products.
+        NB. A product name is not guaranteed to be unique (only the combination of product type and product name is),
+        so this function may strip one or more products.
 
         An exception will be raised if no products with the specified name can be found.
 
