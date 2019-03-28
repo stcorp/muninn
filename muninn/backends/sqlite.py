@@ -833,10 +833,10 @@ class SQLiteBackend(object):
         # Functions.
         #
         rewriter_table[Prototype("covers", (Geometry, Geometry), Boolean)] = \
-            sql.binary_function_rewriter("ST_Covers")
+            lambda arg0, arg1: "(ST_Covers(%s, %s)=1)" % (arg0, arg1)
 
         rewriter_table[Prototype("intersects", (Geometry, Geometry), Boolean)] = \
-            sql.binary_function_rewriter("ST_Intersects")
+            lambda arg0, arg1: "(ST_Intersects(%s, %s)=1)" % (arg0, arg1)
 
         rewriter_table[Prototype("is_source_of", (UUID,), Boolean)] = \
             lambda arg0: "EXISTS (SELECT 1 FROM %s WHERE source_uuid = %s.uuid AND uuid = (%s))" % \
