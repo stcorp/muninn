@@ -1181,7 +1181,7 @@ class Archive(object):
             raise Error("product with uuid '%s' not found" % uuid)
         return count
 
-    def retrieve_properties(self, uuid, namespaces=[]):
+    def retrieve_properties(self, uuid, namespaces=[], property_names=[]):
         """Retrieve product properties for the product with the specified UUID.
 
         Keyword arguments:
@@ -1189,7 +1189,7 @@ class Archive(object):
                         defined in the "core" namespace will be retrieved.
 
         """
-        products = self.search(where="uuid == @uuid", parameters={"uuid": uuid}, namespaces=namespaces)
+        products = self.search(where="uuid == @uuid", parameters={"uuid": uuid}, namespaces=namespaces, property_names)
         assert len(products) <= 1
 
         if len(products) == 0:
