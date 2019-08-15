@@ -1189,7 +1189,8 @@ class Archive(object):
                         defined in the "core" namespace will be retrieved.
 
         """
-        products = self.search(where="uuid == @uuid", parameters={"uuid": uuid}, namespaces=namespaces, property_names)
+        products = self.search(where="uuid == @uuid", parameters={"uuid": uuid}, namespaces=namespaces,
+                               property_names=property_names)
         assert len(products) <= 1
 
         if len(products) == 0:
