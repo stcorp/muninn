@@ -19,9 +19,8 @@ setup(
     name="muninn",
     version="4.4",
     description="Configurable product archive",
-    url="http://stcorp.nl/",
+    url="https://github.com/stcorp/muninn",
     author="S[&]T",
-    author_email="info@stcorp.nl",
     license="BSD",
     packages=["muninn", "muninn.backends", "muninn.tools"],
     entry_points={"console_scripts": [
