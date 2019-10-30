@@ -848,10 +848,14 @@ class Archive(object):
         """
         queue = self.search(where=where, parameters=parameters)
         for product in queue:
+            if not product.core.active:
+                raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
             if 'archive_path' in product.core:
-                raise Error("cannot pull local products")
+                raise Error("product '%s' (%s) is already in the local archive" %
+                            (product.core.product_name, product.core.uuid))
             if 'remote_url' not in product.core:
-                raise Error("cannot pull products that have no remote_url")
+                raise Error("product '%s' (%s) does not have a remote_url" %
+                            (product.core.product_name, product.core.uuid))
 
             plugin = self.product_type_plugin(product.core.product_type)
             product.core.archive_path = plugin.archive_path(product)
