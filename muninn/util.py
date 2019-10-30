@@ -386,6 +386,7 @@ class Downloader(object):
         self.remote_url = remote_url
         self.auth_file = auth_file
         self.url = urlparse(self.remote_url)
+        self.timeout = 60  # we use a timeout of 60 seconds for requests
 
     def save(self, local_file):
         if self.remote_url.lower().startswith('ftp'):
@@ -408,7 +409,7 @@ class Downloader(object):
         import requests
         try:
             username, password = self._get_credentials()
-            r = requests.get(self.remote_url, auth=(username, password))
+            r = requests.get(self.remote_url, timeout=self.timeout, auth=(username, password))
             r.raise_for_status()
             with open(local_file, 'wb') as output:
                 output.write(r.content)
@@ -421,7 +422,7 @@ class Downloader(object):
             if username == '':
                 username = 'anonymous'
                 password = 'guest'
-            ftp = ftplib.FTP(self.url.hostname, username, password)
+            ftp = ftplib.FTP(self.url.hostname, username, password, timeout=self.timeout)
             ftp.cwd(os.path.dirname(self.url.path))
             ftp.set_pasv(True)
             ftp.retrbinary('RETR %s' % os.path.basename(self.url.path), open(local_file, 'wb').write)
