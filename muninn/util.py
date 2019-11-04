@@ -3,8 +3,6 @@
 #
 
 from __future__ import absolute_import, division, print_function
-from muninn._compat import string_types as basestring
-from muninn._compat import urlparse
 
 import errno
 import hashlib
@@ -14,65 +12,9 @@ import tempfile
 import json
 import ftplib
 
-
-class crc16(object):
-    """Implementation of the CRC-16 algorithm that complies to the hashlib interface."""
-    def _create_crc16_table():
-        table = [0 for i in range(256)]
-        for i in range(256):
-            tmp = 0
-            if i & 1:
-                tmp ^= 0x1021
-            if i & 2:
-                tmp ^= 0x2042
-            if i & 4:
-                tmp ^= 0x4084
-            if i & 8:
-                tmp ^= 0x8108
-            if i & 16:
-                tmp ^= 0x1231
-            if i & 32:
-                tmp ^= 0x2462
-            if i & 64:
-                tmp ^= 0x48C4
-            if i & 128:
-                tmp ^= 0x9188
-            assert tmp == tmp & 0xFFFF
-            table[i] = tmp
-        return table
-
-    _table = _create_crc16_table()
-
-    def __init__(self, digest=0xFFFF):
-        self.digest_size = 2
-        self.block_size = 1
-        self._digest = digest & 0xFFFF
-
-    @staticmethod
-    def _update(digest, char):
-        assert digest == digest & 0xFFFF
-        assert ord(char) == ord(char) & 0xFF
-
-        idx = digest >> 8 ^ ord(char)
-        assert idx == idx & 0xFF
-
-        digest = digest << 8 & 0xFF00 ^ crc16._table[idx]
-        assert digest == digest & 0xFFFF
-        return digest
-
-    def update(self, buffer):
-        self._digest = reduce(crc16._update, buffer, self._digest)
-
-    def digest(self):
-        assert self._digest == (self._digest & 0xFFFF)
-        return chr(self._digest >> 8) + chr(self._digest & 0xFF)
-
-    def hexdigest(self):
-        assert self._digest == (self._digest & 0xFFFF)
-        return "%04X" % self._digest
-
-    def copy(self):
-        return crc16(self._digest)
+from muninn._compat import string_types as basestring
+from muninn._compat import urlparse
+from muninn._compat import path_utf8, encode, decode
 
 
 class TemporaryDirectory(object):
@@ -87,10 +29,6 @@ class TemporaryDirectory(object):
     def __exit__(self, exc_type, exc_value, traceback):
         shutil.rmtree(self._path)
         return False
-
-
-def contains_duplicates(iterable):
-    return len(set(iterable)) < len(iterable)
 
 
 def split_path(path):
@@ -232,57 +170,10 @@ def remove_path(path):
         shutil.rmtree(path)
 
 
-def find(root, filter_=None, prune=None, resolve_root=False, resolve_links=False):
-    def _find_rec(root, depth, resolve_links):
-        # If a plain file is passed to find(), this function will not be called. This function is called recursively
-        # only for paths for which os.path.isdir() returns True.
-        assert not os.path.isfile(root)
-
-        # Yield all paths directly below the current root path that match the filter.
-        paths = map(lambda path: os.path.join(root, path), os.listdir(root))
-        for path in filter(filter_, paths):
-            yield (root, depth, path)
-
-        # Find all directories directly below the current root path and optionally prune the list.
-        directories = filter(lambda path: os.path.isdir(path) and (resolve_links or not os.path.islink(path)), paths)
-        if prune is not None:
-            directories = prune(root, depth, directories)
-
-        # Recurse the pruned list of directories.
-        for directory in directories:
-            for match in _find_rec(directory, depth + 1, resolve_links):
-                yield match
-
-    # Check for existence of the root.
-    if not os.path.exists(root):
-        raise IOError("no such file or directory: %s" % root)
-
-    # If the root ends in a path separator and it is a symlink to a directory, then the symlink will be resolved even
-    # if resolve_root is set to False. Disallow a root that refers to a file and has a trailing path separator.
-    if root.endswith(os.path.sep):
-        if not os.path.isdir(os.path.dirname(root)):
-            raise IOError("not a directory: %s" % root)
-        else:
-            resolve_root = True
-
-    # Yield the root if it matches the filter.
-    if filter_ is None or filter_(root):
-        yield (os.path.dirname(root), 0, root)
-
-    # Recursively yield paths matching the specified filter and prune functions.
-    if os.path.isdir(root) and (resolve_root or not os.path.islink(root)):
-        for match in _find_rec(root, 1, resolve_links):
-            yield match
-
-
-def find_paths(root, **kwargs):
-    return map(lambda root, depth, path: path, find(root, **kwargs))
-
-
 def hash_string(string, hash_func=hashlib.sha1):
     hash = hash_func()
     hash.update(string)
-    return hash.hexdigest()
+    return encode(hash.hexdigest())
 
 
 def hash_file(path, block_size=65536, hash_func=hashlib.sha1):
@@ -292,7 +183,7 @@ def hash_file(path, block_size=65536, hash_func=hashlib.sha1):
             # Read a block of character data.
             data = stream.read(block_size)
             if not data:
-                return hash.hexdigest()
+                return encode(hash.hexdigest())
 
             # Update hash.
             hash.update(data)
@@ -305,7 +196,7 @@ def product_hash(roots, resolve_root=True, resolve_links=False, force_encapsulat
     def _product_hash_rec(root, resolve_root, resolve_links, hash_func, block_size):
         if os.path.islink(root) and not (resolve_root or resolve_links):
             # Hash link _contents_.
-            return hash_string(os.readlink(root), hash_func)
+            return hash_string(path_utf8(os.readlink(root)), hash_func)
 
         elif os.path.isfile(root):
             # Hash file contents.
@@ -317,19 +208,19 @@ def product_hash(roots, resolve_root=True, resolve_links=False, force_encapsulat
             # entry.
             hash = hash_func()
             for basename in sorted(os.listdir(root)):
-                hash.update(hash_string(basename, hash_func))
+                hash.update(hash_string(path_utf8(basename), hash_func))
 
                 path = os.path.join(root, basename)
                 if os.path.islink(path) and not (resolve_root or resolve_links):
-                    hash.update("l")
+                    hash.update(b"l")
                 elif os.path.isdir(path):
-                    hash.update("d")
+                    hash.update(b"d")
                 else:
-                    hash.update("f")
+                    hash.update(b"f")
 
                 hash.update(_product_hash_rec(path, False, resolve_links, hash_func, block_size))
 
-            return hash.hexdigest()
+            return encode(hash.hexdigest())
 
         else:
             raise IOError("path does not refer to a regular file or directory: %s" % root)
@@ -338,18 +229,18 @@ def product_hash(roots, resolve_root=True, resolve_links=False, force_encapsulat
         roots = [roots]
 
     if len(roots) == 1 and not force_encapsulation:
-        return _product_hash_rec(roots[0], resolve_root, resolve_links, hash_func, block_size)
+        return decode(_product_hash_rec(roots[0], resolve_root, resolve_links, hash_func, block_size))
 
     hash = hash_func()
     for root in sorted(roots):
-        hash.update(hash_string(os.path.basename(root)))
+        hash.update(hash_string(path_utf8(os.path.basename(root))))
 
         if os.path.islink(root) and not (resolve_root or resolve_links):
-            hash.update("l")
+            hash.update(b"l")
         elif os.path.isdir(root):
-            hash.update("d")
+            hash.update(b"d")
         else:
-            hash.update("f")
+            hash.update(b"f")
 
         hash.update(_product_hash_rec(root, resolve_root, resolve_links, hash_func, block_size))
 

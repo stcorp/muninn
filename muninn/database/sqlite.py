@@ -21,8 +21,8 @@ except ImportError:
     import sqlite3.dbapi2 as dbapi2
 
 import muninn.config as config
-import muninn.backends.sql as sql
-import muninn.backends.blobgeometry as blobgeometry
+import muninn.database.sql as sql
+import muninn.database.blobgeometry as blobgeometry
 import muninn.geometry as geometry
 
 from muninn.exceptions import *

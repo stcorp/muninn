@@ -28,49 +28,22 @@ class UrlBackend(RemoteBackend):
         if getattr(product.core, "archive_path", None) is None:
             raise Error("cannot pull files that do not have archive_path set")
 
-        # Determine the (absolute) path in the archive that will contain the product and create it if required.
-        abs_archive_path = os.path.realpath(os.path.join(archive._root, product.core.archive_path))
-        abs_product_path = os.path.join(abs_archive_path, product.core.physical_name)
-
-        # Create destination location for product
-        try:
-            util.make_path(abs_archive_path)
-        except EnvironmentError as _error:
-            raise Error("cannot create parent destination path '%s' [%s]" % (abs_archive_path, _error))
-
-        plugin = archive.product_type_plugin(product.core.product_type)
-
         # Create a temporary directory and download the product there, then move the product to its
         # destination within the archive.
-        try:
-            with util.TemporaryDirectory(prefix=".pull-", suffix="-%s" % product.core.uuid.hex,
-                                         dir=abs_archive_path) as tmp_path:
+        with util.TemporaryDirectory(prefix=".pull-", suffix="-%s" % product.core.uuid.hex) as tmp_path:
 
-                # Create enclosing directory if required.
-                if plugin.use_enclosing_directory:
-                    tmp_path = os.path.join(tmp_path, product.core.physical_name)
-                    util.make_path(tmp_path)
+            # Define a temp location and download the file
+            tmp_file = os.path.join(tmp_path, product.core.physical_name)
+            downloader = util.Downloader(product.core.remote_url, archive.auth_file())
+            downloader.save(tmp_file)
 
-                # Define a temp location and download the file
-                tmp_file = os.path.join(tmp_path, product.core.physical_name)
-                downloader = util.Downloader(product.core.remote_url, archive.auth_file())
-                downloader.save(tmp_file)
+            # TODO: implement extraction of downloaded archives
+            # for ftp and file check if url ends with 'core.physical_name + <archive ext>'
+            # for http/https check the header for the line:
+            #    Content-Disposition: attachment; filename="**********"
+            # end then use this ***** filename to match against core.physical_name + <archive ext>
 
-                # TODO: implement extraction of downloaded archives
-                # for ftp and file check if url ends with 'core.physical_name + <archive ext>'
-                # for http/https check the header for the line:
-                #    Content-Disposition: attachment; filename="**********"
-                # end then use this ***** filename to match against core.physical_name + <archive ext>
-
-                # Move the transferred product into its destination within the archive.
-                if plugin.use_enclosing_directory:
-                    os.rename(tmp_path, abs_product_path)
-                else:
-                    os.rename(tmp_file, abs_product_path)
-
-        except EnvironmentError as _error:
-            raise Error("unable to transfer product to destination path '%s' [%s]" %
-                        (abs_product_path, _error))
+            archive._storage.put2(tmp_file, archive, product)
 
 
 REMOTE_BACKENDS = {

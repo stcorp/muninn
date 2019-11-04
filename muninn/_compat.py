@@ -24,6 +24,15 @@ if PY3:
     def dictvalues(d):
         return list(d.values())
 
+    def path_utf8(path):
+        return path.encode('utf-8')
+
+    def encode(s):
+        return s.encode('utf-8')
+
+    def decode(s):
+        return s.decode('utf-8')
+
     itervalues = operator.methodcaller("values")
 
     imap = map
@@ -42,6 +51,15 @@ else:
 
     def is_python2_unicode(x):
         return type(x) is unicode
+
+    def path_utf8(path):
+        return path.decode(sys.getfilesystemencoding()).encode('utf-8')
+
+    def decode(s):
+        return s
+
+    def encode(s):
+        return s
 
     dictkeys = operator.methodcaller("keys")
     dictvalues = operator.methodcaller("values")

@@ -1,0 +1,63 @@
+#
+# Copyright (C) 2017 S[&]T, The Netherlands.
+#
+
+import datetime
+import os
+import re
+
+from muninn.struct import Struct
+
+
+class MyTypePlugin(object):
+    def __init__(self):
+        self.product_type = 'MY_TYPE'
+        self.description = ''
+
+        self.is_multi_part_product = False
+        self.is_auxiliary_product = False
+
+        self.use_hash = True
+        self.use_enclosing_directory = {use_enclosing_directory}
+
+    def enclosing_directory(self, properties):
+        return properties.core.product_name
+
+    def archive_path(self, properties):
+        return '{archive_path}'
+
+    def identify(self, paths):
+        return True
+
+    def analyze(self, paths):
+        path = paths[0]
+
+        result = Struct()
+        core_properties = result.core = Struct()
+
+        core_properties.product_type = self.product_type
+
+        if self.use_enclosing_directory and len(paths) > 1:
+            core_properties.product_name = os.path.basename(os.path.dirname(path))
+        else:
+            core_properties.product_name = os.path.basename(path)
+
+        return result
+
+    def export_bla_blup(self, archiver, product, target_path):
+        pass
+
+_plugin = MyTypePlugin()
+
+_product_type_plugins = \
+{
+    _plugin.product_type: _plugin,
+}
+
+
+def product_types():
+    return _product_type_plugins.keys()
+
+
+def product_type_plugin(product_type):
+    return _product_type_plugins[product_type]

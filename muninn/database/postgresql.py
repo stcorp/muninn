@@ -14,8 +14,8 @@ import psycopg2.extensions
 import psycopg2.extras
 
 import muninn.config as config
-import muninn.backends.sql as sql
-import muninn.backends.ewkb as ewkb
+import muninn.database.sql as sql
+import muninn.database.ewkb as ewkb
 import muninn.geometry as geometry
 
 from muninn.exceptions import *
