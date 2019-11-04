@@ -1,0 +1,27 @@
+[archive]
+storage = {storage}
+database = {database}
+use_symlinks = false
+product_type_extensions = product_type
+
+[sqlite]
+connection_string = /tmp/my_arch.db
+
+[postgresql]
+connection_string = user=postgres
+
+[fs]
+root = /tmp/my_archive
+
+[s3]
+bucket = root
+host = localhost
+port = 9000
+access_key = minio
+secret_access_key = minio1300
+
+[swift]
+container = root
+user = test:tester
+key = testing
+authurl = http://127.0.0.1:12345/auth/v1.0

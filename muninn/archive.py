@@ -47,8 +47,10 @@ class _ExtensionList(Sequence):
 class _ArchiveConfig(Mapping):
     _alias = "archive"
 
-    root = Text
-    backend = Text
+    root = optional(Text)
+    backend = optional(Text)
+    database = optional(Text)
+    storage = optional(Text)
     use_symlinks = optional(Boolean)
     cascade_grace_period = optional(Integer)
     max_cascade_cycles = optional(Integer)
@@ -60,12 +62,23 @@ class _ArchiveConfig(Mapping):
 
 
 def _load_backend_module(name):
-    module_name = "muninn.backends.%s" % name
+    module_name = "muninn.database.%s" % name
 
     try:
         __import__(module_name)
     except ImportError as e:
-        raise Error("import of backend %r (module %r) failed (%s)" % (name, module_name, e))
+        raise Error("import of database %r (module %r) failed (%s)" % (name, module_name, e))
+
+    return sys.modules[module_name]
+    
+
+def _load_storage_module(name):
+    module_name = "muninn.storage.%s" % name
+
+    try:
+        __import__(module_name)
+    except ImportError as e:
+        raise Error("import of storage %r (module %r) failed (%s)" % (name, module_name, e))
 
     return sys.modules[module_name]
 
@@ -84,14 +97,23 @@ def create(configuration):
     _ArchiveConfig.validate(options)
 
     # Load and create the backend.
-    backend_module = _load_backend_module(options.pop("backend"))
+    if 'backend' in options:
+        print("WARNING: the 'backend' option will be removed. Please use 'database' instead.")
+        backend = options.pop('backend')
+    else:
+        backend = options.pop('database')
+    backend_module = _load_backend_module(backend)
     backend = backend_module.create(configuration)
+
+    # Load and create the storage backend.
+    storage_module = _load_storage_module(options.pop("storage", "fs"))
+    storage = storage_module.create(configuration)
 
     # Create the archive.
     namespace_extensions = options.pop("namespace_extensions", [])
     product_type_extensions = options.pop("product_type_extensions", [])
     remote_backend_extensions = options.pop("remote_backend_extensions", [])
-    archive = Archive(backend=backend, **options)
+    archive = Archive(backend=backend, storage=storage, **options)
 
     # Register core namespace.
     archive.register_namespace("core", Core)
@@ -128,10 +150,10 @@ def create(configuration):
 
 class Archive(object):
 
-    def __init__(self, root, backend, use_symlinks=False, cascade_grace_period=0, max_cascade_cycles=25,
-                 external_archives=[], auth_file=None):
+    def __init__(self, backend, storage, use_symlinks=False, cascade_grace_period=0, max_cascade_cycles=25,
+                 external_archives=[], auth_file=None, root=None):
         self._root = root
-        self._backend = backend
+
         self._use_symlinks = use_symlinks
         self._cascade_grace_period = datetime.timedelta(minutes=cascade_grace_period)
         self._max_cascade_cycles = max_cascade_cycles
@@ -143,17 +165,16 @@ class Archive(object):
         self._remote_backend_plugins = copy.copy(remote.REMOTE_BACKENDS)
         self._export_formats = set()
 
+        self._backend = backend
         self._backend.initialize(self._namespace_schemas)
+
+        self._storage = storage
 
     def __enter__(self):
         return self
 
     def __exit__(self, type, value, traceback):
         self.close()
-
-    def _archive_exists(self):
-        # Check if the archive path exists
-        return os.path.isdir(self._root)
 
     def _calculate_hash(self, product):
         """ calculate the hash on a product in the archive """
@@ -164,12 +185,14 @@ class Archive(object):
         # Get the product type specific plug-in.
         plugin = self.product_type_plugin(product.core.product_type)
 
-        # Determine product hash
-        if plugin.use_enclosing_directory:
-            paths = [os.path.join(product_path, basename) for basename in os.listdir(product_path)]
-        else:
-            paths = [product_path]
-        return util.product_hash(paths)
+        # Download/symlink product in temp directory and hash
+        with util.TemporaryDirectory(prefix=".calc_hash-", suffix="-%s" % product.core.uuid.hex) as tmp_path:
+            use_symlinks = self._storage.supports_symlinks
+            self._storage.get(product_path, tmp_path, plugin, use_symlinks=use_symlinks)
+
+            # Determine product hash
+            paths = [os.path.join(tmp_path, basename) for basename in os.listdir(tmp_path)]
+            return util.product_hash(paths)
 
     def _catalogue_exists(self):
         return self._backend.exists()
@@ -224,13 +247,13 @@ class Archive(object):
         if getattr(product.core, "archive_path", None) is None:
             return None
 
-        return os.path.join(self._root, product.core.archive_path, product.core.physical_name)
+        return self._storage.product_path(product)
 
     def _purge(self, product):
         # Remove the product from the product catalogue.
         self._backend.delete_product_properties(product.core.uuid)
 
-        # Remove any data on disk associated with the product.
+        # Remove any data in storage associated with the product.
         self._remove(product)
 
     def _relocate(self, product, properties=None):
@@ -246,39 +269,22 @@ class Archive(object):
         plugin_archive_path = plugin.archive_path(product)
 
         if product_archive_path != plugin_archive_path:
-            abs_archive_path = os.path.realpath(os.path.join(self._root, plugin_archive_path))
-            util.make_path(abs_archive_path)
-            os.rename(product_path, os.path.join(abs_archive_path, product.core.physical_name))
-            result = plugin_archive_path
-
-        return result
+            self._storage.move(product, plugin_archive_path, plugin)
+            return plugin_archive_path
 
     def _remove(self, product):
-        # If the product has no data on disk associated with it, return.
+        # If the product has no data in storage associated with it, return.
         product_path = self._product_path(product)
-        if product_path is None or not os.path.lexists(product_path):
+        if product_path is None:
             # If the product does not exist, do not consider this an error.
             return
 
         # Remove the data associated with the product from disk.
-        try:
-            with util.TemporaryDirectory(prefix=".remove-", suffix="-%s" % product.core.uuid.hex,
-                                         dir=os.path.dirname(product_path)) as tmp_path:
-
-                # Move product into the temporary directory. When the temporary directory will be removed at the end of
-                # this scope, the product will be removed along with it.
-                assert product.core.physical_name == os.path.basename(product_path)
-                try:
-                    os.rename(product_path, os.path.join(tmp_path, os.path.basename(product_path)))
-                except EnvironmentError as _error:
-                    raise
-
-        except EnvironmentError as _error:
-            raise Error("unable to remove product '%s' (%s) [%s]" % (product.core.product_name, product.core.uuid,
-                                                                     _error))
+        plugin = self.product_type_plugin(product.core.product_type)
+        self._storage.delete(product_path, product, plugin)
 
     def _retrieve(self, product, target_path, use_symlinks=False):
-        # Determine the path of the product on disk.
+        # Determine the path of the product in storage.
         product_path = self._product_path(product)
         if not product_path:
             raise Error("no data available for product '%s' (%s)" % (product.core.product_name, product.core.uuid))
@@ -287,32 +293,16 @@ class Archive(object):
         plugin = self.product_type_plugin(product.core.product_type)
 
         # Symbolic link or copy the product at or to the specified target directory.
-        try:
-            if use_symlinks:
-                if plugin.use_enclosing_directory:
-                    for basename in os.listdir(product_path):
-                        os.symlink(os.path.join(product_path, basename), os.path.join(target_path, basename))
-                else:
-                    os.symlink(product_path, os.path.join(target_path, os.path.basename(product_path)))
-            else:
-                if plugin.use_enclosing_directory:
-                    for basename in os.listdir(product_path):
-                        util.copy_path(os.path.join(product_path, basename), target_path, resolve_root=True)
-                else:
-                    util.copy_path(product_path, target_path, resolve_root=True)
-
-        except EnvironmentError as _error:
-            raise Error("unable to retrieve product '%s' (%s) [%s]" % (product.core.product_name, product.core.uuid,
-                                                                       _error))
+        self._storage.get(product_path, target_path, plugin, use_symlinks)
 
         return os.path.join(target_path, os.path.basename(product_path))
 
     def _strip(self, product):
-        # Set the archive path to None to indicate the product has no data on disk associated with it.
+        # Set the archive path to None to indicate the product has no data in storage associated with it.
         self.update_properties(Struct({'core': {'active': True, 'archive_path': None, 'archive_date': None}}),
                                product.core.uuid)
 
-        # Remove any data on disk associated with the product.
+        # Remove any data in storage associated with the product.
         self._remove(product)
 
     def _update_export_formats(self, plugin):
@@ -385,15 +375,10 @@ class Archive(object):
         """
         self.destroy_catalogue()
 
-        # Remove the archive root path (if it exists).
-        if self._archive_exists():
-            try:
-                util.remove_path(self._root)
-            except EnvironmentError as _error:
-                raise Error("unable to remove archive root path '%s' [%s]" % (self._root, _error))
+        self._storage.destroy()
 
     def destroy_catalogue(self):
-        """Completely remove the catalogue database, but leaving the datastore on disk untouched.
+        """Completely remove the catalogue database, but leaving the datastore in storage untouched.
 
         Using the archive after calling this function results in undefined behavior.
         Using the prepare_catalogue() function and ingesting all products again, can bring the archive
@@ -557,8 +542,8 @@ class Archive(object):
         if not paths:
             raise Error("nothing to ingest")
 
-        if not os.path.isdir(self._root):
-            raise Error("archive root path '%s' does not exist" % self._root)
+        if not self._storage.exists():
+            raise Error("archive root path '%s' does not exist" % self._storage._root)
 
         # Use absolute paths to make error messages more useful, and to avoid broken links when ingesting a product
         # using symbolic links.
@@ -566,7 +551,8 @@ class Archive(object):
 
         # Ensure that the set of files and / or directories that make up the product does not contain duplicate
         # basenames.
-        if util.contains_duplicates([os.path.basename(path) for path in paths]):
+        basenames = [os.path.basename(path) for path in paths]
+        if len(set(basenames)) < len(basenames):
             raise Error("basename of each part should be unique for multi-part products")
 
         # Get the product type plug-in.
@@ -594,7 +580,7 @@ class Archive(object):
         properties.core.uuid = self.generate_uuid()
         properties.core.active = False
         properties.core.hash = None
-        properties.core.size = util.product_size(paths)
+        properties.core.size = util.product_size(paths)  # TODO determine after?
         properties.core.metadata_date = None
         properties.core.archive_date = None
         properties.core.archive_path = None
@@ -608,6 +594,13 @@ class Archive(object):
             properties.core.physical_name = os.path.basename(paths[0])
         else:
             raise Error("cannot determine physical name for multi-part product")
+
+        # Determine archive path
+        if ingest_product:
+            if use_current_path:
+                properties.core.archive_path = self._storage.current_archive_path(paths)
+            else:
+                properties.core.archive_path = plugin.archive_path(paths)
 
         # Remove existing product with the same product type and name before ingesting
         if force:
@@ -629,93 +622,18 @@ class Archive(object):
                 # Update the product hash in the product catalogue.
                 self.update_properties(Struct({'core': {'hash': properties.core.hash}}), properties.core.uuid)
 
-            # Ingest the product into the archive.
             if ingest_product:
-                # Determine the (absolute) path in the archive that will contain the product and create it if required.
-                if use_current_path:
-                    for path in paths:
-                        if not util.is_sub_path(os.path.realpath(path), self._root, allow_equal=True):
-                            raise Error("cannot ingest a file in-place if it is not inside the muninn archive root")
-                    if len(paths) > 1:
-                        # check whether all files have the right enclosing directory
-                        for path in paths:
-                            enclosing_directory = os.path.basename(os.path.dirname(os.path.realpath(path)))
-                            if enclosing_directory != properties.core.physical_name:
-                                raise Error("multi-part product has invalid enclosing directory for in-place ingestion")
-                        # strip the archive root
-                        properties.core.archive_path = os.path.relpath(
-                            os.path.dirname(os.path.dirname(os.path.realpath(paths[0]))),
-                            start=os.path.realpath(self._root))
-                    else:
-                        # strip the archive root
-                        properties.core.archive_path = os.path.relpath(
-                            os.path.dirname(os.path.realpath(paths[0])),
-                            start=os.path.realpath(self._root))
-                else:
-                    properties.core.archive_path = plugin.archive_path(properties)
-                    abs_archive_path = os.path.realpath(os.path.join(self._root, properties.core.archive_path))
-                    abs_product_path = os.path.join(abs_archive_path, properties.core.physical_name)
+                use_symlinks = (use_symlinks or use_symlinks is None and self._use_symlinks)
+                self._storage.put(paths, properties, plugin, use_symlinks)
 
-                if not use_current_path:
-                    if util.is_sub_path(os.path.realpath(paths[0]), abs_product_path, allow_equal=True):
-                        # Product should already be in the target location
-                        for path in paths:
-                            if not os.path.exists(path):
-                                raise Error("product source path does not exist '%s'" % (path,))
-                            if not util.is_sub_path(os.path.realpath(path), abs_product_path, allow_equal=True):
-                                raise Error("cannot ingest product where only part of the files are already at the "
-                                            "destination location")
-                    else:
-                        # Create destination location for product
-                        try:
-                            util.make_path(abs_archive_path)
-                        except EnvironmentError as _error:
-                            raise Error("cannot create parent destination path '%s' [%s]" % (abs_archive_path, _error))
+                metadata = {'archive_path': properties.core.archive_path}
+                self.update_properties(Struct({'core': metadata}), properties.core.uuid)
 
-                        # Create a temporary directory and transfer the product there, then move the product to its
-                        # destination within the archive.
-                        try:
-                            with util.TemporaryDirectory(prefix=".ingest-", suffix="-%s" % properties.core.uuid.hex,
-                                                         dir=abs_archive_path) as tmp_path:
+                # Verify product hash after copy
+                if verify_hash:
+                    if self.verify_hash("uuid == @uuid", {"uuid": properties.core.uuid}):
+                        raise Error("ingested product has incorrect hash")
 
-                                # Create enclosing directory if required.
-                                if plugin.use_enclosing_directory:
-                                    tmp_path = os.path.join(tmp_path, properties.core.physical_name)
-                                    util.make_path(tmp_path)
-
-                                # Transfer the product (parts).
-                                if use_symlinks or use_symlinks is None and self._use_symlinks:
-                                    # Create symbolic link(s) for the product (parts).
-                                    for path in paths:
-                                        if util.is_sub_path(path, self._root):
-                                            # Create a relative symbolic link when the target is part of the archive
-                                            # (i.e. when creating an intra-archive symbolic link). This ensures the
-                                            # archive can be relocated without breaking intra-archive symbolic links.
-                                            os.symlink(os.path.relpath(path, abs_archive_path),
-                                                       os.path.join(tmp_path, os.path.basename(path)))
-                                        else:
-                                            os.symlink(path, os.path.join(tmp_path, os.path.basename(path)))
-                                else:
-                                    # Copy product (parts).
-                                    for path in paths:
-                                        util.copy_path(path, tmp_path, resolve_root=True)
-
-                                # Move the transferred product into its destination within the archive.
-                                if plugin.use_enclosing_directory:
-                                    os.rename(tmp_path, abs_product_path)
-                                else:
-                                    assert len(paths) == 1 and \
-                                        properties.core.physical_name == os.path.basename(paths[0])
-                                    tmp_product_path = os.path.join(tmp_path, properties.core.physical_name)
-                                    os.rename(tmp_product_path, abs_product_path)
-
-                        except EnvironmentError as _error:
-                            raise Error("unable to transfer product to destination path '%s' [%s]" %
-                                        (abs_product_path, _error))
-                        # Verify product hash after copy
-                        if verify_hash:
-                            if self.verify_hash("uuid == @uuid", {"uuid": properties.core.uuid}):
-                                raise Error("ingested product has incorrect hash")
                 properties.core.archive_date = self._backend.server_time_utc()
         except:
             # Try to remove the entry for this product from the product catalogue.
@@ -727,7 +645,6 @@ class Archive(object):
         metadata = {
             'active': properties.core.active,
             'archive_date': properties.core.archive_date,
-            'archive_path': properties.core.archive_path,
         }
         self.update_properties(Struct({'core': metadata}), properties.core.uuid)
 
@@ -773,7 +690,7 @@ class Archive(object):
 
         """
         if not force:
-            if self._archive_exists():
+            if self._storage.exists():
                 raise Error("archive directory already exists")
             if self._catalogue_exists():
                 raise Error("catalogue already exists")
@@ -783,12 +700,7 @@ class Archive(object):
 
         # Prepare the archive for use.
         self._backend.prepare()
-
-        # Create the archive root path.
-        try:
-            util.make_path(self._root)
-        except EnvironmentError as _error:
-            raise Error("unable to create archive root path '%s' [%s]" % (self._root, _error))
+        self._storage.prepare()
 
     def prepare_catalogue(self, dry_run=False):
         """Prepare the catalogue of the archive for (first) use.
@@ -797,7 +709,7 @@ class Archive(object):
         return self._backend.prepare(dry_run=dry_run)
 
     def product_path(self, uuid_or_name_or_properties):
-        """Return the path on disk where the product with the specified product.
+        """Return the path in storage where the product with the specified product.
         Product can be specified by either: uuid, product name or product properties.
         """
         if isinstance(uuid_or_name_or_properties, Struct):
@@ -874,7 +786,8 @@ class Archive(object):
                 raise
 
             # reactivate and update size
-            size = util.product_size(self._product_path(product))
+            product_path = self._product_path(product)
+            size = self._storage.size(product_path, plugin)
             metadata = {'active': True, 'archive_date': self._backend.server_time_utc(), 'size': size}
             self.update_properties(Struct({'core': metadata}), product.core.uuid)
 
@@ -909,7 +822,7 @@ class Archive(object):
         if not product.core.active:
             raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
 
-        # Determine the path of the product on disk.
+        # Determine the path of the product within storage
         product_path = self._product_path(product)
         if not product_path:
             raise Error("no data available for product '%s' (%s)" % (product.core.product_name, product.core.uuid))
@@ -917,11 +830,13 @@ class Archive(object):
         # Extract product metadata.
         plugin = self.product_type_plugin(product.core.product_type)
 
-        if plugin.use_enclosing_directory:
-            paths = [os.path.join(product_path, basename) for basename in os.listdir(product_path)]
-        else:
-            paths = [product_path]
-        metadata = plugin.analyze(paths)
+        # Download/symlink product in temp directory and analyze
+        with util.TemporaryDirectory(prefix=".calc_hash-", suffix="-%s" % product.core.uuid.hex) as tmp_path:
+            use_symlinks = self._storage.supports_symlinks
+            self._storage.get(product_path, tmp_path, plugin, use_symlinks=use_symlinks)
+
+            paths = [os.path.join(tmp_path, basename) for basename in os.listdir(tmp_path)]
+            metadata = plugin.analyze(paths)
 
         if isinstance(metadata, (tuple, list)):
             properties, tags = metadata
@@ -937,7 +852,7 @@ class Archive(object):
                 pass
 
         # update size
-        properties.core.size = util.product_size(self._product_path(product))
+        properties.core.size = self._storage.size(product_path, plugin)
 
         # Make sure product is stored in the correct location
         if not use_current_path:
@@ -989,7 +904,8 @@ class Archive(object):
                 product.core.archive_path = new_archive_path
 
         # update size
-        product.core.size = util.product_size(self._product_path(product))
+        product_path = self._product_path(product)
+        product.core.size = self._storage.size(product_path, plugin)
 
         # verify product hash.
         if verify_hash and 'hash' in product.core:
@@ -1082,7 +998,7 @@ class Archive(object):
                         this option with care.
         """
         products = self.search(where=where, parameters=parameters,
-                               property_names=['uuid', 'active', 'product_name', 'archive_path', 'physical_name'])
+                               property_names=['uuid', 'active', 'product_name', 'archive_path', 'physical_name', 'product_type'])
         for product in products:
             if not product.core.active and not force:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
@@ -1393,9 +1309,9 @@ class Archive(object):
         failed_products = []
         products = self.search(where=where, parameters=parameters,
                                property_names=['uuid', 'active', 'product_name', 'archive_path', 'physical_name',
-                                               'hash'])
+                                               'hash', 'product_type'])
         for product in products:
-            if product.core.active and 'archive_path' in product.core:
+            if 'archive_path' in product.core:
                 if 'hash' not in product.core:
                     raise Error("no hash available for product '%s' (%s)" %
                                 (product.core.product_name, product.core.uuid))
