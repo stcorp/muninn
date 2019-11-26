@@ -167,12 +167,12 @@ def archive(database, storage, use_enclosing_directory, archive_path):
 
 
 class TestArchive:
-    def _ingest_file(self, archive):
+    def _ingest_file(self, archive, use_symlinks=False):
         name = 'pi.txt'
         path = 'data/%s' % name
         size = os.path.getsize(path)
 
-        properties = archive.ingest([path], verify_hash=True)
+        properties = archive.ingest([path], verify_hash=True, use_symlinks=use_symlinks)
 
         path = os.path.join(archive._params['archive_path'], 'pi.txt')
 
@@ -221,7 +221,18 @@ class TestArchive:
         return props
 
     def test_ingest_file(self, archive):
+        # copy
         self._ingest_file(archive)
+
+        archive.remove()
+
+        # symlink
+        if archive._params['storage'] == 'fs':
+            self._ingest_file(archive, use_symlinks=True)
+        else:
+            with pytest.raises(muninn.exceptions.Error) as excinfo:
+                self._ingest_file(archive, use_symlinks=True)
+            assert 'storage backend does not support symlinks' in str(excinfo)
 
     def test_remove_file(self, archive):
         self._ingest_file(archive)
