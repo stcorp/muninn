@@ -280,19 +280,6 @@ class TestArchive:
         s = archive.search('has_tag("niks")')
         assert len(s) == 0
 
-    def test_retrieve_file(self, archive):
-        self._ingest_file(archive)
-
-        name = 'pi.txt'
-        size = os.path.getsize('data/pi.txt')
-
-        with muninn.util.TemporaryDirectory() as tmp_path:
-            archive.retrieve(target_path=tmp_path)
-
-            path = os.path.join(tmp_path, name)
-            assert os.path.isfile(path)
-            assert os.path.getsize(path) == size
-
     def test_rebuild_properties_file(self, archive):
         properties = self._ingest_file(archive)
         archive.rebuild_properties(properties.core.uuid)
@@ -308,6 +295,7 @@ class TestArchive:
         name = 'pi.txt'
         size = os.path.getsize('data/pi.txt')
 
+        # copy
         with muninn.util.TemporaryDirectory() as tmp_path:
             archive.retrieve(target_path=tmp_path)
 
@@ -315,10 +303,24 @@ class TestArchive:
             assert os.path.isfile(path)
             assert os.path.getsize(path) == size
 
+        # symlink
+        if archive._params['storage'] == 'fs':
+            with muninn.util.TemporaryDirectory() as tmp_path:
+                archive.retrieve(target_path=tmp_path, use_symlinks=True)
+
+                path = os.path.join(tmp_path, name)
+                assert os.path.islink(path)
+        else:
+            with pytest.raises(muninn.exceptions.Error) as excinfo:
+                with muninn.util.TemporaryDirectory() as tmp_path:
+                    archive.retrieve(target_path=tmp_path, use_symlinks=True)
+            assert 'storage backend does not support symlinks' in str(excinfo)
+
     def test_retrieve_dir(self, archive):
-        if archive._params['use_enclosing_directory']:
+        if archive._params['use_enclosing_directory'] == True:
             self._ingest_dir(archive)
 
+            # copy
             with muninn.util.TemporaryDirectory() as tmp_path:
                 archive.retrieve(target_path=tmp_path)
 
@@ -326,6 +328,20 @@ class TestArchive:
                     path = os.path.join(tmp_path, name)
                     assert os.path.isfile(path)
                     assert os.path.getsize(path) == os.path.getsize('data/multi/%s' % name)
+
+            # symlink
+            if archive._params['storage'] == 'fs':
+                with muninn.util.TemporaryDirectory() as tmp_path:
+                    archive.retrieve(target_path=tmp_path, use_symlinks=True)
+
+                    for name in ('1.txt', '2.txt'):
+                        path = os.path.join(tmp_path, name)
+                        assert os.path.islink(path)
+            else:
+                with pytest.raises(muninn.exceptions.Error) as excinfo:
+                    with muninn.util.TemporaryDirectory() as tmp_path:
+                        archive.retrieve(target_path=tmp_path, use_symlinks=True)
+                assert 'storage backend does not support symlinks' in str(excinfo)
 
     def test_rebuild_properties_file(self, archive):
         properties = self._ingest_file(archive)
