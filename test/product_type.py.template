@@ -8,6 +8,7 @@ import re
 import tarfile
 
 from muninn.struct import Struct
+from muninn.util import TemporaryDirectory
 
 
 def compress(source_filepath, target_filepath):
@@ -61,10 +62,19 @@ class MyTypePlugin(object):
 
     def export_tgz(self, archive, product, target_path):
         product_filepath = archive.product_path(product)
+
         target_filepath = os.path.join(os.path.abspath(target_path), product.core.archive_path, product.core.physical_name + ".tgz")
         if not os.path.exists(os.path.dirname(target_filepath)):
             os.makedirs(os.path.dirname(target_filepath))
-        compress(product_filepath, target_filepath)
+
+        with TemporaryDirectory(prefix=".calc_hash-", suffix="-%s" % product.core.uuid.hex) as tmp_path:
+            tmp_path = os.path.join(tmp_path, os.path.basename(product_filepath))
+            os.makedirs(tmp_path)
+
+            archive._storage.get(product_filepath, tmp_path, self) # TODO use symlinks for performance?
+
+            compress(tmp_path, target_filepath)
+
         return target_filepath
 
 _plugin = MyTypePlugin()
