@@ -115,7 +115,11 @@ class FilesystemStorageBackend(StorageBackend):
                                 # Create a relative symbolic link when the target is part of the archive
                                 # (i.e. when creating an intra-archive symbolic link). This ensures the
                                 # archive can be relocated without breaking intra-archive symbolic links.
-                                os.symlink(os.path.relpath(path, abs_archive_path),
+                                if plugin.use_enclosing_directory:
+                                    abs_path = abs_product_path
+                                else:
+                                    abs_path = abs_archive_path
+                                os.symlink(os.path.relpath(path, abs_path),
                                            os.path.join(tmp_path, os.path.basename(path)))
                             else:
                                 os.symlink(path, os.path.join(tmp_path, os.path.basename(path)))
