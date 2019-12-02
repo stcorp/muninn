@@ -23,6 +23,8 @@ sys.path.insert(0, '..')
 import muninn
 os.environ['MUNINN_CONFIG_PATH'] = '.'
 
+import shutil
+
 
 class BaseChecker(object):
     def __init__(self, storage):
@@ -167,10 +169,21 @@ def archive(database, storage, use_enclosing_directory, archive_path):
 
 
 class TestArchive:
-    def _ingest_file(self, archive, use_symlinks=False):
+    def _ingest_file(self, archive, use_symlinks=False, intra=False):
         name = 'pi.txt'
         path = 'data/%s' % name
         size = os.path.getsize(path)
+
+        if intra:
+            dirpath = os.path.join(
+                archive._checker.root,
+                'een/twee'  # multi: add dir
+            )
+
+            if not os.path.isdir(dirpath):
+                os.makedirs(dirpath)
+            shutil.copy(path, dirpath)
+            path = os.path.join(dirpath, name)
 
         properties = archive.ingest(
             [path],
@@ -189,8 +202,19 @@ class TestArchive:
             source_path = os.path.join(archive._checker.root, path)
             assert os.path.islink(source_path)
 
-            target_path = os.path.join(os.getcwd(), 'data/pi.txt')
-            assert os.readlink(source_path) == target_path
+            if intra:
+                target_path = 'een/twee/pi.txt'
+                dotdots = 0 # don't use relpath on purpose for comparison
+                if archive._params['use_enclosing_directory']:
+                    dotdots += 1
+                if archive._params['archive_path']:
+                    dotdots += 2
+                for i in range(dotdots):
+                    target_path = os.path.join('..', target_path)
+                assert os.readlink(source_path) == target_path
+            else:
+                target_path = os.path.join(os.getcwd(), 'data/pi.txt')
+                assert os.readlink(source_path) == target_path
 
         return properties
 
@@ -270,6 +294,12 @@ class TestArchive:
             with pytest.raises(muninn.exceptions.Error) as excinfo:
                 self._ingest_file(archive, use_symlinks=True)
             assert 'storage backend does not support symlinks' in str(excinfo)
+
+        archive.remove()
+
+        # intra-archive symlink
+        if archive._params['storage'] == 'fs':
+            self._ingest_file(archive, use_symlinks=True, intra=True)
 
     def test_remove_file(self, archive):
         self._ingest_file(archive)
