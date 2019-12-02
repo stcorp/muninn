@@ -101,7 +101,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
 
         self._resource.Object(self.bucket, key).upload_file(file_path)
 
-    def get(self, product_path, target_path, plugin, use_symlinks):
+    def get(self, product_path, target_path, plugin, use_symlinks=False):
         if use_symlinks:
             raise Error("S3 storage backend does not support symlinks")
 

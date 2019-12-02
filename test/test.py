@@ -453,8 +453,7 @@ class TestArchive:
                 assert 'storage backend does not support symlinks' in str(excinfo)
 
     def test_export_file(self, archive):
-        if (archive._params['storage'] == 'fs' and
-            archive._params['use_enclosing_directory']):  # TODO plugin doesn't compress single files?
+        if archive._params['use_enclosing_directory']:  # TODO plugin doesn't compress single files?
             self._ingest_file(archive)
 
             with muninn.util.TemporaryDirectory() as tmp_path:
@@ -470,8 +469,7 @@ class TestArchive:
                 assert tf.getmember('pi.txt/pi.txt').size == 1015
 
     def test_export_dir(self, archive):
-        if (archive._params['storage'] == 'fs' and
-            archive._params['use_enclosing_directory']):
+        if archive._params['use_enclosing_directory']:
             self._ingest_dir(archive)
 
             with muninn.util.TemporaryDirectory() as tmp_path:
