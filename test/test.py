@@ -172,7 +172,11 @@ class TestArchive:
         path = 'data/%s' % name
         size = os.path.getsize(path)
 
-        properties = archive.ingest([path], verify_hash=True, use_symlinks=use_symlinks)
+        properties = archive.ingest(
+            [path],
+            verify_hash=True,
+            use_symlinks=use_symlinks
+        )
 
         path = os.path.join(archive._params['archive_path'], 'pi.txt')
 
@@ -181,21 +185,54 @@ class TestArchive:
 
         assert archive._checker.exists(path, size)
 
+        if use_symlinks and archive._params['storage'] == 'fs':
+            source_path = os.path.join(archive._checker.root, path)
+            assert os.path.islink(source_path)
+
+            target_path = os.path.join(os.getcwd(), 'data/pi.txt')
+            assert os.readlink(source_path) == target_path
+
         return properties
 
-    def _ingest_dir(self, archive):
+    def _ingest_dir(self, archive, use_symlinks=False):
         paths = glob.glob('data/multi/*')
         sizes = [os.path.getsize(p) for p in paths]
 
         if archive._params['use_enclosing_directory']:
-            properties = archive.ingest(paths, verify_hash=True)
+            properties = archive.ingest(
+                paths,
+                verify_hash=True,
+                use_symlinks=use_symlinks
+            )
 
             for (path, size) in zip(paths, sizes):
                 archive._checker.exists(path, size)
+
+            if use_symlinks and archive._params['storage'] == 'fs':
+                for path in paths:
+                    source_path = os.path.join(
+                        archive._checker.root,
+                        archive._params['archive_path'],
+                        'multi',
+                        os.path.basename(path)
+                    )
+                    assert os.path.islink(source_path)
+
+                    target_path = os.path.join(
+                        os.getcwd(),
+                        'data/multi',
+                        os.path.basename(path)
+                    )
+                    assert os.readlink(source_path) == target_path
+
         else:
             properties = None
             with pytest.raises(muninn.exceptions.Error) as excinfo:
-                properties = archive.ingest(paths, verify_hash=True)
+                properties = archive.ingest(
+                    paths,
+                    verify_hash=True,
+                    use_symlinks=use_symlinks
+                )
             assert 'cannot determine physical name for multi-part product' in str(excinfo)
 
         return properties
@@ -245,7 +282,19 @@ class TestArchive:
         assert not archive._checker.exists(path)
 
     def test_ingest_dir(self, archive):
+        # copy
         self._ingest_dir(archive)
+
+        archive.remove()
+
+        # symlink
+        if archive._params['storage'] == 'fs':
+            self._ingest_dir(archive, use_symlinks=True)
+
+        elif archive._params['use_enclosing_directory']:
+            with pytest.raises(muninn.exceptions.Error) as excinfo:
+                self._ingest_dir(archive, use_symlinks=True)
+            assert 'storage backend does not support symlinks' in str(excinfo)
 
     def test_remove_dir(self, archive):
         if archive._params['use_enclosing_directory']:
@@ -321,6 +370,16 @@ class TestArchive:
 
                 path = os.path.join(tmp_path, name)
                 assert os.path.islink(path)
+
+                target_path = os.path.join(
+                    archive._checker.root,
+                    archive._params['archive_path'],
+                    'pi.txt'
+                )
+                if archive._params['use_enclosing_directory']:
+                    target_path = os.path.join(target_path, 'pi.txt')
+
+                assert os.readlink(path) == target_path
         else:
             with pytest.raises(muninn.exceptions.Error) as excinfo:
                 with muninn.util.TemporaryDirectory() as tmp_path:
@@ -348,6 +407,14 @@ class TestArchive:
                     for name in ('1.txt', '2.txt'):
                         path = os.path.join(tmp_path, name)
                         assert os.path.islink(path)
+
+                        target_path = os.path.join(
+                            archive._checker.root,
+                            archive._params['archive_path'],
+                            'multi',
+                            name
+                        )
+                        assert os.readlink(path) == target_path
             else:
                 with pytest.raises(muninn.exceptions.Error) as excinfo:
                     with muninn.util.TemporaryDirectory() as tmp_path:
