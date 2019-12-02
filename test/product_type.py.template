@@ -5,8 +5,23 @@
 import datetime
 import os
 import re
+import tarfile
 
 from muninn.struct import Struct
+
+
+def compress(source_filepath, target_filepath):
+    # While using Python 2.6 we need to explicitly use the basename when creating the tgz
+    # Otherwise the full path gets added in the gzip file (which gives problems on Windows)
+    tgzfile = open(target_filepath, 'wb')
+    tar = tarfile.open(os.path.basename(target_filepath), 'w:gz', tgzfile)
+    rootlen = len(os.path.dirname(source_filepath)) + 1
+    for base, dirs, files in os.walk(source_filepath):
+        tar.add(base, base[rootlen:], recursive=False)
+        for _file in files:
+            fn = os.path.join(base, _file)
+            tar.add(fn, fn[rootlen:], recursive=False)
+    tar.close()
 
 
 class MyTypePlugin(object):
@@ -44,8 +59,13 @@ class MyTypePlugin(object):
 
         return result
 
-    def export_bla_blup(self, archiver, product, target_path):
-        pass
+    def export_tgz(self, archive, product, target_path):
+        product_filepath = archive.product_path(product)
+        target_filepath = os.path.join(os.path.abspath(target_path), product.core.archive_path, product.core.physical_name + ".tgz")
+        if not os.path.exists(os.path.dirname(target_filepath)):
+            os.makedirs(os.path.dirname(target_filepath))
+        compress(product_filepath, target_filepath)
+        return target_filepath
 
 _plugin = MyTypePlugin()
 
