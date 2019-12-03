@@ -175,10 +175,10 @@ class TestArchive:
         path = 'data/%s' % name
         size = os.path.getsize(path)
 
-        if intra:
+        if intra: # relative symlink within archive
             dirpath = os.path.join(
                 archive._checker.root,
-                'een/twee'  # multi: add dir
+                'een/twee'
             )
 
             if not os.path.isdir(dirpath):
@@ -202,8 +202,10 @@ class TestArchive:
         if use_symlinks and archive._params['storage'] == 'fs':
             source_path = os.path.join(archive._checker.root, path)
             assert os.path.islink(source_path)
+            assert os.path.isfile(os.path.realpath(source_path))
 
             if intra:
+                # TODO remove this, as os.path.realpath already resolves
                 target_path = 'een/twee/pi.txt'
                 dotdots = 0 # don't use relpath on purpose for comparison
                 if archive._params['use_enclosing_directory']:
@@ -219,38 +221,11 @@ class TestArchive:
 
         return properties
 
-    def _ingest_dir(self, archive, use_symlinks=False):
+    def _ingest_dir(self, archive, use_symlinks=False, intra=False):
         paths = glob.glob('data/multi/*')
         sizes = [os.path.getsize(p) for p in paths]
 
-        if archive._params['use_enclosing_directory']:
-            properties = archive.ingest(
-                paths,
-                verify_hash=True,
-                use_symlinks=use_symlinks
-            )
-
-            for (path, size) in zip(paths, sizes):
-                archive._checker.exists(path, size)
-
-            if use_symlinks and archive._params['storage'] == 'fs':
-                for path in paths:
-                    source_path = os.path.join(
-                        archive._checker.root,
-                        archive._params['archive_path'],
-                        'multi',
-                        os.path.basename(path)
-                    )
-                    assert os.path.islink(source_path)
-
-                    target_path = os.path.join(
-                        os.getcwd(),
-                        'data/multi',
-                        os.path.basename(path)
-                    )
-                    assert os.readlink(source_path) == target_path
-
-        else:
+        if not archive._params['use_enclosing_directory']:
             properties = None
             with pytest.raises(muninn.exceptions.Error) as excinfo:
                 properties = archive.ingest(
@@ -259,6 +234,57 @@ class TestArchive:
                     use_symlinks=use_symlinks
                 )
             assert 'cannot determine physical name for multi-part product' in str(excinfo)
+            return
+
+        if intra: # relative symlinks within archive
+            dirpath = os.path.join(
+                archive._checker.root,
+                'drie/multi'
+            )
+
+            if not os.path.isdir(dirpath):
+                os.makedirs(dirpath)
+            for path in paths:
+                shutil.copy(path, dirpath)
+
+            paths = [os.path.join(dirpath, os.path.basename(path)) for path in paths]
+
+        properties = archive.ingest(
+            paths,
+            verify_hash=True,
+            use_symlinks=use_symlinks
+        )
+
+        for (path, size) in zip(paths, sizes):
+            archive._checker.exists(path, size)
+
+        if use_symlinks and archive._params['storage'] == 'fs':
+            for path in paths:
+                source_path = os.path.join(
+                    archive._checker.root,
+                    archive._params['archive_path'],
+                    'multi',
+                    os.path.basename(path)
+                )
+                assert os.path.isfile(os.path.realpath(source_path))
+
+                if intra:
+                    # TODO remove this, as os.path.realpath already resolves
+                    target_path = os.path.join('drie/multi', os.path.basename(path))
+                    dotdots = 1 # enclosing
+                    if archive._params['archive_path']:
+                        dotdots += 2
+                    for i in range(dotdots):
+                        target_path = os.path.join('..', target_path)
+                    assert os.readlink(source_path) == target_path
+
+                else:
+                    target_path = os.path.join(
+                        os.getcwd(),
+                        'data/multi',
+                        os.path.basename(path)
+                    )
+                    assert os.readlink(source_path) == target_path
 
         return properties
 
@@ -326,6 +352,12 @@ class TestArchive:
             with pytest.raises(muninn.exceptions.Error) as excinfo:
                 self._ingest_dir(archive, use_symlinks=True)
             assert 'storage backend does not support symlinks' in str(excinfo)
+
+        archive.remove()
+
+        # intra-archive symlinks
+        if archive._params['storage'] == 'fs':
+            self._ingest_dir(archive, use_symlinks=True, intra=True)
 
     def test_remove_dir(self, archive):
         if archive._params['use_enclosing_directory']:
@@ -410,6 +442,7 @@ class TestArchive:
                 if archive._params['use_enclosing_directory']:
                     target_path = os.path.join(target_path, 'pi.txt')
 
+                assert os.path.isfile(target_path)
                 assert os.readlink(path) == target_path
         else:
             with pytest.raises(muninn.exceptions.Error) as excinfo:
@@ -445,6 +478,7 @@ class TestArchive:
                             'multi',
                             name
                         )
+                        assert os.path.isfile(target_path)
                         assert os.readlink(path) == target_path
             else:
                 with pytest.raises(muninn.exceptions.Error) as excinfo:
