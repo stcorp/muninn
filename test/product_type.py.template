@@ -10,6 +10,7 @@ import tarfile
 from muninn.struct import Struct
 from muninn.util import TemporaryDirectory
 
+ARCHIVE_PATH='{archive_path}'
 
 def compress(source_filepath, target_filepath):
     # While using Python 2.6 we need to explicitly use the basename when creating the tgz
@@ -40,7 +41,7 @@ class MyTypePlugin(object):
         return properties.core.product_name
 
     def archive_path(self, properties):
-        return '{archive_path}'
+        return ARCHIVE_PATH
 
     def identify(self, paths):
         return True
