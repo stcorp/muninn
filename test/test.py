@@ -521,12 +521,60 @@ class TestArchive:
 
     def test_rebuild_properties_file(self, archive):
         properties = self._ingest_file(archive)
+
+        oldpath = os.path.join(
+            archive._params['archive_path'],
+            'pi.txt'
+        )
+        if archive._params['use_enclosing_directory']:
+            oldpath = os.path.join(oldpath, 'pi.txt')
+
+        assert archive._checker.exists(oldpath)
+
+        sys.modules['product_type'].ARCHIVE_PATH = 'fiets'
         archive.rebuild_properties(properties.core.uuid)
 
+        assert not archive._checker.exists(oldpath)
+
+        properties = archive.retrieve_properties(properties.core.uuid)
+        assert properties.core.archive_path == 'fiets'
+
+        path = 'fiets/pi.txt'
+        if archive._params['use_enclosing_directory']:
+            path = os.path.join(path, 'pi.txt')
+        assert archive._checker.exists(path)
+
     def test_rebuild_properties_dir(self, archive):
+        names = ['1.txt', '2.txt']
+
         if archive._params['use_enclosing_directory']:
             properties = self._ingest_dir(archive)
+
+            for name in names:
+                oldpath = os.path.join(
+                    archive._params['archive_path'],
+                    'multi',
+                    name
+                )
+                assert archive._checker.exists(oldpath)
+
+            sys.modules['product_type'].ARCHIVE_PATH = 'fiets'
             archive.rebuild_properties(properties.core.uuid)
+
+            for name in names:
+                path = os.path.join(
+                    'fiets/multi',
+                    name
+                )
+                assert archive._checker.exists(path)
+
+            for name in names:
+                oldpath = os.path.join(
+                    archive._params['archive_path'],
+                    'multi',
+                    name
+                )
+                assert not archive._checker.exists(oldpath)
 
     def test_rebuild_pull_properties(self, archive):
         properties = self._pull(archive)
