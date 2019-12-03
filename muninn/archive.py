@@ -165,8 +165,8 @@ class Archive(object):
         self._remote_backend_plugins = copy.copy(remote.REMOTE_BACKENDS)
         self._export_formats = set()
 
-        self._backend = backend
-        self._backend.initialize(self._namespace_schemas)
+        self._database = backend
+        self._database.initialize(self._namespace_schemas)
 
         self._storage = storage
 
@@ -195,7 +195,7 @@ class Archive(object):
             return util.product_hash(paths)
 
     def _catalogue_exists(self):
-        return self._backend.exists()
+        return self._database.exists()
 
     def _establish_invariants(self):
         repeat = True
@@ -211,7 +211,7 @@ class Archive(object):
                     continue
 
                 strip = cascade_rule in (CascadeRule.CASCADE_PURGE_AS_STRIP, CascadeRule.STRIP)
-                products = self._backend.find_products_without_source(product_type, self._cascade_grace_period, strip)
+                products = self._database.find_products_without_source(product_type, self._cascade_grace_period, strip)
                 if products:
                     repeat = True
 
@@ -225,7 +225,7 @@ class Archive(object):
                 if cascade_rule in (CascadeRule.CASCADE_PURGE_AS_STRIP, CascadeRule.CASCADE_PURGE):
                     continue
 
-                products = self._backend.find_products_without_available_source(product_type)
+                products = self._database.find_products_without_available_source(product_type)
                 if products:
                     repeat = True
 
@@ -251,7 +251,7 @@ class Archive(object):
 
     def _purge(self, product):
         # Remove the product from the product catalogue.
-        self._backend.delete_product_properties(product.core.uuid)
+        self._database.delete_product_properties(product.core.uuid)
 
         # Remove any data in storage associated with the product.
         self._remove(product)
@@ -326,7 +326,7 @@ class Archive(object):
         """ add a core.metadata_date field if it did not yet exist and set it to the current date """
         if "core" not in properties:
             properties.core = Struct()
-        properties.core.metadata_date = self._backend.server_time_utc()
+        properties.core.metadata_date = self._database.server_time_utc()
 
     def auth_file(self):
         """Return the path of the authentication file to download from remote locations"""
@@ -338,7 +338,7 @@ class Archive(object):
         Using the archive after calling this function results in undefined behavior.
 
         """
-        self._backend.disconnect()
+        self._database.disconnect()
 
     def count(self, where="", parameters={}):
         """Return the number of products matching the specified search expression.
@@ -348,7 +348,7 @@ class Archive(object):
         parameters  --  Parameters referenced in the search expression (if any).
 
         """
-        return self._backend.count(where, parameters)
+        return self._database.count(where, parameters)
 
     def create_properties(self, properties):
         """ Create record for product in the product catalogue.
@@ -360,11 +360,11 @@ class Archive(object):
                not unique within the product catalogue.
         """
         self._update_metadata_date(properties)
-        self._backend.insert_product_properties(properties)
+        self._database.insert_product_properties(properties)
 
     def derived_products(self, uuid):
         """Return the UUIDs of the products that are linked to the given product as derived products."""
-        return self._backend.derived_products(uuid)
+        return self._database.derived_products(uuid)
 
     def destroy(self):
         """Completely remove the archive, both the products as well as the product catalogue.
@@ -387,7 +387,7 @@ class Archive(object):
         """
         # Call the backend to remove anything related to the archive.
         if self._catalogue_exists():
-            self._backend.destroy()
+            self._database.destroy()
 
     def export(self, where="", parameters={}, target_path=os.path.curdir, format=None):
         """Export one or more products from the archive. Return the list of file paths of the exported products.
@@ -634,10 +634,10 @@ class Archive(object):
                     if self.verify_hash("uuid == @uuid", {"uuid": properties.core.uuid}):
                         raise Error("ingested product has incorrect hash")
 
-                properties.core.archive_date = self._backend.server_time_utc()
+                properties.core.archive_date = self._database.server_time_utc()
         except:
             # Try to remove the entry for this product from the product catalogue.
-            self._backend.delete_product_properties(properties.core.uuid)
+            self._database.delete_product_properties(properties.core.uuid)
             raise
 
         # Activate product.
@@ -649,7 +649,7 @@ class Archive(object):
         self.update_properties(Struct({'core': metadata}), properties.core.uuid)
 
         # Set product tags.
-        self._backend.tag(properties.core.uuid, tags)
+        self._database.tag(properties.core.uuid, tags)
 
         # Run the post ingest hook (if defined by the product type plug-in).
         #
@@ -665,7 +665,7 @@ class Archive(object):
         if isinstance(source_uuids, uuid.UUID):
             source_uuids = [source_uuids]
 
-        self._backend.link(uuid_, source_uuids)
+        self._database.link(uuid_, source_uuids)
 
     def namespace_schema(self, namespace):
         """Return the schema definition of a namespace."""
@@ -699,14 +699,14 @@ class Archive(object):
         self.destroy()
 
         # Prepare the archive for use.
-        self._backend.prepare()
+        self._database.prepare()
         self._storage.prepare()
 
     def prepare_catalogue(self, dry_run=False):
         """Prepare the catalogue of the archive for (first) use.
 
         """
-        return self._backend.prepare(dry_run=dry_run)
+        return self._database.prepare(dry_run=dry_run)
 
     def product_path(self, uuid_or_name_or_properties):
         """Return the path in storage where the product with the specified product.
@@ -788,7 +788,7 @@ class Archive(object):
             # reactivate and update size
             product_path = self._product_path(product)
             size = self._storage.size(product_path, plugin)
-            metadata = {'active': True, 'archive_date': self._backend.server_time_utc(), 'size': size}
+            metadata = {'active': True, 'archive_date': self._database.server_time_utc(), 'size': size}
             self.update_properties(Struct({'core': metadata}), product.core.uuid)
 
             # verify product hash.
@@ -1143,11 +1143,11 @@ class Archive(object):
                         (the namespace can be omitted for the 'core' namespace).
                         If the property_names parameter is provided then the namespaces parameter is ignored.
         """
-        return self._backend.search(where, order_by, limit, parameters, namespaces, property_names)
+        return self._database.search(where, order_by, limit, parameters, namespaces, property_names)
 
     def source_products(self, uuid):
         """Return the UUIDs of the products that are linked to the given product as source products."""
-        return self._backend.source_products(uuid)
+        return self._database.source_products(uuid)
 
     def strip(self, where="", parameters={}, force=False):
         """Remove one or more products from disk only (not from the product catalogue). Return the number of products
@@ -1238,32 +1238,32 @@ class Archive(object):
 
         Note that the property names must always include the namespace. 'core' is not assumed.
         """
-        return self._backend.summary(where, parameters, aggregates, group_by, group_by_tag, order_by)
+        return self._database.summary(where, parameters, aggregates, group_by, group_by_tag, order_by)
 
     def tag(self, uuid, tags):
         """Set one or more tags on a product."""
         if isinstance(tags, basestring):
             tags = [tags]
 
-        self._backend.tag(uuid, tags)
+        self._database.tag(uuid, tags)
 
     def tags(self, uuid):
         """Return the tags of a product."""
-        return self._backend.tags(uuid)
+        return self._database.tags(uuid)
 
     def unlink(self, uuid_, source_uuids=None):
         """Remove the link between a product and one or more of its source products."""
         if isinstance(source_uuids, uuid.UUID):
             source_uuids = [source_uuids]
 
-        self._backend.unlink(uuid_, source_uuids)
+        self._database.unlink(uuid_, source_uuids)
 
     def untag(self, uuid, tags=None):
         """Remove one or more tags from a product."""
         if isinstance(tags, basestring):
             tags = [tags]
 
-        self._backend.untag(uuid, tags)
+        self._database.untag(uuid, tags)
 
     def update_properties(self, properties, uuid=None, create_namespaces=False):
         """Update product properties in the product catalogue. The UUID of the product to update will be taken from the
@@ -1291,7 +1291,7 @@ class Archive(object):
         else:
             new_namespaces = None
         self._update_metadata_date(properties)
-        self._backend.update_product_properties(properties, uuid=uuid, new_namespaces=new_namespaces)
+        self._database.update_product_properties(properties, uuid=uuid, new_namespaces=new_namespaces)
 
     def verify_hash(self, where="", parameters={}):
         """Verify the hash for one or more products in the archive.
