@@ -81,6 +81,7 @@ class FilesystemStorageBackend(StorageBackend):
         abs_archive_path = os.path.realpath(os.path.join(self._root, properties.core.archive_path))
         abs_product_path = os.path.join(abs_archive_path, properties.core.physical_name)
 
+        # TODO separate this out like 'current_archive_path'
         if util.is_sub_path(os.path.realpath(paths[0]), abs_product_path, allow_equal=True):
             # Product should already be in the target location
             for path in paths:
@@ -90,58 +91,38 @@ class FilesystemStorageBackend(StorageBackend):
                     raise Error("cannot ingest product where only part of the files are already at the "
                                 "destination location")
         else:
-            # Create destination location for product
+            # Create destination path for product (parts)
+            if plugin.use_enclosing_directory:
+                abs_path = abs_product_path
+            else:
+                abs_path = abs_archive_path
             try:
-                util.make_path(abs_archive_path)
+                util.make_path(abs_path)
             except EnvironmentError as _error:
-                raise Error("cannot create parent destination path '%s' [%s]" % (abs_archive_path, _error))
+                raise Error("cannot create destination path '%s' [%s]" % (abs_path, _error))
 
-            # Create a temporary directory and transfer the product there, then move the product to its
-            # destination within the archive.
             try:
-                with util.TemporaryDirectory(prefix=".ingest-", suffix="-%s" % properties.core.uuid.hex,
-                                             dir=abs_archive_path) as tmp_path:
-
-                    # Create enclosing directory if required.
-                    if plugin.use_enclosing_directory:
-                        tmp_path = os.path.join(tmp_path, properties.core.physical_name)
-                        util.make_path(tmp_path)
-
-                    # Transfer the product (parts).
-                    if use_symlinks:
-                        # Create symbolic link(s) for the product (parts).
-                        for path in paths:
-                            if util.is_sub_path(path, self._root):
-                                # Create a relative symbolic link when the target is part of the archive
-                                # (i.e. when creating an intra-archive symbolic link). This ensures the
-                                # archive can be relocated without breaking intra-archive symbolic links.
-                                if plugin.use_enclosing_directory:
-                                    abs_path = abs_product_path
-                                else:
-                                    abs_path = abs_archive_path
-                                os.symlink(os.path.relpath(path, abs_path),
-                                           os.path.join(tmp_path, os.path.basename(path)))
-                            else:
-                                os.symlink(path, os.path.join(tmp_path, os.path.basename(path)))
-                    else:
-                        # Copy product (parts).
-                        for path in paths:
-                            util.copy_path(path, tmp_path, resolve_root=True)
-
-                    # Move the transferred product into its destination within the archive.
-                    if plugin.use_enclosing_directory:
-                        os.rename(tmp_path, abs_product_path)
-                    else:
-                        assert len(paths) == 1 and \
-                            properties.core.physical_name == os.path.basename(paths[0])
-                        tmp_product_path = os.path.join(tmp_path, properties.core.physical_name)
-                        os.rename(tmp_product_path, abs_product_path)
+                if use_symlinks:
+                    # Create symbolic link(s) for the product (parts).
+                    for path in paths:
+                        if util.is_sub_path(path, self._root):
+                            # Create a relative symbolic link when the target is part of the archive
+                            # (i.e. when creating an intra-archive symbolic link). This ensures the
+                            # archive can be relocated without breaking intra-archive symbolic links.
+                            os.symlink(os.path.relpath(path, abs_path),
+                                       os.path.join(abs_path, os.path.basename(path)))
+                        else:
+                            os.symlink(path, os.path.join(abs_path, os.path.basename(path)))
+                else:
+                    # Copy product (parts).
+                    for path in paths:
+                        util.copy_path(path, abs_path, resolve_root=True)
 
             except EnvironmentError as _error:
                 raise Error("unable to transfer product to destination path '%s' [%s]" %
                             (abs_product_path, _error))
 
-    def put2(self, file_path, archive, product):
+    def put2(self, file_path, archive, product): # TODO merge with 'put'.. add move flag?
         physical_name = product.core.physical_name
         archive_path = product.core.archive_path
 
