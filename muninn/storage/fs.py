@@ -171,7 +171,8 @@ class FilesystemStorageBackend(StorageBackend):
             raise Error("unable to transfer product to destination path '%s' [%s]" %
                         (abs_product_path, _error))
 
-    def get(self, product_path, target_path, plugin, use_symlinks=False):
+    # TODO product_path follows from product
+    def get(self, product, product_path, target_path, plugin, use_symlinks=False):
         try:
             if use_symlinks:
                 if plugin.use_enclosing_directory:
@@ -186,7 +187,7 @@ class FilesystemStorageBackend(StorageBackend):
                 else:
                     util.copy_path(product_path, target_path, resolve_root=True)
 
-        except EnvironmentError as _error: #  TODO product undefined
+        except EnvironmentError as _error:
             raise Error("unable to retrieve product '%s' (%s) [%s]" % (product.core.product_name, product.core.uuid,
                                                                        _error))
 
