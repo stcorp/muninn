@@ -71,7 +71,7 @@ class MyTypePlugin(object):
             tmp_path = os.path.join(tmp_path, os.path.basename(product_filepath))
             os.makedirs(tmp_path)
 
-            archive._storage.get(product_filepath, tmp_path, self) # TODO use symlinks for performance?
+            archive.retrieve_by_uuid(product.core.uuid, tmp_path) # TODO symlinks currently don't work with compress?
 
             compress(tmp_path, target_filepath)
 
