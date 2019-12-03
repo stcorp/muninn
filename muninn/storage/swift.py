@@ -98,7 +98,7 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
         with open(file_path, 'rb') as f:
             self._conn.put_object(self.container, key, contents=f.read())
 
-    def get(self, product_path, target_path, plugin, use_symlinks=False):
+    def get(self, product, product_path, target_path, plugin, use_symlinks=False):
         if use_symlinks:
             raise Error("Swift storage backend does not support symlinks")
 
