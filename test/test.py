@@ -178,7 +178,7 @@ class TestArchive:
         if intra: # relative symlink within archive
             dirpath = os.path.join(
                 archive._checker.root,
-                'een/twee'
+                'one/two'
             )
 
             if not os.path.isdir(dirpath):
@@ -206,7 +206,7 @@ class TestArchive:
 
             if intra:
                 # TODO remove this, as os.path.realpath already resolves
-                target_path = 'een/twee/pi.txt'
+                target_path = 'one/two/pi.txt'
                 dotdots = 0 # don't use relpath on purpose for comparison
                 if archive._params['use_enclosing_directory']:
                     dotdots += 1
@@ -531,15 +531,15 @@ class TestArchive:
 
         assert archive._checker.exists(oldpath)
 
-        sys.modules['product_type'].ARCHIVE_PATH = 'fiets'
+        sys.modules['product_type'].ARCHIVE_PATH = 'bicycle'
         archive.rebuild_properties(properties.core.uuid)
 
         assert not archive._checker.exists(oldpath)
 
         properties = archive.retrieve_properties(properties.core.uuid)
-        assert properties.core.archive_path == 'fiets'
+        assert properties.core.archive_path == 'bicycle'
 
-        path = 'fiets/pi.txt'
+        path = 'bicycle/pi.txt'
         if archive._params['use_enclosing_directory']:
             path = os.path.join(path, 'pi.txt')
         assert archive._checker.exists(path)
@@ -558,12 +558,12 @@ class TestArchive:
                 )
                 assert archive._checker.exists(oldpath)
 
-            sys.modules['product_type'].ARCHIVE_PATH = 'fiets'
+            sys.modules['product_type'].ARCHIVE_PATH = 'bicycle'
             archive.rebuild_properties(properties.core.uuid)
 
             for name in names:
                 path = os.path.join(
-                    'fiets/multi',
+                    'bicycle/multi',
                     name
                 )
                 assert archive._checker.exists(path)
