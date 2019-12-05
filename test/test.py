@@ -10,6 +10,7 @@ import os
 import sys
 import tarfile
 import unittest
+import urllib
 
 import pytest
 
@@ -289,11 +290,14 @@ class TestArchive:
         return properties
 
     def _pull(self, archive):
+        URL = 'http://archive.debian.org/README'
+        urllib.request.urlretrieve(URL, 'data/README')
+
         props = archive.ingest(['data/README'], ingest_product=False)
         size = os.path.getsize('data/README')
 
         metadata = {
-            'remote_url': 'http://archive.debian.org/README',
+            'remote_url': URL
         }
 
         archive.update_properties(muninn.Struct({'core': metadata}), props.core.uuid)
