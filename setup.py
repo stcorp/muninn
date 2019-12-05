@@ -17,12 +17,12 @@ if sys.version_info[0] == 2 and sys.version_info[1] == 6:
 
 setup(
     name="muninn",
-    version="4.4",
+    version="4.5",
     description="Data product catalogue and archive system",
     url="https://github.com/stcorp/muninn",
     author="S[&]T",
     license="BSD",
-    packages=["muninn", "muninn.backends", "muninn.tools"],
+    packages=["muninn", "muninn.database", "muninn.storage"],
     entry_points={"console_scripts": [
         "muninn-destroy = muninn.tools.destroy:main",
         "muninn-export = muninn.tools.export:main",

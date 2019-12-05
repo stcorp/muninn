@@ -37,6 +37,12 @@ For the sqlite backend:
   - pysqlite >=2.8.3 or python built with sqlite3 loadable extension support
   - libspatialite 4.2.0 or higher
 
+For the S3 storage backend:
+  - boto3
+
+For the Swift storage backend:
+  - swiftclient
+
 To be able to install muninn, you will need:
   - setuptools version 0.6 or compatible.
 
@@ -45,6 +51,7 @@ Optional dependencies:
   - requests: to perform a muninn-pull on http/https urls
   - tabulate: provides more output format options for muninn-search
   - tqdm: to show a progress bar for muninn-update
+  - pytest: to run the tests
 
 
 Muninn is distributed as a source distribution created using setuptools version
@@ -54,12 +61,12 @@ in most cases.
 
 Using pip: ::
 
-  $ pip install muninn-4.4.tar.gz
+  $ pip install muninn-4.5.tar.gz
 
 Using setup.py: ::
 
-  $ tar xvfz muninn-4.4.tar.gz
-  $ cd muninn-4.4
+  $ tar xvfz muninn-4.5.tar.gz
+  $ cd muninn-4.5
   $ python setup.py install
 
 The muninn distribution contains a generic archiving framework that cannot be
