@@ -1,3 +1,3 @@
 include COPYING CHANGES DEVELOPER.rst EXTENSIONS.rst
-include test/test.py test/test.cfg.template test/product_type.py.template test/coverage.sh
+include test/test.py test/test.cfg.template test/product_type.py.template test/coverage.sh test/README.rst
 include test/data/pi.txt test/data/multi/1.txt test/data/multi/2.txt test/data/README
