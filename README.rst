@@ -355,10 +355,11 @@ Section "archive"
 This section contains general archive settings and may contain the following
 settings:
 
-- ``root``: The root path on disk of the archive.
-
-- ``backend``: The backend used for storing product properties. The currently
+- ``database``: The backend used for storing product properties. The currently
   supported backends are ``postgresql`` and ``sqlite``.
+
+- ``storage``: The backend used for storing product data. The currently
+  supported backends are ``fs``, ``s3`` and ``swift``.
 
 - ``use_symlinks``: If set to ``true``, an archived product will consist of
   symbolic links to the original product, instead of a copy of the product.
@@ -386,13 +387,20 @@ settings:
   modules or packages that contain remote backend plug-ins (see section
   "Extensions"_). The default is the empty list.
 
-- ``auth_file``: [Optional] JSON file containing the credentials to download using
-  muninn-pull
+- ``auth_file``: [Optional] JSON file containing the credentials to download
+  using muninn-pull
+
+Deprecated settings:
+
+- ``root``: The root path on disk of the archive when using the file system
+  storage backend (please use the ``fs`` section).
+
+- ``backend``: Same as ``database`` (please use this instead).
 
 
 Section "postgresql"
 --------------------
-This sections contains backend specific settings for the postgresql backend and
+This section contains backend specific settings for the postgresql backend and
 may contain the following settings:
 
 - connection_string: Mandatory. A postgresql connection string of the database
@@ -408,7 +416,7 @@ may contain the following settings:
 
 Section "sqlite"
 ----------------
-This sections contains backend specific settings for the postgresql backend and
+This section contains backend specific settings for the postgresql backend and
 may contain the following settings:
 
 - connection_string: Mandatory. A full path to the sqlite database file
@@ -426,16 +434,47 @@ may contain the following settings:
   Change this to e.g. /usr/local/lib/mod_spatialite to set an explicit path
   (no filename extension needed).
 
+Section "fs"
+----------------
+This section contains backend specific settings for the filesystem storage
+backend and may contain the following settings:
+
+- root: Mandatory. The root path on disk of the archive.
+
+Section "s3"
+----------------
+This section contains backend specific settings for the S3 storage
+backend and may contain the following settings:
+
+- bucket: Mandatory. The bucket containing the archive.
+- host: Mandatory. S3 host URL.
+- port: Mandatory. S3 host port.
+- access_key: Mandatory. S3 authentication access key.
+- secret_access_key: Mandatory. S3 authentication secret access key.
+
+Section "swift"
+----------------
+This section contains backend specific settings for the Swift storage
+backend and may contain the following settings:
+
+- container: Mandatory. The container containing the archive.
+- user: Mandatory. Swift authentication user name.
+- key: Mandatory. Swift authentication key.
+- authurl: Mandatory. Swift authentication auth URL.
+
 Example configuration file
 --------------------------
 ::
 
   [archive]
-  root = /home/alice/archives/foo
-  backend = postgresql
+  database = postgresql
+  storage = fs
   use_symlinks = true
   product_type_extensions = cryosat asar
   auth_file = /home/alice/credentials.json
+
+  [fs]
+  root = /home/alice/archives/foo
 
   [postgresql]
   connection_string = dbname=foo user=alice password=wonderland host=192.168.0.1
