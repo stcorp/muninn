@@ -1,5 +1,20 @@
 * Added property_names argument to archive.retrieve_properties().
 
+4.5 2019-12-05
+~~~~~~~~~~~~~~
+
+* Added a storage backend framework, including S3 and Swift backends.
+
+* Added an initial test framework
+
+* Fixed issue with intra-archive links without enclosing dir (resulting
+  in broken symlinks).
+
+* Fixed issue where product hashes were not actually verified.
+
+* Made product hashing compatible with Python 3 (and using UTF-8 encoding
+  before hashing, instead of the current filesystem encoding).
+
 4.4 2019-04-03
 ~~~~~~~~~~~~~~
 
