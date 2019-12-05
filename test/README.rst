@@ -13,3 +13,10 @@ Steps to run the Muninn tests:
   - a Swift server (e.g., https://hub.docker.com/r/morrisjobke/docker-swift-onlyone/)
 - Update settings in test.cfg.template
 - Run pytest test.py
+
+Steps to check test coverage:
+
+- Install the following Python dependencies:
+  - coverage
+- Run ./coverage.sh
+- Look at htmlcov/index.html
