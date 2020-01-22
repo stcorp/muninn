@@ -600,7 +600,7 @@ class Archive(object):
             if use_current_path:
                 properties.core.archive_path = self._storage.current_archive_path(paths)
             else:
-                properties.core.archive_path = plugin.archive_path(paths)
+                properties.core.archive_path = plugin.archive_path(properties)
 
         # Remove existing product with the same product type and name before ingesting
         if force:
