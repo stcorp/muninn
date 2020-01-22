@@ -38,15 +38,23 @@ class MyTypePlugin(object):
         self.use_enclosing_directory = {use_enclosing_directory}
 
     def enclosing_directory(self, properties):
+        assert isinstance(properties, Struct)
+
         return properties.core.product_name
 
     def archive_path(self, properties):
+        assert isinstance(properties, Struct)
+
         return ARCHIVE_PATH
 
     def identify(self, paths):
+        assert isinstance(paths, list)
+
         return True
 
     def analyze(self, paths):
+        assert isinstance(paths, list)
+
         path = paths[0]
 
         result = Struct()
