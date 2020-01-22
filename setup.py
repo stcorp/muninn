@@ -22,7 +22,7 @@ setup(
     url="https://github.com/stcorp/muninn",
     author="S[&]T",
     license="BSD",
-    packages=["muninn", "muninn.database", "muninn.storage"],
+    packages=["muninn", "muninn.tools", "muninn.database", "muninn.storage"],
     entry_points={"console_scripts": [
         "muninn-destroy = muninn.tools.destroy:main",
         "muninn-export = muninn.tools.export:main",
