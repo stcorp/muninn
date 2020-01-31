@@ -683,7 +683,7 @@ Parameter references
 A name preceded by an at sign ``@`` denotes the value of the parameter with
 that name. This is primarily useful when calling library functions that take an
 expression as an argument. These functions will also take a dictionary of
-parameters that will be used to resolved any parameters references present in
+parameters that will be used to resolved any parameter references present in
 the expression.
 
 Some examples of parameter references:
