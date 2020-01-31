@@ -540,7 +540,7 @@ Some examples of literal real values:
   ``1.0``
 
 The text type represents text. Literal values are enclosed in double quotes and
-most common backslash escape sequence are recognized. To include a double quote
+most common backslash escape sequences are recognized. To include a double quote
 or a backslash inside a text literal, they must be escaped with a backslash,
 i.e. ``\"`` and ``\\``.
 
