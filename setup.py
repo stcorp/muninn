@@ -18,7 +18,7 @@ if sys.version_info[0] == 2 and sys.version_info[1] == 6:
 setup(
     name="muninn",
     version="4.4",
-    description="Configurable product archive",
+    description="Data product catalogue and archive system",
     url="https://github.com/stcorp/muninn",
     author="S[&]T",
     license="BSD",
@@ -40,6 +40,19 @@ setup(
         "muninn-untag = muninn.tools.untag:main",
         "muninn-update = muninn.tools.update:main",
     ]},
+    classifiers=[
+        "Development Status :: 5 - Production/Stable",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.6",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "License :: OSI Approved :: BSD License",
+        "Operating System :: OS Independent",
+        "Topic :: Scientific/Engineering",
+    ],
     python_requires=python_req,
     install_requires=requirements
 )
