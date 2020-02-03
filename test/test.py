@@ -27,6 +27,12 @@ os.environ['MUNINN_CONFIG_PATH'] = '.'
 
 import shutil
 
+from muninn.schema import Mapping, optional, Text
+
+
+class MyNamespace(Mapping):
+    hallo = optional(Text)
+
 
 class BaseChecker(object):
     def __init__(self, storage):
@@ -152,6 +158,7 @@ def archive(database, storage, use_enclosing_directory, archive_path):
 
     # create clean archive
     archive = muninn.open('test')
+    archive.register_namespace('mynamespace', MyNamespace)
     archive.destroy()
     archive.prepare()
 
@@ -583,3 +590,52 @@ class TestArchive:
     def test_rebuild_pull_properties(self, archive):
         properties = self._pull(archive)
         archive.rebuild_pull_properties(properties.core.uuid, verify_hash=True)
+
+
+class TestQuery:
+    def _prep_data(self, archive):
+        self.uuid_a = archive.ingest(['data/a.txt']).core.uuid
+        self.uuid_b = archive.ingest(['data/b.txt']).core.uuid
+        self.uuid_c = archive.ingest(['data/c.txt']).core.uuid
+
+        archive.link(self.uuid_b, [self.uuid_a])
+        archive.link(self.uuid_c, [self.uuid_a, self.uuid_b])
+
+    def test_IsDerivedFrom(self, archive):
+        self._prep_data(archive)
+
+        for (count, name, uuid) in [
+            (2, 'a.txt', self.uuid_a),
+            (1, 'b.txt', self.uuid_b),
+            (0, 'c.txt', self.uuid_c),
+        ]:
+            s = archive.search('is_derived_from(%s)' % uuid)
+            assert len(s) == count
+            s = archive.search('is_derived_from(uuid==%s)' % uuid)
+            assert len(s) == count
+            s = archive.search('is_derived_from(physical_name==\"%s\")' % name)
+            assert len(s) == count
+
+        s = archive.search('is_derived_from(is_derived_from(physical_name==\"a.txt\"))')
+        assert len(s) == 1
+        assert s[0].core.uuid == self.uuid_c
+
+        s = archive.search('is_derived_from(physical_name==\"a.txt\") or is_derived_from(is_derived_from(physical_name==\"a.txt\"))')
+        assert len(s) == 2
+
+    def test_Namespaces(self, archive):
+        self._prep_data(archive)
+
+        archive.update_properties(muninn.Struct({'mynamespace': {'hallo': 'hoi'}}), self.uuid_a, True)
+        archive.update_properties(muninn.Struct({'mynamespace': {'hallo': 'hoi'}}), self.uuid_b, True)
+
+        s = archive.search('mynamespace.hallo==\"haai\"')
+        assert len(s) == 0
+        s = archive.search('mynamespace.hallo==\"hoi\"')
+        assert len(s) == 2
+
+        s = archive.search('is_derived_from(mynamespace.hallo==\"hoi\")')
+        assert len(s) == 2
+
+        s = archive.search('is_derived_from(physical_name==\"a.txt\") and mynamespace.hallo==\"hoi\"')
+        assert len(s) == 1
