@@ -10,7 +10,7 @@ import argparse
 
 import muninn
 from muninn.schema import Timestamp
-from muninn.backends.sql import AGGREGATE_FUNCTIONS, GROUP_BY_FUNCTIONS
+from muninn.database.sql import AGGREGATE_FUNCTIONS, GROUP_BY_FUNCTIONS
 from .utils import create_parser, parse_args_and_run
 
 
