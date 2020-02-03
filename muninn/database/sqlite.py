@@ -518,9 +518,33 @@ class SQLiteBackend(object):
             lambda arg0: "EXISTS (SELECT 1 FROM %s WHERE source_uuid = %s.uuid AND uuid = (%s))" % \
             (self._link_table_name, self._core_table_name, arg0)
 
+        def is_source_of_subquery(where_expr, where_namespaces):
+            inner_joins = ''
+            for namespace in where_namespaces:
+                inner_joins = "%s INNER JOIN %s USING (uuid)" % (inner_joins, self._table_name(namespace))
+
+            return "{core}.uuid in (SELECT {link}.source_uuid FROM {core} {joins} " \
+                "INNER JOIN {link} on {link}.uuid = {core}.uuid WHERE {where})".format(
+                    core=self._core_table_name, link=self._link_table_name, joins=inner_joins,
+                    where=where_expr)
+
+        rewriter_table[Prototype("is_source_of", (Boolean,), Boolean)] = is_source_of_subquery
+
         rewriter_table[Prototype("is_derived_from", (UUID,), Boolean)] = \
             lambda arg0: "EXISTS (SELECT 1 FROM %s WHERE uuid = %s.uuid AND source_uuid = (%s))" % \
             (self._link_table_name, self._core_table_name, arg0)
+
+        def is_derived_from_subquery(where_expr, where_namespaces):
+            inner_joins = ''
+            for namespace in where_namespaces:
+                inner_joins = "%s INNER JOIN %s USING (uuid)" % (inner_joins, self._table_name(namespace))
+
+            return "{core}.uuid in (SELECT {link}.uuid FROM {core} {joins} " \
+                "INNER JOIN {link} on {link}.source_uuid = {core}.uuid WHERE {where})".format(
+                    core=self._core_table_name, link=self._link_table_name, joins=inner_joins,
+                    where=where_expr)
+
+        rewriter_table[Prototype("is_derived_from", (Boolean,), Boolean)] = is_derived_from_subquery
 
         rewriter_table[Prototype("has_tag", (Text,), Boolean)] = \
             lambda arg0: "EXISTS (SELECT 1 FROM %s WHERE uuid = %s.uuid AND tag = (%s))" % \

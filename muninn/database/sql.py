@@ -269,20 +269,22 @@ def default_rewriter_table():
 
 
 class _WhereExpressionVisitor(Visitor):
-    def __init__(self, rewriter_table, column_name_func, named_placeholder_func):
+    def __init__(self, rewriter_table, column_name_func, named_placeholder_func, root_visitor=None):
         super(_WhereExpressionVisitor, self).__init__()
         self._rewriter_table = rewriter_table
         self._column_name = column_name_func
         self._named_placeholder = named_placeholder_func
+
+        self._root_visitor = root_visitor or self
 
     def visit(self, visitable):
         self._count, self._parameters, self._namespaces = 0, {}, set()
         return super(_WhereExpressionVisitor, self).visit(visitable), self._parameters, self._namespaces
 
     def visit_Literal(self, visitable):
-        parameter_name = str(self._count)
-        self._parameters[parameter_name] = visitable.value
-        self._count += 1
+        parameter_name = str(self._root_visitor._count)
+        self._root_visitor._parameters[parameter_name] = visitable.value
+        self._root_visitor._count += 1
         return self._named_placeholder(parameter_name)
 
     def visit_Name(self, visitable):
@@ -291,9 +293,9 @@ class _WhereExpressionVisitor(Visitor):
         return self._column_name(namespace, name)
 
     def visit_ParameterReference(self, visitable):
-        parameter_name = str(self._count)
-        self._parameters[parameter_name] = visitable.value
-        self._count += 1
+        parameter_name = str(self._root_visitor._count)
+        self._root_visitor._parameters[parameter_name] = visitable.value
+        self._root_visitor._count += 1
         return self._named_placeholder(parameter_name)
 
     def visit_FunctionCall(self, visitable):
@@ -302,7 +304,24 @@ class _WhereExpressionVisitor(Visitor):
         except KeyError:
             raise Error("function not supported by backend: %s" % visitable.prototype)
 
-        arguments = [super(_WhereExpressionVisitor, self).visit(argument) for argument in visitable.arguments]
+        # sub-query
+        prototype = visitable.prototype
+        if (prototype.name in ('is_source_of', 'is_derived_from') and \
+            prototype.argument_types and \
+            prototype.argument_types[0].name() == 'boolean'):
+
+            visitor = _WhereExpressionVisitor(self._rewriter_table, self._column_name, self._named_placeholder, self._root_visitor)
+            where_expr, where_parameters, where_namespaces = visitor.visit(visitable.arguments[0])
+
+            if 'core' in where_namespaces:
+                where_namespaces.remove('core')
+
+            arguments = [where_expr, where_namespaces]
+
+        # non-sub-query
+        else:
+            arguments = [super(_WhereExpressionVisitor, self).visit(argument) for argument in visitable.arguments]
+
         return rewriter_func(*arguments)
 
     def default(self, visitable):
