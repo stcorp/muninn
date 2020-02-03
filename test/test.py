@@ -10,7 +10,12 @@ import os
 import sys
 import tarfile
 import unittest
-import urllib
+
+PY3 = sys.version_info[0] == 3
+if PY3:
+    import urllib
+else:
+    import urllib2
 
 import pytest
 
@@ -298,7 +303,12 @@ class TestArchive:
 
     def _pull(self, archive):
         URL = 'http://archive.debian.org/README'
-        urllib.request.urlretrieve(URL, 'data/README')
+        if PY3:
+            urllib.request.urlretrieve(URL, 'data/README')
+        else:
+            data = urllib2.urlopen(URL).read()
+            with open('data/README', 'wb') as f:
+                f.write(data)
 
         props = archive.ingest(['data/README'], ingest_product=False)
         size = os.path.getsize('data/README')
