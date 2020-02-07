@@ -34,6 +34,14 @@ import shutil
 
 from muninn.schema import Mapping, optional, Text
 
+CFG = ConfigParser()
+CFG.read('test.cfg')
+
+STORAGE_BACKENDS = [s.strip() for s in CFG.get('DEFAULT', 'backend').split(',')]
+DATABASE_BACKENDS = [s.strip() for s in CFG.get('DEFAULT', 'database').split(',')]
+ARCHIVE_PATHS = [s.strip() for s in CFG.get('DEFAULT', 'archive_path').split(',')]
+USE_ENCLOSING_DIR = [s.strip()=='true' for s in CFG.get('DEFAULT', 'use_enclosing_dir').split(',')]
+
 
 class MyNamespace(Mapping):
     hallo = optional(Text)
@@ -43,7 +51,7 @@ class BaseChecker(object):
     def __init__(self, storage):
         self.storage = storage
         self.parser = ConfigParser()
-        self.parser.read('test.cfg')
+        self.parser.read('my_arch.cfg')
 
 
 class FSChecker(BaseChecker):
@@ -124,32 +132,39 @@ STORAGE_CHECKERS = {
 
 # TODO merge fixtures into one with multiple parameters?
 
-@pytest.fixture(params=['sqlite', 'postgresql'])  # TODO add postgresql
+@pytest.fixture(params=DATABASE_BACKENDS)
 def database(request):
     return request.param
 
 
-@pytest.fixture(params=['fs', 's3', 'swift'])
+@pytest.fixture(params=STORAGE_BACKENDS)
 def storage(request):
     return request.param
 
 
-@pytest.fixture(params=['', 'archive/path'])
+@pytest.fixture(params=ARCHIVE_PATHS)
 def archive_path(request):
     return request.param
 
 
-@pytest.fixture(params=[True, False])
+@pytest.fixture(params=USE_ENCLOSING_DIR)
 def use_enclosing_directory(request):
     return request.param
 
 
 @pytest.fixture
 def archive(database, storage, use_enclosing_directory, archive_path):
-    template = open('test.cfg.template', 'r').read()
+    template = open('my_arch.cfg.template', 'r').read()
     data = template.replace('{database}', database)
     data = data.replace('{storage}', storage)
-    open('test.cfg', 'w').write(data)
+    with open('my_arch.cfg', 'w') as f:
+        f.write(data)
+        section = None
+        for line in open('test.cfg'):
+            if line.startswith('['):
+                section = line.strip()
+            if section != '[DEFAULT]':
+                f.write(line)
 
     template = open('product_type.py.template', 'r').read()
     data = template.replace('{archive_path}', archive_path)
@@ -162,7 +177,7 @@ def archive(database, storage, use_enclosing_directory, archive_path):
     os.system('rm *.pyc -f')
 
     # create clean archive
-    archive = muninn.open('test')
+    archive = muninn.open('my_arch')
     archive.register_namespace('mynamespace', MyNamespace)
     archive.destroy()
     archive.prepare()
