@@ -590,25 +590,41 @@ class SemanticAnalysis(Visitor):
     def visit_Name(self, visitable):
         split_name = visitable.value.split(".")
 
+        # namespace/implicit core property
         if len(split_name) == 1:
-            namespace, name = "core", split_name[0]
+            if split_name[0] in self._namespace_schemas:
+                namespace = split_name[0]
+                name = None
+            else:
+                namespace, name = "core", split_name[0]
+
+        # namespace.property
         elif len(split_name) == 2:
             namespace, name = split_name
+
         else:
             raise Error("invalid property name: \"%s\"" % visitable.value)
 
+        # check that namespace exists
         try:
             schema = self._namespace_schemas[namespace]
         except KeyError:
             raise Error("undefined namespace: \"%s\"" % namespace)
 
-        try:
-            type = schema[name]
-        except KeyError:
-            raise Error("no property: \"%s\" defined within namespace: \"%s\"" % (name, namespace))
+        # namespace
+        if name is None:
+            visitable.value = split_name[0]
+            visitable.type = Text
 
-        visitable.value = "%s.%s" % (namespace, name)
-        visitable.type = type
+        # namespace.property
+        else:
+            try:
+                type = schema[name]
+            except KeyError:
+                raise Error("no property: \"%s\" defined within namespace: \"%s\"" % (name, namespace))
+
+            visitable.value = "%s.%s" % (namespace, name)
+            visitable.type = type
 
     def visit_ParameterReference(self, visitable):
         try:
