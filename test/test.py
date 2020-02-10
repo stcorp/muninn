@@ -623,6 +623,9 @@ class TestQuery:
         self.uuid_b = archive.ingest(['data/b.txt']).core.uuid
         self.uuid_c = archive.ingest(['data/c.txt']).core.uuid
 
+        archive.update_properties(muninn.Struct({'mynamespace': {'hallo': 'hoi'}}), self.uuid_a, True)
+        archive.update_properties(muninn.Struct({'mynamespace': {'hallo': 'hoi'}}), self.uuid_b, True)
+
         archive.link(self.uuid_b, [self.uuid_a])
         archive.link(self.uuid_c, [self.uuid_a, self.uuid_b])
 
@@ -648,11 +651,8 @@ class TestQuery:
         s = archive.search('is_derived_from(physical_name==\"a.txt\") or is_derived_from(is_derived_from(physical_name==\"a.txt\"))')
         assert len(s) == 2
 
-    def test_Namespaces(self, archive):
+    def test_Namespaces(self, archive): # TODO test 'not is_derived_from(..')
         self._prep_data(archive)
-
-        archive.update_properties(muninn.Struct({'mynamespace': {'hallo': 'hoi'}}), self.uuid_a, True)
-        archive.update_properties(muninn.Struct({'mynamespace': {'hallo': 'hoi'}}), self.uuid_b, True)
 
         s = archive.search('mynamespace.hallo==\"haai\"')
         assert len(s) == 0
@@ -664,3 +664,24 @@ class TestQuery:
 
         s = archive.search('is_derived_from(physical_name==\"a.txt\") and mynamespace.hallo==\"hoi\"')
         assert len(s) == 1
+
+    def test_IsDefined(self, archive):
+        self._prep_data(archive)
+
+        # namespace.property
+        s = archive.search('is_defined(core.physical_name)')
+        assert len(s) == 3
+        s = archive.search('not is_defined(core.physical_name)')
+        assert len(s) == 0
+        s = archive.search('is_defined(mynamespace.hallo)')
+        assert len(s) == 2
+#        s = archive.search('not is_defined(mynamespace.hallo)') # TODO not working??
+#        assert len(s) == 1
+
+        # namespace/core property
+        s = archive.search('is_defined(core)')
+        assert len(s) == 3
+        s = archive.search('is_defined(mynamespace)')
+        assert len(s) == 2
+        s = archive.search('is_defined(physical_name)')
+        assert len(s) == 3

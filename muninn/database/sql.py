@@ -255,7 +255,11 @@ def default_rewriter_table():
         (right0, left0, right1, left1, right0, left1, left0, right1)
 
     def is_defined_rewriter(arg):
-        return "(%s) IS NOT NULL" % arg
+        if arg is None: # namespace
+            return '1 > 0'
+        else:
+            return "(%s) IS NOT NULL" % arg
+
     rewriter_table[Prototype("is_defined", (Long,), Boolean)] = is_defined_rewriter
     rewriter_table[Prototype("is_defined", (Integer,), Boolean)] = is_defined_rewriter
     rewriter_table[Prototype("is_defined", (Real,), Boolean)] = is_defined_rewriter
@@ -288,9 +292,15 @@ class _WhereExpressionVisitor(Visitor):
         return self._named_placeholder(parameter_name)
 
     def visit_Name(self, visitable):
-        namespace, name = visitable.value.split(".")
+        namespace_name = visitable.value.split('.')
+        if len(namespace_name) == 1:
+            namespace = namespace_name[0]
+            name = None
+        else:
+            namespace, name = namespace_name
+            name = self._column_name(namespace, name)
         self._namespaces.add(namespace)
-        return self._column_name(namespace, name)
+        return name
 
     def visit_ParameterReference(self, visitable):
         parameter_name = str(self._root_visitor._count)
