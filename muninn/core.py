@@ -39,18 +39,18 @@ class Remote(Text):
 
 
 class Core(Mapping):
-    uuid = UUID
-    active = Boolean
-    hash = optional(Text)
-    size = optional(Long)
+    uuid = UUID()
+    active = Boolean()
+    hash = Text(optional=True)
+    size = Long(optional=True)
     metadata_date = Timestamp
-    archive_date = optional(Timestamp)
-    archive_path = optional(ArchivePath)
-    product_type = Text
-    product_name = Text
-    physical_name = Basename
-    validity_start = optional(Timestamp)
-    validity_stop = optional(Timestamp)
-    creation_date = optional(Timestamp)
-    footprint = optional(Geometry)
-    remote_url = optional(Remote)
+    archive_date = Timestamp(optional=True)
+    archive_path = ArchivePath(optional=True)
+    product_type = Text()
+    product_name = Text()
+    physical_name = Basename()
+    validity_start = Timestamp(optional=True)
+    validity_stop = Timestamp(optional=True)
+    creation_date = Timestamp(optional=True)
+    footprint = Geometry(optional=True)
+    remote_url = Remote(optional=True)
