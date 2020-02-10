@@ -33,6 +33,10 @@ class optional(object):
 
 
 class Type(object):
+    def __init__(self, optional=False, index=False):
+        self.optional = optional
+        self.index = index
+
     @classmethod
     def name(cls):
         return getattr(cls, "_alias", cls.__name__.lower())
@@ -128,6 +132,8 @@ class MetaMapping(type):
         for key, value in dct.items():
             if isinstance(value, type) and issubclass(value, Type):
                 items[key] = (value, False)
+            elif isinstance(value, Type):
+                items[key] = (type(value), value.optional)
             elif type(value) is optional:
                 items[key] = (value.type, True)
             else:
@@ -135,6 +141,7 @@ class MetaMapping(type):
 
         assert "_items" not in class_dct
         class_dct["_items"] = items
+
         return super(MetaMapping, meta).__new__(meta, name, bases, class_dct)
 
     def __len__(self):
