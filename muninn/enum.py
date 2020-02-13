@@ -4,19 +4,16 @@
 
 from __future__ import absolute_import, division, print_function
 
-from muninn._compat import with_metaclass
-
 
 class MetaEnum(type):
     def __new__(meta, name, bases, dct):
-        for value, item in enumerate(dct["_items"]):
-            dct[item] = value
-        return super(MetaEnum, meta).__new__(meta, name, bases, dct)
+        class_dct = dct.copy()
+        for value, item in enumerate(dct.get('_items', [])):
+            class_dct[item] = value
+        return super(MetaEnum, meta).__new__(meta, name, bases, class_dct)
 
 
-class Enum(with_metaclass(MetaEnum)):
-    _items = ()
-
+class Enum:
     @classmethod
     def count(cls):
         return len(cls._items)
@@ -41,3 +38,5 @@ class Enum(with_metaclass(MetaEnum)):
             return cls._items.index(value)
         except ValueError:
             raise ValueError("enumeration: %s does not contain: %s" % (cls.__name__, value))
+
+Enum = MetaEnum('Enum', (), Enum.__dict__)
