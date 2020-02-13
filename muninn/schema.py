@@ -144,21 +144,18 @@ class MetaMapping(type):
 
         return super(MetaMapping, meta).__new__(meta, name, bases, class_dct)
 
-    def __len__(self):
-        return self._len()
+    def __len__(cls):
+        return len(cls._items)
 
-    def __getitem__(self, name):
-        return self._getitem(name)
+    def __getitem__(cls, name):
+        return cls._items[name][0]
 
-    def __iter__(self):
-        return self._iter()
+    def __iter__(cls):
+        return iter(cls._items)
 
-    def __contains__(self, name):
-        return self._contains(name)
+    def __contains__(cls, name):
+        return name in cls._items
 
-
-class Mapping:
-    @classmethod
     def validate(cls, value, partial=False, path=""):
         path = "%s:" % cls.name() if not path else path
 
@@ -187,26 +184,9 @@ class Mapping:
             extra_names = set(value) - set(cls._items)
             raise ValueError(prefix_message_with_path(path, "undefined item: %r" % extra_names.pop()))
 
-    @classmethod
     def is_optional(cls, name):
         _, optional = cls._items[name]
         return optional
 
-    @classmethod
-    def _getitem(cls, name):
-        type, _ = cls._items[name]
-        return type
 
-    @classmethod
-    def _contains(cls, name):
-        return name in cls._items
-
-    @classmethod
-    def _iter(cls):
-        return iter(cls._items)
-
-    @classmethod
-    def _len(cls):
-        return len(cls._items)
-
-Mapping = MetaMapping('Mapping', (Container,), Mapping.__dict__)
+Mapping = MetaMapping('Mapping', (Container,), {})
