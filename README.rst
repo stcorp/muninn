@@ -26,7 +26,7 @@ Installation instructions
 =========================
 To be able to use muninn, you will need:
   - A Unix-based operating system (e.g. Linux).
-  - Python version 2.6 or higher, or Python 3.6 or higher.
+  - Python version 2.7 or higher, or Python 3.6 or higher.
 
 For the postgresql backend:
   - psycopg2 version 2.2 or higher.
@@ -47,7 +47,6 @@ To be able to install muninn, you will need:
   - setuptools version 0.6 or compatible.
 
 Optional dependencies:
-  - argparse: mandatory when using Python 2.6
   - requests: to perform a muninn-pull on http/https urls
   - tabulate: provides more output format options for muninn-search
   - tqdm: to show a progress bar for muninn-update
@@ -677,6 +676,11 @@ Some examples of property references:
 
   ``core.validity_start``
 
+Namespace references
+--------------------
+A namespace ``x`` is referred to using simply ``x``. It is undesirable to
+create a namespace with the same name as one of the properties in ``core``,
+as this may lead to ambiguities.
 
 Parameter references
 --------------------
@@ -739,8 +743,8 @@ sqlite, time intervals are limited to millisecond precision when using the
 sqlite backend.
 
 The unary function ``is_defined`` is supported for all data types and returns
-true if its argument is defined. This can be used to check if optional
-properties are defined or not.
+true if its argument is defined. This can be used to check whether optional
+properties or namespaces are defined or not.
 
 The function ``covers(timestamp, timestamp, timestamp, timestamp)`` returns
 true if the time range formed by the pair of timestamps covers the time range
