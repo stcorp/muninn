@@ -70,7 +70,7 @@ def _load_backend_module(name):
         raise Error("import of database %r (module %r) failed (%s)" % (name, module_name, e))
 
     return sys.modules[module_name]
-    
+
 
 def _load_storage_module(name):
     module_name = "muninn.storage.%s" % name
