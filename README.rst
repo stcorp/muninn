@@ -101,9 +101,24 @@ created with prior versions of muninn.
 Upgrading to version 5.0
 ------------------------
 
-Although 5.0 is backward compatible with 4.x, you will get deprecation warnings.
+Although 5.0 is backwards compatible with 4.x, you will get deprecation
+warnings. For each archive configuration file you should start migrating to
+the new approach. If you had:
+::
 
-For each archive configuration change 
+   [archive]
+   root = /home/alice/archives/foo
+   backend = postgresql
+
+then you should change this to:
+::
+
+   [archive]
+   database = postgresql
+   storage = fs
+
+   [fs]
+   root = /home/alice/archives/foo
 
 
 Upgrading to version 4.0

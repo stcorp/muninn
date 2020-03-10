@@ -3,6 +3,12 @@
 
 * Added a storage backend framework, including S3 and Swift backends.
 
+* Changed configuration file format due to new storage backends:
+  - renamed `backend` parameter to `database` in `archive` section
+  - added `storage` parameter to `archive` section
+  - added new sections for `fs`, `s3`, and 'swift`
+  - moved `root` parameter from `archive` section to `fs` section
+
 * Added an initial test framework.
 
 * Added property_names argument to archive.retrieve_properties().
