@@ -1,11 +1,11 @@
-* Added property_names argument to archive.retrieve_properties().
-
-4.5 2019-12-05
+5.0 2020-03-xx
 ~~~~~~~~~~~~~~
 
 * Added a storage backend framework, including S3 and Swift backends.
 
-* Added an initial test framework
+* Added an initial test framework.
+
+* Added property_names argument to archive.retrieve_properties().
 
 * Fixed issue with intra-archive links without enclosing dir (resulting
   in broken symlinks).

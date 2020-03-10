@@ -60,12 +60,12 @@ in most cases.
 
 Using pip: ::
 
-  $ pip install muninn-4.5.tar.gz
+  $ pip install muninn-5.0.tar.gz
 
 Using setup.py: ::
 
-  $ tar xvfz muninn-4.5.tar.gz
-  $ cd muninn-4.5
+  $ tar xvfz muninn-5.0.tar.gz
+  $ cd muninn-5.0
   $ python setup.py install
 
 The muninn distribution contains a generic archiving framework that cannot be
@@ -97,6 +97,14 @@ Upgrade instructions
 ====================
 This section contains instructions for upgrading existing archives that were
 created with prior versions of muninn.
+
+Upgrading to version 5.0
+------------------------
+
+Although 5.0 is backward compatible with 4.x, you will get deprecation warnings.
+
+For each archive configuration change 
+
 
 Upgrading to version 4.0
 ------------------------
