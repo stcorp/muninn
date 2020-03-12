@@ -639,25 +639,39 @@ class TestQuery:
         ]:
             s = archive.search('is_derived_from(%s)' % uuid)
             assert len(s) == count
+            s = archive.search('not is_derived_from(%s)' % uuid)
+            assert len(s) == 3-count
             s = archive.search('is_derived_from(uuid==%s)' % uuid)
             assert len(s) == count
+            s = archive.search('not is_derived_from(uuid==%s)' % uuid)
+            assert len(s) == 3-count
             s = archive.search('is_derived_from(physical_name==\"%s\")' % name)
             assert len(s) == count
+            s = archive.search('not is_derived_from(physical_name==\"%s\")' % name)
+            assert len(s) == 3-count
 
         s = archive.search('is_derived_from(is_derived_from(physical_name==\"a.txt\"))')
         assert len(s) == 1
         assert s[0].core.uuid == self.uuid_c
+        s = archive.search('not is_derived_from(is_derived_from(physical_name==\"a.txt\"))')
+        assert len(s) == 2
 
         s = archive.search('is_derived_from(physical_name==\"a.txt\") or is_derived_from(is_derived_from(physical_name==\"a.txt\"))')
         assert len(s) == 2
+        s = archive.search('not (is_derived_from(physical_name==\"a.txt\") or is_derived_from(is_derived_from(physical_name==\"a.txt\")))')
+        assert len(s) == 1
 
-    def test_Namespaces(self, archive): # TODO test 'not is_derived_from(..')
+    def test_Namespaces(self, archive):
         self._prep_data(archive)
 
         s = archive.search('mynamespace.hallo==\"haai\"')
         assert len(s) == 0
+#        s = archive.search('not mynamespace.hallo==\"haai\"') # TODO
+#        assert len(s) == 3
         s = archive.search('mynamespace.hallo==\"hoi\"')
         assert len(s) == 2
+#        s = archive.search('not mynamespace.hallo==\"hoi\"') # TODO
+#        assert len(s) == 1
 
         s = archive.search('is_derived_from(mynamespace.hallo==\"hoi\")')
         assert len(s) == 2
@@ -675,7 +689,7 @@ class TestQuery:
         assert len(s) == 0
         s = archive.search('is_defined(mynamespace.hallo)')
         assert len(s) == 2
-#        s = archive.search('not is_defined(mynamespace.hallo)') # TODO not working??
+#        s = archive.search('not is_defined(mynamespace.hallo)') # TODO
 #        assert len(s) == 1
 
         # namespace/core property
