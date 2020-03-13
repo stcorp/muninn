@@ -503,7 +503,7 @@ class SQLiteBackend(object):
         # Enable escape sequences with the LIKE operator
         #
         rewriter_table[Prototype("~=", (Text, Text), Boolean)] = \
-            lambda arg0, arg1: "(%s) LIKE (%s) ESCAPE '\\'" % (arg0, arg1)
+            lambda arg0, arg1: "((%s) LIKE (%s) ESCAPE '\\' AND (%s) IS NOT NULL)" % (arg0, arg1, arg0)
 
         #
         # Functions.

@@ -666,14 +666,31 @@ class TestQuery:
 
         s = archive.search('mynamespace.hallo==\"haai\"')
         assert len(s) == 0
-        s = archive.search('not mynamespace.hallo==\"haai\"') # NULL value is ignored! :S
-        assert len(s) == 2
-        s = archive.search('not mynamespace.hallo==\"haai\" or not is_defined(mynamespace.hallo)') # better now
+        s = archive.search('not mynamespace.hallo==\"haai\"') # TODO move to logic operator tests
         assert len(s) == 3
+        s = archive.search('mynamespace.hallo!=\"haai\"')
+        assert len(s) == 3
+        s = archive.search('not mynamespace.hallo!=\"haai\"') # TODO move to logic operator tests, etc.
+        assert len(s) == 0
+
         s = archive.search('mynamespace.hallo==\"hoi\"')
         assert len(s) == 2
-        s = archive.search('not mynamespace.hallo==\"hoi\"') # NULL values are ignored
+        s = archive.search('not mynamespace.hallo==\"hoi\"')
+        assert len(s) == 1
+        s = archive.search('mynamespace.hallo!=\"hoi\"')
+        assert len(s) == 1
+        s = archive.search('not mynamespace.hallo!=\"hoi\"')
+        assert len(s) == 2
+
+        s = archive.search('mynamespace.hallo~=\"ha%\"')
         assert len(s) == 0
+        s = archive.search('not mynamespace.hallo~=\"ha%\"')
+        assert len(s) == 3
+
+        s = archive.search('mynamespace.hallo~=\"ho%\"')
+        assert len(s) == 2
+        s = archive.search('not mynamespace.hallo~=\"ho%\"')
+        assert len(s) == 1
 
         s = archive.search('is_derived_from(mynamespace.hallo==\"hoi\")')
         assert len(s) == 2

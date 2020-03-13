@@ -78,7 +78,12 @@ def unary_operator_rewriter(operator):
 
 
 def binary_operator_rewriter(operator):
-    return lambda arg0, arg1: "(%s) %s (%s)" % (arg0, operator, arg1)
+    if operator in ('=', 'LIKE'):
+        return lambda arg0, arg1: "((%s) %s (%s) AND (%s) IS NOT NULL)" % (arg0, operator, arg1, arg0)
+    elif operator == '!=':
+        return lambda arg0, arg1: "((%s) %s (%s) OR (%s) IS NULL)" % (arg0, operator, arg1, arg0)
+    else:
+        return lambda arg0, arg1: "(%s) %s (%s)" % (arg0, operator, arg1)
 
 
 def unary_function_rewriter(name):
