@@ -4,7 +4,10 @@
 
 from __future__ import absolute_import, division, print_function
 
-import collections
+try:
+    from collections.abc import MutableSequence
+except ImportError:
+    from collections import MutableSequence
 
 
 class Geometry(object):
@@ -103,7 +106,7 @@ class Point(Geometry):
         return self.as_wkt()
 
 
-class GeometrySequence(Geometry, collections.MutableSequence):
+class GeometrySequence(Geometry, MutableSequence):
     def __init__(self, geometries=[]):
         self._geometries = list(geometries)
 

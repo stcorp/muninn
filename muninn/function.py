@@ -5,7 +5,10 @@
 from __future__ import absolute_import, division, print_function
 from muninn._compat import itervalues, imap, izip
 
-import collections
+try:
+    from collections.abc import MutableSet
+except ImportError:
+    from collections import MutableSet
 
 
 class Prototype(object):
@@ -52,7 +55,7 @@ class Prototype(object):
         return hash(self.id)
 
 
-class FunctionTable(collections.MutableSet):
+class FunctionTable(MutableSet):
     def __init__(self, prototypes=[]):
         self._prototypes = {}
         for prototype in prototypes:

@@ -5,6 +5,11 @@
 from __future__ import absolute_import, division, print_function
 
 import collections
+try:
+    from collections.abc import MutableMapping
+except ImportError:
+    from collections import MutableMapping
+
 import inspect
 import re
 
@@ -38,7 +43,7 @@ GROUP_BY_FUNCTIONS = collections.OrderedDict([
 ])
 
 
-class TypeMap(collections.MutableMapping):
+class TypeMap(MutableMapping):
     def __init__(self):
         self._types = {}
 

@@ -34,11 +34,11 @@ def _merge_configuration(configuration, other_configuration):
 
 def _read_archive_config_file(path):
     try:
-        from ConfigParser import SafeConfigParser
+        from ConfigParser import ConfigParser
     except ImportError:
-        from configparser import SafeConfigParser
+        from configparser import ConfigParser
 
-    parser = SafeConfigParser()
+    parser = ConfigParser()
     if not parser.read(path):
         raise Error("unable to read config file: \"%s\"" % path)
     return dict([(name, dict(parser.items(name))) for name in parser.sections()])
