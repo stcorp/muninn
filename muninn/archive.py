@@ -98,7 +98,7 @@ def create(configuration):
 
     # Load and create the backend.
     if 'backend' in options:
-        print("WARNING: the 'backend' configuration option is deprecated. Use 'database' instead.")
+        print("WARNING: the 'backend' option will be removed. Please use 'database' instead.", file=sys.stderr)
         backend = options.pop('backend')
     else:
         backend = options.pop('database')

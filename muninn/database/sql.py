@@ -254,21 +254,6 @@ def default_rewriter_table():
         lambda left0, right0, left1, right1: "(%s) >= (%s) AND (%s) >= (%s) AND (%s) >= (%s) AND (%s) <= (%s)" % \
         (right0, left0, right1, left1, right0, left1, left0, right1)
 
-    def is_defined_rewriter(arg):
-        if arg is None: # namespace
-            return '1 > 0'
-        else:
-            return "(%s) IS NOT NULL" % arg
-
-    rewriter_table[Prototype("is_defined", (Long,), Boolean)] = is_defined_rewriter
-    rewriter_table[Prototype("is_defined", (Integer,), Boolean)] = is_defined_rewriter
-    rewriter_table[Prototype("is_defined", (Real,), Boolean)] = is_defined_rewriter
-    rewriter_table[Prototype("is_defined", (Boolean,), Boolean)] = is_defined_rewriter
-    rewriter_table[Prototype("is_defined", (Text,), Boolean)] = is_defined_rewriter
-    rewriter_table[Prototype("is_defined", (Timestamp,), Boolean)] = is_defined_rewriter
-    rewriter_table[Prototype("is_defined", (UUID,), Boolean)] = is_defined_rewriter
-    rewriter_table[Prototype("is_defined", (Geometry,), Boolean)] = is_defined_rewriter
-
     return rewriter_table
 
 
@@ -295,7 +280,7 @@ class _WhereExpressionVisitor(Visitor):
         namespace_name = visitable.value.split('.')
         if len(namespace_name) == 1:
             namespace = namespace_name[0]
-            name = None
+            name = namespace
         else:
             namespace, name = namespace_name
             name = self._column_name(namespace, name)
@@ -403,12 +388,7 @@ class SQLBuilder(object):
         return "CREATE TABLE %s (%s)" % (self._table_name(namespace), ", ".join(column_sql))
 
     def build_count_query(self, where="", parameters={}):
-        # Namespaces that appear in the "where" expression are combined via inner joins. This ensures that only those
-        # products that actually have a defined value for a given property will be considered by the "where"
-        # expression. This also means that products that do not occur in all of the namespaces referred to in the
-        # "where" expression will be ignored.
-        #
-        inner_join_set = set()
+        join_set = set()
 
         # Parse the where clause.
         where_clause, where_parameters = "", {}
@@ -417,15 +397,15 @@ class SQLBuilder(object):
             visitor = _WhereExpressionVisitor(self._rewriter_table, self._column_name, self._named_placeholder)
             where_expr, where_parameters, where_namespaces = visitor.visit(ast)
             if where_expr:
-                inner_join_set.update(where_namespaces)
+                join_set.update(where_namespaces)
                 where_clause = "WHERE %s" % where_expr
 
         # Generate the FROM clause.
         from_clause = "FROM %s" % self._table_name("core")
 
-        inner_join_set.discard("core")
-        for namespace in inner_join_set:
-            from_clause = "%s INNER JOIN %s USING (uuid)" % (from_clause, self._table_name(namespace))
+        join_set.discard("core")
+        for namespace in join_set:
+            from_clause = "%s LEFT JOIN %s USING (uuid)" % (from_clause, self._table_name(namespace))
 
         # Generate the complete query.
         query = "SELECT COUNT(*) AS count %s" % from_clause
@@ -436,20 +416,11 @@ class SQLBuilder(object):
 
     def build_summary_query(self, where='', parameters=None, aggregates=None, group_by=None, group_by_tag=False,
                             order_by=None):
-        # Namespaces that appear in the "where" expression are combined via inner joins. This ensures that only those
-        # products that actually have a defined value for a given property will be considered by the "where"
-        # expression. This also means that products that do not occur in all of the namespaces referred to in the
-        # "where" expression will be ignored.
-        #
-        # Other namespaces are combined via (left) outer joins, with the core namespace as the leftmost namespace.
-        # This ensures that properties will be returned of any product that occurs in zero or more of the requested
-        # namespaces.
-
         aggregates = aggregates or []
         if group_by_tag:
             group_by = group_by + ['tag']
         result_fields = group_by + ['count'] + aggregates
-        outer_join_set, inner_join_set = set(item.split('.')[0] for item in group_by), set()
+        join_set = set(item.split('.')[0] for item in group_by)
 
         # Parse the WHERE clause.
         where_clause, where_parameters = '', {}
@@ -458,7 +429,7 @@ class SQLBuilder(object):
             visitor = _WhereExpressionVisitor(self._rewriter_table, self._column_name, self._named_placeholder)
             where_expr, where_parameters, where_namespaces = visitor.visit(ast)
             if where_expr:
-                inner_join_set.update(where_namespaces)
+                join_set.update(where_namespaces)
                 where_clause = 'WHERE %s' % where_expr
 
         # Generate the GROUP BY clause.
@@ -535,12 +506,9 @@ class SQLBuilder(object):
         # Generate the FROM clause.
         from_clause = 'FROM %s' % self._table_name('core')
 
-        outer_join_set.discard('core')
-        inner_join_set.discard('core')
-        for namespace in outer_join_set - inner_join_set:
-            from_clause = '%s LEFT OUTER JOIN %s USING (uuid)' % (from_clause, self._table_name(namespace))
-        for namespace in inner_join_set:
-            from_clause = '%s INNER JOIN %s USING (uuid)' % (from_clause, self._table_name(namespace))
+        join_set.discard('core')
+        for namespace in join_set:
+            from_clause = '%s LEFT JOIN %s USING (uuid)' % (from_clause, self._table_name(namespace))
 
         # Generate the complete query.
         query = '%s\n%s' % (select_clause, from_clause)
@@ -554,16 +522,6 @@ class SQLBuilder(object):
         return query, where_parameters, result_fields
 
     def build_search_query(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], property_names=[]):
-        # Namespaces are combined via (left) outer joins, with the core namespace as the leftmost namespace. This
-        # ensures that properties will be returned of any product that occurs in zero or more of the requested
-        # namespaces.
-        #
-        # Namespaces that appear in the "where" and "order by" expressions, in contrast, are combined via inner joins.
-        # This ensures that only those products that actually have a defined value for a given property will be
-        # considered by the "where" and "order by" expressions. This also means that products that do not occur in all
-        # of the namespaces referred to in the "where" and "order by" expressions will be ignored.
-        #
-
         if property_names:
             namespaces = []
             namespace_properties = {}
@@ -577,12 +535,12 @@ class SQLBuilder(object):
                     namespace_properties[namespace] = ['uuid']  # always add uuid to determine if namespace exists
                 if identifier != 'uuid':
                     namespace_properties[namespace].append(identifier)
-            outer_join_set, inner_join_set = set(namespaces), set()
+            join_set = set(namespaces)
             description = [(namespace, namespace_properties[namespace]) for namespace in namespaces]
         else:
-            outer_join_set, inner_join_set = set(namespaces), set()
+            join_set = set(namespaces)
             description = [("core", list(self._namespace_schema("core")))]
-            for namespace in outer_join_set:
+            for namespace in join_set:
                 description.append((namespace, ["uuid"] + list(self._namespace_schema(namespace))))
 
         # Parse the where clause.
@@ -592,7 +550,7 @@ class SQLBuilder(object):
             visitor = _WhereExpressionVisitor(self._rewriter_table, self._column_name, self._named_placeholder)
             where_expr, where_parameters, where_namespaces = visitor.visit(ast)
             if where_expr:
-                inner_join_set.update(where_namespaces)
+                join_set.update(where_namespaces)
                 where_clause = "WHERE %s" % where_expr
 
         # Parse the order by clause.
@@ -600,7 +558,7 @@ class SQLBuilder(object):
         if order_by:
             order_by_list, order_by_namespaces = self._build_order_by_list(order_by)
             if order_by_list:
-                inner_join_set.update(order_by_namespaces)
+                join_set.update(order_by_namespaces)
                 order_by_clause = "ORDER BY %s" % ", ".join(order_by_list)
 
         # Parse the limit clause.
@@ -625,12 +583,9 @@ class SQLBuilder(object):
         # Generate the FROM clause.
         from_clause = "FROM %s" % self._table_name("core")
 
-        outer_join_set.discard("core")
-        inner_join_set.discard("core")
-        for namespace in outer_join_set - inner_join_set:
-            from_clause = "%s LEFT OUTER JOIN %s USING (uuid)" % (from_clause, self._table_name(namespace))
-        for namespace in inner_join_set:
-            from_clause = "%s INNER JOIN %s USING (uuid)" % (from_clause, self._table_name(namespace))
+        join_set.discard("core")
+        for namespace in join_set:
+            from_clause = "%s LEFT JOIN %s USING (uuid)" % (from_clause, self._table_name(namespace))
 
         # Generate the complete query.
         query = "%s %s" % (select_clause, from_clause)

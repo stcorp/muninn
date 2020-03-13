@@ -519,13 +519,13 @@ class SQLiteBackend(object):
             (self._link_table_name, self._core_table_name, arg0)
 
         def is_source_of_subquery(where_expr, where_namespaces):
-            inner_joins = ''
+            joins = ''
             for namespace in where_namespaces:
-                inner_joins = "%s INNER JOIN %s USING (uuid)" % (inner_joins, self._table_name(namespace))
+                joins = "%s INNER JOIN %s USING (uuid)" % (joins, self._table_name(namespace))
 
             return "{core}.uuid in (SELECT {link}.source_uuid FROM {core} {joins} " \
                 "INNER JOIN {link} on {link}.uuid = {core}.uuid WHERE {where})".format(
-                    core=self._core_table_name, link=self._link_table_name, joins=inner_joins,
+                    core=self._core_table_name, link=self._link_table_name, joins=joins,
                     where=where_expr)
 
         rewriter_table[Prototype("is_source_of", (Boolean,), Boolean)] = is_source_of_subquery
@@ -535,13 +535,13 @@ class SQLiteBackend(object):
             (self._link_table_name, self._core_table_name, arg0)
 
         def is_derived_from_subquery(where_expr, where_namespaces):
-            inner_joins = ''
+            joins = ''
             for namespace in where_namespaces:
-                inner_joins = "%s INNER JOIN %s USING (uuid)" % (inner_joins, self._table_name(namespace))
+                joins = "%s INNER JOIN %s USING (uuid)" % (joins, self._table_name(namespace))
 
             return "{core}.uuid in (SELECT {link}.uuid FROM {core} {joins} " \
                 "INNER JOIN {link} on {link}.source_uuid = {core}.uuid WHERE {where})".format(
-                    core=self._core_table_name, link=self._link_table_name, joins=inner_joins,
+                    core=self._core_table_name, link=self._link_table_name, joins=joins,
                     where=where_expr)
 
         rewriter_table[Prototype("is_derived_from", (Boolean,), Boolean)] = is_derived_from_subquery
@@ -552,6 +552,23 @@ class SQLiteBackend(object):
 
         rewriter_table[Prototype("now", (), Timestamp)] = \
             sql.as_is("datetime(\"now\")")
+
+        def is_defined_rewriter(arg):
+            namespace_name = arg.split('.')
+            if len(namespace_name) == 1:
+                return 'EXISTS (SELECT 1 FROM (%s) WHERE uuid == %s.uuid)' % \
+                    (arg, self._core_table_name)
+            else:
+                return "(%s) IS NOT NULL" % arg
+
+        rewriter_table[Prototype("is_defined", (Long,), Boolean)] = is_defined_rewriter
+        rewriter_table[Prototype("is_defined", (Integer,), Boolean)] = is_defined_rewriter
+        rewriter_table[Prototype("is_defined", (Real,), Boolean)] = is_defined_rewriter
+        rewriter_table[Prototype("is_defined", (Boolean,), Boolean)] = is_defined_rewriter
+        rewriter_table[Prototype("is_defined", (Text,), Boolean)] = is_defined_rewriter
+        rewriter_table[Prototype("is_defined", (Timestamp,), Boolean)] = is_defined_rewriter
+        rewriter_table[Prototype("is_defined", (UUID,), Boolean)] = is_defined_rewriter
+        rewriter_table[Prototype("is_defined", (Geometry,), Boolean)] = is_defined_rewriter
 
         return rewriter_table
 
