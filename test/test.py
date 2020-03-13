@@ -44,7 +44,7 @@ USE_ENCLOSING_DIR = [s.strip()=='true' for s in CFG.get('DEFAULT', 'use_enclosin
 
 
 class MyNamespace(Mapping):
-    hallo = optional(Text)
+    hello = optional(Text)
 
 
 class BaseChecker(object):
@@ -267,7 +267,7 @@ class TestArchive:
         if intra: # relative symlinks within archive
             dirpath = os.path.join(
                 archive._checker.root,
-                'drie/multi'
+                'three/multi'
             )
 
             if not os.path.isdir(dirpath):
@@ -298,7 +298,7 @@ class TestArchive:
 
                 if intra:
                     # TODO remove this, as os.path.realpath already resolves
-                    target_path = os.path.join('drie/multi', os.path.basename(path))
+                    target_path = os.path.join('three/multi', os.path.basename(path))
                     dotdots = 1 # enclosing
                     if archive._params['archive_path']:
                         dotdots += 2
@@ -436,7 +436,7 @@ class TestArchive:
 
         s = archive.search('has_tag("mytag")')
         assert len(s) == 1
-        s = archive.search('has_tag("niks")')
+        s = archive.search('has_tag("nothing")')
         assert len(s) == 0
 
     def test_rebuild_properties_file(self, archive):
@@ -623,8 +623,8 @@ class TestQuery:
         self.uuid_b = archive.ingest(['data/b.txt']).core.uuid
         self.uuid_c = archive.ingest(['data/c.txt']).core.uuid
 
-        archive.update_properties(muninn.Struct({'mynamespace': {'hallo': 'hoi'}}), self.uuid_a, True)
-        archive.update_properties(muninn.Struct({'mynamespace': {'hallo': 'hoi'}}), self.uuid_b, True)
+        archive.update_properties(muninn.Struct({'mynamespace': {'hello': 'hohoho'}}), self.uuid_a, True)
+        archive.update_properties(muninn.Struct({'mynamespace': {'hello': 'hohoho'}}), self.uuid_b, True)
 
         archive.link(self.uuid_b, [self.uuid_a])
         archive.link(self.uuid_c, [self.uuid_a, self.uuid_b])
@@ -664,38 +664,38 @@ class TestQuery:
     def test_Namespaces(self, archive):
         self._prep_data(archive)
 
-        s = archive.search('mynamespace.hallo==\"haai\"')
+        s = archive.search('mynamespace.hello==\"hiya\"')
         assert len(s) == 0
-        s = archive.search('not mynamespace.hallo==\"haai\"') # TODO move to logic operator tests
+        s = archive.search('not mynamespace.hello==\"hiya\"') # TODO move to logic operator tests
         assert len(s) == 3
-        s = archive.search('mynamespace.hallo!=\"haai\"')
+        s = archive.search('mynamespace.hello!=\"hiya\"')
         assert len(s) == 3
-        s = archive.search('not mynamespace.hallo!=\"haai\"') # TODO move to logic operator tests, etc.
+        s = archive.search('not mynamespace.hello!=\"hiya\"') # TODO move to logic operator tests, etc.
         assert len(s) == 0
 
-        s = archive.search('mynamespace.hallo==\"hoi\"')
+        s = archive.search('mynamespace.hello==\"hohoho\"')
         assert len(s) == 2
-        s = archive.search('not mynamespace.hallo==\"hoi\"')
+        s = archive.search('not mynamespace.hello==\"hohoho\"')
         assert len(s) == 1
-        s = archive.search('mynamespace.hallo!=\"hoi\"')
+        s = archive.search('mynamespace.hello!=\"hohoho\"')
         assert len(s) == 1
-        s = archive.search('not mynamespace.hallo!=\"hoi\"')
+        s = archive.search('not mynamespace.hello!=\"hohoho\"')
         assert len(s) == 2
 
-        s = archive.search('mynamespace.hallo~=\"ha%\"')
+        s = archive.search('mynamespace.hello~=\"hi%\"')
         assert len(s) == 0
-        s = archive.search('not mynamespace.hallo~=\"ha%\"')
+        s = archive.search('not mynamespace.hello~=\"hi%\"')
         assert len(s) == 3
 
-        s = archive.search('mynamespace.hallo~=\"ho%\"')
+        s = archive.search('mynamespace.hello~=\"ho%\"')
         assert len(s) == 2
-        s = archive.search('not mynamespace.hallo~=\"ho%\"')
+        s = archive.search('not mynamespace.hello~=\"ho%\"')
         assert len(s) == 1
 
-        s = archive.search('is_derived_from(mynamespace.hallo==\"hoi\")')
+        s = archive.search('is_derived_from(mynamespace.hello==\"hohoho\")')
         assert len(s) == 2
 
-        s = archive.search('is_derived_from(physical_name==\"a.txt\") and mynamespace.hallo==\"hoi\"')
+        s = archive.search('is_derived_from(physical_name==\"a.txt\") and mynamespace.hello==\"hohoho\"')
         assert len(s) == 1
 
     def test_IsDefined(self, archive):
@@ -706,9 +706,9 @@ class TestQuery:
         assert len(s) == 3
         s = archive.search('not is_defined(core.physical_name)')
         assert len(s) == 0
-        s = archive.search('is_defined(mynamespace.hallo)')
+        s = archive.search('is_defined(mynamespace.hello)')
         assert len(s) == 2
-        s = archive.search('not is_defined(mynamespace.hallo)')
+        s = archive.search('not is_defined(mynamespace.hello)')
         assert len(s) == 1
 
         # namespace/core property
