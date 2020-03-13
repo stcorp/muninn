@@ -12,7 +12,10 @@ Steps to run the Muninn tests:
   - an S3 server (e.g., Minio)
   - a Swift server (e.g., https://hub.docker.com/r/morrisjobke/docker-swift-onlyone/)
 - Update settings in test.cfg (DEFAULT section: desired combinations for which to run all tests)
-- Run 'python -m pytest test.py' and/or 'python3 -m pytest test.py'
+- Run:
+    python3 -m pytest test.py
+  Or:
+    python -m pytest test.py
 
 Steps to check test coverage:
 
