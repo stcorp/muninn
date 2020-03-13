@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, print_function
 
 import datetime
 from muninn._compat import long
+from muninn._compat import string_types as basestring
 import uuid
 
 import muninn.geometry as geometry
@@ -74,7 +75,7 @@ class Boolean(Type):
 class Text(Type):
     @classmethod
     def validate(cls, value):
-        if type(value) is not str:
+        if not isinstance(value, basestring):
             raise ValueError("invalid value %r for type %r" % (value, cls.name()))
 
 

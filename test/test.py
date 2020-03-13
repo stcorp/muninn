@@ -35,7 +35,7 @@ import shutil
 from muninn.schema import Mapping, optional, Text
 
 CFG = ConfigParser()
-CFG.read('test.cfg')
+CFG.read(u'test.cfg')
 
 STORAGE_BACKENDS = [s.strip() for s in CFG.get('DEFAULT', 'backend').split(',')]
 DATABASE_BACKENDS = [s.strip() for s in CFG.get('DEFAULT', 'database').split(',')]
@@ -51,7 +51,7 @@ class BaseChecker(object):
     def __init__(self, storage):
         self.storage = storage
         self.parser = ConfigParser()
-        self.parser.read('my_arch.cfg')
+        self.parser.read(u'my_arch.cfg')
 
 
 class FSChecker(BaseChecker):
