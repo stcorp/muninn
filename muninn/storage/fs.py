@@ -171,10 +171,10 @@ class FilesystemStorageBackend(StorageBackend):
             raise Error("unable to retrieve product '%s' (%s) [%s]" % (product.core.product_name, product.core.uuid,
                                                                        _error))
 
-    def size(self, product_path, plugin):
+    def size(self, product_path, use_enclosing_directory):
         return util.product_size(product_path)
 
-    def delete(self, product_path, properties, plugin):
+    def delete(self, product_path, properties, use_enclosing_directory):
         if not os.path.lexists(product_path):
             # If the product does not exist, do not consider this an error.
             return
@@ -192,7 +192,7 @@ class FilesystemStorageBackend(StorageBackend):
             raise Error("unable to remove product '%s' (%s) [%s]" % (properties.core.product_name, properties.core.uuid,
                                                                      _error))
 
-    def move(self, product, archive_path, plugin):
+    def move(self, product, archive_path, use_enclosing_directory):
         # Make target archive path
         abs_archive_path = os.path.realpath(os.path.join(self._root, archive_path))
         util.make_path(abs_archive_path)

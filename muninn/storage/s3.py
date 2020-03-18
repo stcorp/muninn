@@ -108,24 +108,24 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             target = os.path.join(target_path, basename)
             self._resource.Object(self.bucket, obj.key).download_file(target)
 
-    def delete(self, product_path, properties, plugin):
+    def delete(self, product_path, properties, use_enclosing_directory):
         for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=product_path):  # TODO slow?
             obj.delete()
 
-    def size(self, product_path, plugin):
+    def size(self, product_path, use_enclosing_directory):
         total = 0
-        if plugin.use_enclosing_directory:
+        if use_enclosing_directory:
             for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=product_path):  # TODO slow?
                 total += obj.size
         else:
             total = self._resource.Object(self.bucket, product_path).content_length
         return total
 
-    def move(self, product, archive_path, plugin):
+    def move(self, product, archive_path, use_enclosing_directory):
         old_key = self.product_path(product)
         moves = []
 
-        if plugin.use_enclosing_directory:
+        if use_enclosing_directory:
             for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=old_key):  # TODO slow?
                 new_key = os.path.join(archive_path, product.core.physical_name, os.path.basename(obj.key))
                 moves.append((obj.key, new_key))

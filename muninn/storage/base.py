@@ -24,14 +24,25 @@ class StorageBackend(object):
 
     # TODO lower-granularity put/get/delete
 
-    def put(self, paths, properties, plugin, use_current_path, use_symlinks):
+    def put(self, paths, properties, use_enclosing_directory, use_symlinks):
         # Place product file(s) into storage
         raise NotImplementedError()
 
-    def get(self, product_path, target_path, plugin, use_symlinks):
+    def put2(self, file_path, archive, product, use_enclosing_directory): # TODO merge with 'put'.. add move flag?
+        raise NotImplementedError()
+
+    def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=False):
         # Retrieve product file(s) from storage
         raise NotImplementedError()
 
-    def delete(self, product_path):
+    def size(self, product_path, use_enclosing_directory):
+        # Return product storage size
+        raise NotImplementedError()
+
+    def delete(self, product_path, properties, use_enclosing_directory):
         # Delete product file(s) from storage
+        raise NotImplementedError()
+
+    def move(self, product, archive_path, use_enclosing_directory):
+        # Move product
         raise NotImplementedError()

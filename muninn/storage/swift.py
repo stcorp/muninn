@@ -113,16 +113,16 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
             with open(target, 'wb') as f:
                 f.write(binary)
 
-    def delete(self, product_path, properties, plugin):
-        if plugin.use_enclosing_directory:
+    def delete(self, product_path, properties, use_enclosing_directory):
+        if use_enclosing_directory:
             for data in self._conn.get_container(self.container, path=product_path)[1]:
                 self._conn.delete_object(self.container, data['name'])
         else:
             self._conn.delete_object(self.container, product_path)
 
-    def size(self, product_path, plugin):
+    def size(self, product_path, use_enclosing_directory):
         total = 0
-        if plugin.use_enclosing_directory:
+        if use_enclosing_directory:
             for data in self._conn.get_container(self.container, path=product_path)[1]:
                 total += data['bytes']
         else:
@@ -131,11 +131,11 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
 
         return total
 
-    def move(self, product, archive_path, plugin):
+    def move(self, product, archive_path, use_enclosing_directory):
         old_key = self.product_path(product)
         moves = []
 
-        if plugin.use_enclosing_directory:
+        if use_enclosing_directory:
             for data in self._conn.get_container(self.container, path=old_key)[1]:
                 new_key = os.path.join(archive_path, product.core.physical_name, os.path.basename(data['name']))
                 moves.append((data['name'], new_key))
