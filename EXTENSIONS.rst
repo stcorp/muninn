@@ -41,7 +41,10 @@ also the file ``core.py`` included in the muninn source distribution): ::
     footprint = Geometry(optional=True)
     remote_url = Remote(optional=True)
 
-By default, properties are required. As can be seen in the example, this can be changed by specifying ``optional=True``. By default, properties are also not indexed in the database backend. This can be changed by specifying ``index=True``.
+By default, properties are required. As can be seen in the example, this can be
+changed by specifying ``optional=True``. By default, properties are also not
+indexed in the database backend. This can be changed by specifying
+``index=True``.
 
 A product type plug-in is an instance of a class that handles all product type
 specific details. The most important function of a product type plug-in is to
