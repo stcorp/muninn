@@ -221,10 +221,12 @@ class PostgresqlBackend(object):
                       (self._core_table_name, self._core_table_name))
         result.append("ALTER TABLE %s ADD CONSTRAINT %s_product_name_uniq UNIQUE (product_type, product_name)" %
                       (self._core_table_name, self._core_table_name))
-        for field in ['active', 'hash', 'size', 'archive_date', 'product_type', 'product_name', 'physical_name',
-                      'validity_start', 'validity_stop', 'creation_date']:
-            result.append("CREATE INDEX idx_%s_%s ON %s (%s)" %
-                          (self._core_table_name, field, self._core_table_name, field))
+
+        schema = self._namespace_schema("core")
+        for name in schema:
+            if schema.is_index(name):
+                result.append("CREATE INDEX idx_%s_%s ON %s (%s)" %
+                              (self._core_table_name, name, self._core_table_name, name))
 
         # For the geospatial footprint we need to use a special GIST index
         result.append("CREATE INDEX idx_%s_footprint ON %s USING GIST (footprint)" %
@@ -241,6 +243,12 @@ class PostgresqlBackend(object):
             result.append("ALTER TABLE %s ADD CONSTRAINT %s_uuid_fkey FOREIGN KEY (uuid) REFERENCES %s (uuid) ON "
                           "DELETE CASCADE" % (self._table_name(namespace), self._table_name(namespace),
                                               self._core_table_name))
+
+            schema = self._namespace_schema(namespace)
+            for name in schema:
+                if schema.is_index(name):
+                    result.append("CREATE INDEX idx_%s_%s ON %s (%s)" %
+                                  (self._table_name(namespace), name, self._table_name(namespace), name))
 
         # We use explicit 'id' primary keys for the links and tags tables so the entries can be managed using
         # other front-ends that may not support tuples as primary keys.

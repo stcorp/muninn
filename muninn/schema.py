@@ -131,12 +131,17 @@ class MetaMapping(type):
         class_dct = {}
         items = {}
         for key, value in dct.items():
+            # class: not optional, no index
             if isinstance(value, type) and issubclass(value, Type):
-                items[key] = (value, False)
+                items[key] = (value, False, False)
+
+            # instance: get optional, index from instance
             elif isinstance(value, Type):
-                items[key] = (type(value), value.optional)
+                items[key] = (type(value), value.optional, value.index)
+
+            # optional() wrapper: optional, no index
             elif type(value) is optional:
-                items[key] = (value.type, True)
+                items[key] = (value.type, True, False)
             else:
                 class_dct[key] = value
 
@@ -145,23 +150,11 @@ class MetaMapping(type):
 
         return super(MetaMapping, meta).__new__(meta, name, bases, class_dct)
 
-    def __len__(cls):
-        return len(cls._items)
-
-    def __getitem__(cls, name):
-        return cls._items[name][0]
-
-    def __iter__(cls):
-        return iter(cls._items)
-
-    def __contains__(cls, name):
-        return name in cls._items
-
     def validate(cls, value, partial=False, path=""):
         path = "%s:" % cls.name() if not path else path
 
         validated = 0
-        for sub_name, (sub_type, sub_optional) in cls._items.items():
+        for sub_name, (sub_type, sub_optional, sub_index) in cls._items.items():
             try:
                 sub_value = value[sub_name]
             except TypeError:
@@ -185,9 +178,24 @@ class MetaMapping(type):
             extra_names = set(value) - set(cls._items)
             raise ValueError(prefix_message_with_path(path, "undefined item: %r" % extra_names.pop()))
 
+    # TODO store more nicely (at least not positionally)
+    def __getitem__(cls, name):
+        return cls._items[name][0]
+
     def is_optional(cls, name):
-        _, optional = cls._items[name]
-        return optional
+        return cls._items[name][1]
+
+    def is_index(cls, name):
+        return cls._items[name][2]
+
+    def __len__(cls):
+        return len(cls._items)
+
+    def __iter__(cls):
+        return iter(cls._items)
+
+    def __contains__(cls, name):
+        return name in cls._items
 
 
 Mapping = MetaMapping('Mapping', (Container,), {})

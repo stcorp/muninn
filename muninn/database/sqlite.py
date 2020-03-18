@@ -271,10 +271,10 @@ class SQLiteBackend(object):
             if self._type_map()[schema[name]] == "GEOMETRY":
                 result.append("SELECT AddGeometryColumn('%s', '%s', 4326, 'GEOMETRY', 2)" %
                               (self._core_table_name, name,))
-        for field in ['active', 'hash', 'size', 'archive_date', 'product_type', 'product_name', 'physical_name',
-                      'validity_start', 'validity_stop', 'creation_date']:
-            result.append("CREATE INDEX idx_%s_%s ON %s (%s)" %
-                          (self._core_table_name, field, self._core_table_name, field))
+        for name in schema:
+            if schema.is_index(name):
+                result.append("CREATE INDEX idx_%s_%s ON %s (%s)" %
+                              (self._core_table_name, name, self._core_table_name, name))
 
         # For the geospatial footprint we need to use a special spatial index
         result.append("SELECT CreateSpatialIndex('%s', '%s')" % (self._core_table_name, 'footprint'))
@@ -300,6 +300,10 @@ class SQLiteBackend(object):
                 if self._type_map()[schema[name]] == "GEOMETRY":
                     result.append("SELECT AddGeometryColumn('%s', '%s', 4326, 'GEOMETRY', 2)" %
                                   (self._table_name(namespace), name))
+            for name in schema:
+                if schema.is_index(name):
+                    result.append("CREATE INDEX idx_%s_%s ON %s (%s)" %
+                                  (self._table_name(namespace), name, self._table_name(namespace), name))
 
         # We use explicit 'id' primary keys for the links and tags tables so the entries can be managed using
         # other front-ends that may not support tuples as primary keys.
