@@ -43,7 +43,7 @@ class Core(Mapping):
     active = Boolean(index=True)
     hash = Text(optional=True, index=True)
     size = Long(optional=True, index=True)
-    metadata_date = Timestamp
+    metadata_date = Timestamp(index=True)
     archive_date = Timestamp(optional=True, index=True)
     archive_path = ArchivePath(optional=True)
     product_type = Text(index=True)
