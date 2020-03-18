@@ -46,6 +46,12 @@ changed by specifying ``optional=True``. By default, properties are also not
 indexed in the database backend. This can be changed by specifying
 ``index=True``.
 
+The uuid of the core schema is a primary key and therefore does not require
+an explicit index setting. All other namespaces will automatically have an
+implicit primary key called ``uuid`` added that will act as a foreign key to
+``core.uuid``. This ``uuid`` field should not be explicitly defined in
+namespace extensions.
+
 A product type plug-in is an instance of a class that handles all product type
 specific details. The most important function of a product type plug-in is to
 extract properties from a product and return them in a form the archiving
@@ -74,7 +80,7 @@ separate Struct instance for each namespace. For example: ::
   properties.xml_pi.startTime = datetime.datetime.utcnow()
   ... more of the same ...
 
-A remote backend plug-in adds the hability of an archive to pull products
+A remote backend plug-in adds the ability of an archive to pull products
 from remote sources using a protocol beyond the basic file/ftp/http/https
 protocols.
 
