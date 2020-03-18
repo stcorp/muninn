@@ -132,6 +132,10 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
         return total
 
     def move(self, product, archive_path, use_enclosing_directory):
+        # Ignore if product already there
+        if product.core.archive_path == archive_path:
+            return
+
         old_key = self.product_path(product)
         moves = []
 

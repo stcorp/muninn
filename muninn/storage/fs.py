@@ -193,6 +193,10 @@ class FilesystemStorageBackend(StorageBackend):
                                                                      _error))
 
     def move(self, product, archive_path, use_enclosing_directory):
+        # Ignore if product already there
+        if product.core.archive_path == archive_path:
+            return
+
         # Make target archive path
         abs_archive_path = os.path.realpath(os.path.join(self._root, archive_path))
         util.make_path(abs_archive_path)
