@@ -25,21 +25,23 @@ also the file ``core.py`` included in the muninn source distribution): ::
   from muninn.schema import *
 
   class Core(Mapping):
-      uuid = UUID
-      active = Boolean
-      hash = optional(Text)
-      size = optional(Long)
-      metadata_date = Timestamp
-      archive_date = optional(Timestamp)
-      archive_path = optional(ArchivePath)
-      product_type = Text
-      product_name = Text
-      physical_name = Basename
-      validity_start = optional(Timestamp)
-      validity_stop = optional(Timestamp)
-      creation_date = optional(Timestamp)
-      footprint = optional(Geometry)
-      remote_url = optional(Remote)
+    uuid = UUID()
+    active = Boolean(index=True)
+    hash = Text(optional=True, index=True)
+    size = Long(optional=True, index=True)
+    metadata_date = Timestamp()
+    archive_date = Timestamp(optional=True, index=True)
+    archive_path = ArchivePath(optional=True)
+    product_type = Text(index=True)
+    product_name = Text(index=True)
+    physical_name = Basename(index=True)
+    validity_start = Timestamp(optional=True, index=True)
+    validity_stop = Timestamp(optional=True, index=True)
+    creation_date = Timestamp(optional=True, index=True)
+    footprint = Geometry(optional=True)
+    remote_url = Remote(optional=True)
+
+By default, properties are required. As can be seen in the example, this can be changed by specifying ``optional=True``. By default, properties are also not indexed in the database backend. This can be changed by specifying ``index=True``.
 
 A product type plug-in is an instance of a class that handles all product type
 specific details. The most important function of a product type plug-in is to
