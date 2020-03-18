@@ -626,9 +626,6 @@ class Archive(object):
                 use_symlinks = (use_symlinks or use_symlinks is None and self._use_symlinks)
                 self._storage.put(paths, properties, plugin, use_symlinks)
 
-                metadata = {'archive_path': properties.core.archive_path}
-                self.update_properties(Struct({'core': metadata}), properties.core.uuid)
-
                 # Verify product hash after copy
                 if verify_hash:
                     if self.verify_hash("uuid == @uuid", {"uuid": properties.core.uuid}):
