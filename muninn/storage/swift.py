@@ -84,7 +84,7 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
             with open(path, 'rb') as f:
                 self._conn.put_object(self.container, key, contents=f.read())
 
-    def put2(self, file_path, archive, product, use_enclosing_directory):
+    def put2(self, file_path, product, use_enclosing_directory):
         archive_path = product.core.archive_path
         physical_name = product.core.physical_name
 

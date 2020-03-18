@@ -122,7 +122,7 @@ class FilesystemStorageBackend(StorageBackend):
                 raise Error("unable to transfer product to destination path '%s' [%s]" %
                             (abs_product_path, _error))
 
-    def put2(self, file_path, archive, product, use_enclosing_directory): # TODO merge with 'put'.. add move flag?
+    def put2(self, file_path, product, use_enclosing_directory): # TODO merge with 'put'.. add move flag?
         physical_name = product.core.physical_name
         archive_path = product.core.archive_path
 

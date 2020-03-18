@@ -88,7 +88,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             # Upload file
             self._resource.Object(self.bucket, key).upload_file(path)
 
-    def put2(self, file_path, archive, product, use_enclosing_directory):
+    def put2(self, file_path, product, use_enclosing_directory):
         archive_path = product.core.archive_path
         physical_name = product.core.physical_name
 
