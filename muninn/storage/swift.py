@@ -69,8 +69,7 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
         if use_symlinks:
             raise Error("Swift storage backend does not support symlinks")
 
-        archive_path = plugin.archive_path(properties)
-        properties.core.archive_path = archive_path
+        archive_path = properties.core.archive_path
         physical_name = properties.core.physical_name
 
         # Upload file(s)
