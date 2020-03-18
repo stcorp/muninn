@@ -77,7 +77,7 @@ class FilesystemStorageBackend(StorageBackend):
                 os.path.dirname(os.path.realpath(paths[0])),
                 start=os.path.realpath(self._root))
 
-    def put(self, paths, properties, plugin, use_symlinks):
+    def put(self, paths, properties, use_enclosing_directory, use_symlinks):
         abs_archive_path = os.path.realpath(os.path.join(self._root, properties.core.archive_path))
         abs_product_path = os.path.join(abs_archive_path, properties.core.physical_name)
 
@@ -92,7 +92,7 @@ class FilesystemStorageBackend(StorageBackend):
                                 "destination location")
         else:
             # Create destination path for product (parts)
-            if plugin.use_enclosing_directory:
+            if use_enclosing_directory:
                 abs_path = abs_product_path
             else:
                 abs_path = abs_archive_path
@@ -152,16 +152,16 @@ class FilesystemStorageBackend(StorageBackend):
                         (abs_product_path, _error))
 
     # TODO product_path follows from product
-    def get(self, product, product_path, target_path, plugin, use_symlinks=False):
+    def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=False):
         try:
             if use_symlinks:
-                if plugin.use_enclosing_directory:
+                if use_enclosing_directory:
                     for basename in os.listdir(product_path):
                         os.symlink(os.path.join(product_path, basename), os.path.join(target_path, basename))
                 else:
                     os.symlink(product_path, os.path.join(target_path, os.path.basename(product_path)))
             else:
-                if plugin.use_enclosing_directory:
+                if use_enclosing_directory:
                     for basename in os.listdir(product_path):
                         util.copy_path(os.path.join(product_path, basename), target_path, resolve_root=True)
                 else:

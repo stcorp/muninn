@@ -188,7 +188,8 @@ class Archive(object):
         # Download/symlink product in temp directory and hash
         with util.TemporaryDirectory(prefix=".calc_hash-", suffix="-%s" % product.core.uuid.hex) as tmp_path:
             use_symlinks = self._storage.supports_symlinks
-            self._storage.get(product, product_path, tmp_path, plugin, use_symlinks=use_symlinks)
+            use_enclosing_directory = plugin.use_enclosing_directory
+            self._storage.get(product, product_path, tmp_path, use_enclosing_directory, use_symlinks=use_symlinks)
 
             # Determine product hash
             paths = [os.path.join(tmp_path, basename) for basename in os.listdir(tmp_path)]
@@ -291,9 +292,10 @@ class Archive(object):
 
         # Get the product type specific plug-in.
         plugin = self.product_type_plugin(product.core.product_type)
+        use_enclosing_directory = plugin.use_enclosing_directory
 
         # Symbolic link or copy the product at or to the specified target directory.
-        self._storage.get(product, product_path, target_path, plugin, use_symlinks)
+        self._storage.get(product, product_path, target_path, use_enclosing_directory, use_symlinks)
 
         return os.path.join(target_path, os.path.basename(product_path))
 
@@ -624,7 +626,8 @@ class Archive(object):
 
             if ingest_product:
                 use_symlinks = (use_symlinks or use_symlinks is None and self._use_symlinks)
-                self._storage.put(paths, properties, plugin, use_symlinks)
+                use_enclosing_directory = plugin.use_enclosing_directory
+                self._storage.put(paths, properties, use_enclosing_directory, use_symlinks)
 
                 # Verify product hash after copy
                 if verify_hash:
@@ -830,7 +833,8 @@ class Archive(object):
         # Download/symlink product in temp directory and analyze
         with util.TemporaryDirectory(prefix=".calc_hash-", suffix="-%s" % product.core.uuid.hex) as tmp_path:
             use_symlinks = self._storage.supports_symlinks
-            self._storage.get(product, product_path, tmp_path, plugin, use_symlinks=use_symlinks)
+            use_enclosing_directory = plugin.use_enclosing_directory
+            self._storage.get(product, product_path, tmp_path, use_enclosing_directory, use_symlinks=use_symlinks)
 
             paths = [os.path.join(tmp_path, basename) for basename in os.listdir(tmp_path)]
             metadata = plugin.analyze(paths)
