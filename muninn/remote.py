@@ -24,7 +24,7 @@ class RemoteBackend(object):
 
 class UrlBackend(RemoteBackend):
 
-    def pull(self, archive, product):
+    def pull(self, archive, product, use_enclosing_directory):
         if getattr(product.core, "archive_path", None) is None:
             raise Error("cannot pull files that do not have archive_path set")
 
@@ -43,7 +43,7 @@ class UrlBackend(RemoteBackend):
             #    Content-Disposition: attachment; filename="**********"
             # end then use this ***** filename to match against core.physical_name + <archive ext>
 
-            archive._storage.put2(tmp_file, archive, product)
+            archive._storage.put2(tmp_file, archive, product, use_enclosing_directory)
 
 
 REMOTE_BACKENDS = {
@@ -54,7 +54,7 @@ REMOTE_BACKENDS = {
 }
 
 
-def pull(archive, product):
+def pull(archive, product, use_enclosing_directory):
     # determine the backend to use
     backend = None
     url = product.core.remote_url
@@ -65,4 +65,4 @@ def pull(archive, product):
     if backend is None:
         raise Error("The protocol of '%s' is not supported" % url)
 
-    backend.pull(archive, product)
+    backend.pull(archive, product, use_enclosing_directory)

@@ -122,7 +122,7 @@ class FilesystemStorageBackend(StorageBackend):
                 raise Error("unable to transfer product to destination path '%s' [%s]" %
                             (abs_product_path, _error))
 
-    def put2(self, file_path, archive, product): # TODO merge with 'put'.. add move flag?
+    def put2(self, file_path, archive, product, use_enclosing_directory): # TODO merge with 'put'.. add move flag?
         physical_name = product.core.physical_name
         archive_path = product.core.archive_path
 
@@ -136,8 +136,7 @@ class FilesystemStorageBackend(StorageBackend):
             raise Error("cannot create parent destination path '%s' [%s]" % (abs_archive_path, _error))
 
         # Create enclosing directory if required.
-        plugin = archive.product_type_plugin(product.core.product_type)
-        if plugin.use_enclosing_directory:
+        if use_enclosing_directory:
             try:
                 util.make_path(abs_product_path)
                 abs_product_path = os.path.join(abs_product_path, physical_name)

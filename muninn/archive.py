@@ -775,7 +775,7 @@ class Archive(object):
 
             # pull product
             try:
-                remote.pull(self, product)
+                remote.pull(self, product, plugin.use_enclosing_directory)
             except:
                 # reset active/archive_path values
                 metadata = {'active': True, 'archive_path': None}
