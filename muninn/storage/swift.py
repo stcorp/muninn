@@ -65,7 +65,7 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
     def current_archive_path(self, paths):
         raise Error("Swift storage backend does not (yet) support ingesting already ingested products")
 
-    def put(self, paths, properties, use_enclosing_directory, use_symlinks):
+    def put(self, paths, properties, use_enclosing_directory, use_symlinks=False):
         if use_symlinks:
             raise Error("Swift storage backend does not support symlinks")
 
@@ -83,17 +83,6 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
             # Upload file
             with open(path, 'rb') as f:
                 self._conn.put_object(self.container, key, contents=f.read())
-
-    def put2(self, file_path, product, use_enclosing_directory):
-        archive_path = product.core.archive_path
-        physical_name = product.core.physical_name
-
-        key = os.path.join(archive_path, physical_name)
-        if use_enclosing_directory:
-            key = os.path.join(key, physical_name)
-
-        with open(file_path, 'rb') as f:
-            self._conn.put_object(self.container, key, contents=f.read())
 
     def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=False):
         if use_symlinks:

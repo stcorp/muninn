@@ -70,7 +70,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
     def current_archive_path(self, paths):
         raise Error("S3 storage backend does not (yet) support ingesting already ingested products")
 
-    def put(self, paths, properties, use_enclosing_directory, use_symlinks):
+    def put(self, paths, properties, use_enclosing_directory, use_symlinks=False):
         if use_symlinks:
             raise Error("S3 storage backend does not support symlinks")
 
@@ -87,16 +87,6 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
 
             # Upload file
             self._resource.Object(self.bucket, key).upload_file(path)
-
-    def put2(self, file_path, product, use_enclosing_directory):
-        archive_path = product.core.archive_path
-        physical_name = product.core.physical_name
-
-        key = os.path.join(archive_path, physical_name)
-        if use_enclosing_directory:
-            key = os.path.join(key, physical_name)
-
-        self._resource.Object(self.bucket, key).upload_file(file_path)
 
     def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=False):
         # TODO use_enclosing_directory not used?

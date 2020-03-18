@@ -77,7 +77,7 @@ class FilesystemStorageBackend(StorageBackend):
                 os.path.dirname(os.path.realpath(paths[0])),
                 start=os.path.realpath(self._root))
 
-    def put(self, paths, properties, use_enclosing_directory, use_symlinks):
+    def put(self, paths, properties, use_enclosing_directory, use_symlinks=False):
         abs_archive_path = os.path.realpath(os.path.join(self._root, properties.core.archive_path))
         abs_product_path = os.path.join(abs_archive_path, properties.core.physical_name)
 
@@ -121,35 +121,6 @@ class FilesystemStorageBackend(StorageBackend):
             except EnvironmentError as _error:
                 raise Error("unable to transfer product to destination path '%s' [%s]" %
                             (abs_product_path, _error))
-
-    def put2(self, file_path, product, use_enclosing_directory): # TODO merge with 'put'.. add move flag?
-        physical_name = product.core.physical_name
-        archive_path = product.core.archive_path
-
-        abs_archive_path = os.path.realpath(os.path.join(self._root, archive_path))
-        abs_product_path = os.path.join(abs_archive_path, physical_name)
-
-        # Create destination location for product
-        try:
-            util.make_path(abs_archive_path)
-        except EnvironmentError as _error:
-            raise Error("cannot create parent destination path '%s' [%s]" % (abs_archive_path, _error))
-
-        # Create enclosing directory if required.
-        if use_enclosing_directory:
-            try:
-                util.make_path(abs_product_path)
-                abs_product_path = os.path.join(abs_product_path, physical_name)
-            except EnvironmentError as _error:
-                raise Error("cannot create parent destination path '%s' [%s]" % (abs_product_path, _error))
-
-        # Move the file into its destination
-        try:
-            os.rename(file_path, abs_product_path)
-
-        except EnvironmentError as _error:
-            raise Error("unable to transfer product to destination path '%s' [%s]" %
-                        (abs_product_path, _error))
 
     # TODO product_path follows from product
     def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=False):
