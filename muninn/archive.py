@@ -24,11 +24,6 @@ from muninn.struct import Struct
 from muninn import remote
 
 
-class _ArchiveList(Sequence):
-    _alias = "archive_list"
-    sub_type = Text
-
-
 class _ExtensionName(Text):
     _alias = "extension_name"
 
@@ -47,18 +42,17 @@ class _ExtensionList(Sequence):
 class _ArchiveConfig(Mapping):
     _alias = "archive"
 
-    root = optional(Text)
-    backend = optional(Text)
-    database = optional(Text)
-    storage = optional(Text)
-    use_symlinks = optional(Boolean)
-    cascade_grace_period = optional(Integer)
-    max_cascade_cycles = optional(Integer)
-    external_archives = optional(_ArchiveList)
-    namespace_extensions = optional(_ExtensionList)
-    product_type_extensions = optional(_ExtensionList)
-    remote_backend_extensions = optional(_ExtensionList)
-    auth_file = optional(Text)
+    root = Text(optional=True)
+    backend = Text(optional=True)
+    database = Text(optional=True)
+    storage = Text(optional=True)
+    use_symlinks = Boolean(optional=True)
+    cascade_grace_period = Integer(optional=True)
+    max_cascade_cycles = Integer(optional=True)
+    namespace_extensions = _ExtensionList(optional=True)
+    product_type_extensions = _ExtensionList(optional=True)
+    remote_backend_extensions = _ExtensionList(optional=True)
+    auth_file = Text(optional=True)
 
 
 def _load_backend_module(name):
@@ -151,13 +145,12 @@ def create(configuration):
 class Archive(object):
 
     def __init__(self, backend, storage, use_symlinks=False, cascade_grace_period=0, max_cascade_cycles=25,
-                 external_archives=[], auth_file=None, root=None):
+                 auth_file=None, root=None):
         self._root = root
 
         self._use_symlinks = use_symlinks
         self._cascade_grace_period = datetime.timedelta(minutes=cascade_grace_period)
         self._max_cascade_cycles = max_cascade_cycles
-        self._external_archives = external_archives
         self._auth_file = auth_file
 
         self._namespace_schemas = {}
@@ -477,15 +470,6 @@ class Archive(object):
     def export_formats(self):
         """Return a list of supported alternative export formats."""
         return list(self._export_formats)
-
-    def external_archives(self):
-        """Return the identifiers of any archives that are configured as external archives associated to this archive.
-
-        External archives contain products which are linked to by products in this archive, but which are not stored in
-        this archive themselves.
-
-        """
-        return self._external_archives
 
     @staticmethod
     def generate_uuid():
