@@ -24,11 +24,11 @@ class StorageBackend(object):
 
     # TODO lower-granularity put/get/delete
 
-    def put(self, paths, properties, use_enclosing_directory, use_symlinks=False):
+    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None):
         # Place product file(s) into storage
         raise NotImplementedError()
 
-    def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=False):
+    def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=None):
         # Retrieve product file(s) from storage
         raise NotImplementedError()
 

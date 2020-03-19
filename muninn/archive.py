@@ -148,7 +148,6 @@ class Archive(object):
                  auth_file=None, root=None):
         self._root = root
 
-        self._use_symlinks = use_symlinks
         self._cascade_grace_period = datetime.timedelta(minutes=cascade_grace_period)
         self._max_cascade_cycles = max_cascade_cycles
         self._auth_file = auth_file
@@ -611,7 +610,6 @@ class Archive(object):
                 self.update_properties(Struct({'core': {'hash': properties.core.hash}}), properties.core.uuid)
 
             if ingest_product:
-                use_symlinks = (use_symlinks or use_symlinks is None and self._use_symlinks)
                 use_enclosing_directory = plugin.use_enclosing_directory
                 self._storage.put(paths, properties, use_enclosing_directory, use_symlinks)
 

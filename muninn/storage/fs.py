@@ -2,7 +2,7 @@ import os
 
 from .base import StorageBackend
 
-from muninn.schema import Mapping, Text
+from muninn.schema import Mapping, Text, Boolean
 import muninn.util as util
 from muninn.exceptions import Error
 import muninn.config as config
@@ -12,17 +12,23 @@ from muninn.util import product_size
 class _FSConfig(Mapping):
     _alias = "fs"
 
-    root = Text
+    root = Text()
+    use_symlinks = Boolean(optional=True)
 
 
 def create(configuration):
     fs_section = configuration.get("fs", {})
     if not fs_section:  # backward compatibility
+        options = {}
         arch_section = configuration.get('archive')
         try:
-            options = {'root': arch_section['root']}
+            options['root'] = arch_section['root']
         except KeyError:
             raise ValueError('archive: storage: fs: no value for mandatory item "root"')
+        try:
+            options['use_symlinks'] = arch_section['use_symlinks']
+        except KeyError:
+            pass
     else:
         options = config.parse(fs_section, _FSConfig)
         _FSConfig.validate(options)
@@ -31,10 +37,11 @@ def create(configuration):
 
 
 class FilesystemStorageBackend(StorageBackend):
-    def __init__(self, root):
+    def __init__(self, root, use_symlinks=None):
         super(FilesystemStorageBackend, self).__init__()
 
         self._root = root
+        self._use_symlinks = use_symlinks or False
         self.supports_symlinks = True
 
     def prepare(self):
@@ -77,7 +84,10 @@ class FilesystemStorageBackend(StorageBackend):
                 os.path.dirname(os.path.realpath(paths[0])),
                 start=os.path.realpath(self._root))
 
-    def put(self, paths, properties, use_enclosing_directory, use_symlinks=False):
+    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None):
+        if use_symlinks is None:
+            use_symlinks = self._use_symlinks
+
         abs_archive_path = os.path.realpath(os.path.join(self._root, properties.core.archive_path))
         abs_product_path = os.path.join(abs_archive_path, properties.core.physical_name)
 
@@ -123,7 +133,10 @@ class FilesystemStorageBackend(StorageBackend):
                             (abs_product_path, _error))
 
     # TODO product_path follows from product
-    def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=False):
+    def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=None):
+        if use_symlinks is None:
+            use_symlinks = self._use_symlinks
+
         try:
             if use_symlinks:
                 if use_enclosing_directory:

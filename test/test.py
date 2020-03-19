@@ -37,7 +37,7 @@ from muninn.schema import Mapping, optional, Text
 CFG = ConfigParser()
 CFG.read(u'test.cfg')
 
-STORAGE_BACKENDS = [s.strip() for s in CFG.get('DEFAULT', 'backend').split(',')]
+STORAGE_BACKENDS = [s.strip() for s in CFG.get('DEFAULT', 'storage').split(',')]
 DATABASE_BACKENDS = [s.strip() for s in CFG.get('DEFAULT', 'database').split(',')]
 ARCHIVE_PATHS = [s.strip() for s in CFG.get('DEFAULT', 'archive_path').split(',')]
 USE_ENCLOSING_DIR = [s.strip()=='true' for s in CFG.get('DEFAULT', 'use_enclosing_dir').split(',')]

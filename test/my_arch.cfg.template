@@ -1,5 +1,4 @@
 [archive]
 storage = {storage}
 database = {database}
-use_symlinks = false
 product_type_extensions = product_type

@@ -15,10 +15,10 @@ logging.getLogger("swiftclient").setLevel(logging.CRITICAL)
 class _SwiftConfig(Mapping):
     _alias = "swift"
 
-    container = Text
-    user = Text
-    key = Text
-    authurl = Text
+    container = Text()
+    user = Text()
+    key = Text()
+    authurl = Text()
 
 
 def create(configuration):
@@ -65,7 +65,7 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
     def current_archive_path(self, paths):
         raise Error("Swift storage backend does not (yet) support ingesting already ingested products")
 
-    def put(self, paths, properties, use_enclosing_directory, use_symlinks=False):
+    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None):
         if use_symlinks:
             raise Error("Swift storage backend does not support symlinks")
 
@@ -84,7 +84,7 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
             with open(path, 'rb') as f:
                 self._conn.put_object(self.container, key, contents=f.read())
 
-    def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=False):
+    def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=None):
         if use_symlinks:
             raise Error("Swift storage backend does not support symlinks")
 
