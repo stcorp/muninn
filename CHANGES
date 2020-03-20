@@ -11,7 +11,11 @@
 
 * Added an initial test framework.
 
+* Added -c/--catalogue-only option to muninn-remove.
+
 * Added property_names argument to archive.retrieve_properties().
+
+* Added archive.delete_properties().
 
 * Fixed issue with intra-archive links without enclosing dir (resulting
   in broken symlinks).

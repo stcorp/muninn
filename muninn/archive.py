@@ -358,6 +358,21 @@ class Archive(object):
         self._update_metadata_date(properties)
         self._database.insert_product_properties(properties)
 
+    def delete_properties(self, where="", parameters={}):
+        """Remove properties for one or more products from the catalogue. Return the number of products removed.
+
+        This function will _not_ remove any product files from storage and will _not_ trigger any of the specific
+        cascade rules.
+
+        Keyword arguments:
+        where       --  Search expression that determines which products to remove.
+        parameters  --  Parameters referenced in the search expression (if any).
+        """
+        products = self.search(where=where, parameters=parameters, property_names=['uuid'])
+        for product in products:
+            self._database.delete_product_properties(product.core.uuid)
+        return len(products)
+
     def derived_products(self, uuid):
         """Return the UUIDs of the products that are linked to the given product as derived products."""
         return self._database.derived_products(uuid)
