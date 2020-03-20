@@ -103,12 +103,13 @@ Upgrading to version 5.0
 
 Although 5.0 is backwards compatible with 4.x, you will get deprecation
 warnings. For each archive configuration file you should start migrating to
-the new approach. If you had:
+the new approach. For example, if you had:
 ::
 
    [archive]
    root = /home/alice/archives/foo
    backend = postgresql
+   use_symlinks = true
 
 then you should change this to:
 ::
@@ -119,6 +120,7 @@ then you should change this to:
 
    [fs]
    root = /home/alice/archives/foo
+   use_symlinks = true
 
 
 Upgrading to version 4.0
@@ -383,19 +385,11 @@ settings:
 - ``storage``: The backend used for storing product data. The currently
   supported backends are ``fs``, ``s3`` and ``swift``.
 
-- ``use_symlinks``: If set to ``true``, an archived product will consist of
-  symbolic links to the original product, instead of a copy of the product.
-  The default is ``false``.
-
 - ``cascade_grace_period``: Number of minutes after which a product may be
   considered for automatic removal. The default is 0 (immediately).
 
 - ``max_cascade_cycles``: Maximum number of iterations of the automatic removal
   algorithm. The default is 25.
-
-- ``external_archives``: White space separated list of archive ids of archives
-  that may contain products linked to by products stored in this archive.
-  The default is the empty list.
 
 - ``namespace_extensions``: White space separated list of names of Python
   packages or modules that contain namespace definitions (see section
@@ -415,7 +409,11 @@ settings:
 Deprecated settings:
 
 - ``root``: The root path on disk of the archive when using the file system
-  storage backend (please use the ``fs`` section).
+  storage backend. Please use the ``fs`` section instead.
+
+- ``use_symlinks``: If set to ``true``, an archived product will consist of
+  symbolic links to the original product, instead of a copy of the product.
+  The default is ``false``. Please use the ``fs`` section instead.
 
 - ``backend``: Same as ``database`` (please use this instead).
 
@@ -425,12 +423,12 @@ Section "postgresql"
 This section contains backend specific settings for the postgresql backend and
 may contain the following settings:
 
-- connection_string: Mandatory. A postgresql connection string of the database
+- ``connection_string``: Mandatory. A postgresql connection string of the database
   containing product properties. The default is the empty string, which will
   connect to the default database for the user invoking muninn. See psycopg
   documentation for the syntax.
 
-- table_prefix: Prefix that should be used for all table names, indices, and
+- ``table_prefix``: Prefix that should be used for all table names, indices, and
   constraints. This is to allow multiple muninn catalogues inside a single
   database (or have a muninn catalogue together with other tables). The prefix
   will be prefixed without separation characters, so any underscores, etc. need
@@ -441,17 +439,17 @@ Section "sqlite"
 This section contains backend specific settings for the postgresql backend and
 may contain the following settings:
 
-- connection_string: Mandatory. A full path to the sqlite database file
+- ``connection_string``: Mandatory. A full path to the sqlite database file
   containing the product properties. This file will be automatically created by
   muninn when it first tries to access the database.
 
-- table_prefix: Prefix that should be used for all table names, indices, and
+- ``table_prefix``: Prefix that should be used for all table names, indices, and
   constraints. This is to allow multiple muninn catalogues inside a single
   database (or have a muninn catalogue together with other tables). The prefix
   will be prefixed without separation characters, so any underscores, etc. need
   to be included in the option value.
 
-- mod_spatialite_path: Path/name of the mod_spatialite library. Will be set to
+- ``mod_spatialite_path``: Path/name of the mod_spatialite library. Will be set to
   'mod_spatialite' by default (which only works if library is on search path).
   Change this to e.g. /usr/local/lib/mod_spatialite to set an explicit path
   (no filename extension needed).
@@ -461,28 +459,33 @@ Section "fs"
 This section contains backend specific settings for the filesystem storage
 backend and may contain the following settings:
 
-- root: Mandatory. The root path on disk of the archive.
+- ``root``: Mandatory. The root path on disk of the archive.
+
+- ``use_symlinks``: If set to ``true``, an archived product will consist of
+  symbolic links to the original product, instead of a copy of the product.
+  The default is ``false``.
+
 
 Section "s3"
 ----------------
 This section contains backend specific settings for the S3 storage
 backend and may contain the following settings:
 
-- bucket: Mandatory. The bucket containing the archive.
-- host: Mandatory. S3 host URL.
-- port: Mandatory. S3 host port.
-- access_key: Mandatory. S3 authentication access key.
-- secret_access_key: Mandatory. S3 authentication secret access key.
+- ``bucket``: Mandatory. The bucket containing the archive.
+- ``host``: Mandatory. S3 host URL.
+- ``port``: Mandatory. S3 host port.
+- ``access_key``: Mandatory. S3 authentication access key.
+- ``secret_access_key``: Mandatory. S3 authentication secret access key.
 
 Section "swift"
 ----------------
 This section contains backend specific settings for the Swift storage
 backend and may contain the following settings:
 
-- container: Mandatory. The container containing the archive.
-- user: Mandatory. Swift authentication user name.
-- key: Mandatory. Swift authentication key.
-- authurl: Mandatory. Swift authentication auth URL.
+- ``container``: Mandatory. The container containing the archive.
+- ``user``: Mandatory. Swift authentication user name.
+- ``key``: Mandatory. Swift authentication key.
+- ``authurl``: Mandatory. Swift authentication auth URL.
 
 Example configuration file
 --------------------------
@@ -491,12 +494,12 @@ Example configuration file
   [archive]
   database = postgresql
   storage = fs
-  use_symlinks = true
   product_type_extensions = cryosat asar
   auth_file = /home/alice/credentials.json
 
   [fs]
   root = /home/alice/archives/foo
+  use_symlinks = true
 
   [postgresql]
   connection_string = dbname=foo user=alice password=wonderland host=192.168.0.1
@@ -791,6 +794,10 @@ The function ``is_derived_from(uuid)`` returns true if the product under
 consideration is (directly) derived from the product referred to by the
 specified uuid.
 
+For ``is_source_of`` and ``is_derived_from``, instead of a uuid, it is also
+possible to specify a sub-expression resolving into one or multiple uuids (see
+below for an example).
+
 The function ``has_tag(text)`` returns true if the product under consideration
 is tagged with the specified tag.
 
@@ -804,8 +811,10 @@ Examples
 
   ``covers(core.validity_start, core.validity_stop, @start, @stop)``
 
-  ``covers(core.footprint, POINT (5.0 52.0))``
+  ``not covers(core.footprint, POINT (5.0 52.0))``
 
   ``is_derived_from(32a61528-a712-427a-b28f-8ebd5b472b16)``
+
+  ``is_derived_from(physical_name == "filename.txt")``
 
   ``validity_stop - validity_start > 300`` (timestamp differences are in seconds)

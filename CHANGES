@@ -7,11 +7,22 @@
   - renamed `backend` parameter to `database` in `archive` section
   - added `storage` parameter to `archive` section
   - added new sections for `fs`, `s3`, and 'swift`
-  - moved `root` parameter from `archive` section to `fs` section
+  - moved `root` and `use_symlinks` parameters from `archive` section
+    to `fs` section
 
-* Added an initial test framework.
+* Added a basic test/coverage framework.
+
+* Changed the syntax for defining namespace properties, allowing
+  one to specify if a property should be indexed in the database backend.
 
 * Added -c/--catalogue-only option to muninn-remove.
+
+* Added support for sub-queries (specify a sub-query instead of a uuid).
+
+* Several fixes for NOT expressions in queries.
+
+* Improved querying on NULL properties. For example, for 'property != b',
+  we now return products for which b is NULL.
 
 * Added property_names argument to archive.retrieve_properties().
 
