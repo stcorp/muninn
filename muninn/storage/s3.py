@@ -70,7 +70,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
     def current_archive_path(self, paths):
         raise Error("S3 storage backend does not (yet) support ingesting already ingested products")
 
-    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None):
+    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None, move_files=False):
         if use_symlinks:
             raise Error("S3 storage backend does not support symlinks")
 

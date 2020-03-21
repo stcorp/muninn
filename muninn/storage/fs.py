@@ -84,12 +84,16 @@ class FilesystemStorageBackend(StorageBackend):
                 os.path.dirname(os.path.realpath(paths[0])),
                 start=os.path.realpath(self._root))
 
-    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None):
+    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None, move_files=False):
         if use_symlinks is None:
             use_symlinks = self._use_symlinks
 
-        abs_archive_path = os.path.realpath(os.path.join(self._root, properties.core.archive_path))
-        abs_product_path = os.path.join(abs_archive_path, properties.core.physical_name)
+        physical_name = properties.core.physical_name
+        archive_path = properties.core.archive_path
+        uuid = properties.core.uuid
+
+        abs_archive_path = os.path.realpath(os.path.join(self._root, archive_path))
+        abs_product_path = os.path.join(abs_archive_path, physical_name)
 
         # TODO separate this out like 'current_archive_path'
         if util.is_sub_path(os.path.realpath(paths[0]), abs_product_path, allow_equal=True):
@@ -110,12 +114,12 @@ class FilesystemStorageBackend(StorageBackend):
             # Create a temporary directory and transfer the product there, then move the product to its
             # destination within the archive.
             try:
-                with util.TemporaryDirectory(prefix=".put-", suffix="-%s" % properties.core.uuid.hex,
+                with util.TemporaryDirectory(prefix=".put-", suffix="-%s" % uuid.hex,
                                              dir=abs_archive_path) as tmp_path:
 
                     # Create enclosing directory if required.
                     if use_enclosing_directory:
-                        tmp_path = os.path.join(tmp_path, properties.core.physical_name)
+                        tmp_path = os.path.join(tmp_path, physical_name)
                         util.make_path(tmp_path)
 
                     # Transfer the product (parts).
@@ -137,16 +141,19 @@ class FilesystemStorageBackend(StorageBackend):
                                 os.symlink(path, os.path.join(tmp_path, os.path.basename(path)))
                     else:
 
-                        # Copy product (parts).
+                        # Copy/move product (parts).
                         for path in paths:
-                            util.copy_path(path, tmp_path, resolve_root=True)
+                            if move_files:
+                                os.rename(path, os.path.join(tmp_path, os.path.basename(path)))
+                            else:
+                                util.copy_path(path, tmp_path, resolve_root=True)
 
                     # Move the transferred product into its destination within the archive.
                     if use_enclosing_directory:
                         os.rename(tmp_path, abs_product_path)
                     else:
-                        assert(len(paths) == 1 and properties.core.physical_name == os.path.basename(paths[0]))
-                        tmp_product_path = os.path.join(tmp_path, properties.core.physical_name)
+                        assert(len(paths) == 1 and os.path.basename(paths[0]) == physical_name)
+                        tmp_product_path = os.path.join(tmp_path, physical_name)
                         os.rename(tmp_product_path, abs_product_path)
 
             except EnvironmentError as _error:

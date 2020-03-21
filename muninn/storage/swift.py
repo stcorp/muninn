@@ -65,7 +65,7 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
     def current_archive_path(self, paths):
         raise Error("Swift storage backend does not (yet) support ingesting already ingested products")
 
-    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None):
+    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None, move_files=False):
         if use_symlinks:
             raise Error("Swift storage backend does not support symlinks")
 

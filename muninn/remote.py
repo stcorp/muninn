@@ -43,7 +43,7 @@ class UrlBackend(RemoteBackend):
             #    Content-Disposition: attachment; filename="**********"
             # end then use this ***** filename to match against core.physical_name + <archive ext>
 
-            archive._storage.put([tmp_file], product, use_enclosing_directory)
+            archive._storage.put([tmp_file], product, use_enclosing_directory, use_symlinks=False, move_files=True)
 
 
 REMOTE_BACKENDS = {
