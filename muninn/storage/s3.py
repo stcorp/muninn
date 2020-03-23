@@ -24,18 +24,19 @@ class _S3Config(Mapping):
     secret_access_key = Text()
 
 
-def create(configuration):
+def create(configuration, tmp_root):
     options = config.parse(configuration.get("s3", {}), _S3Config)
     _S3Config.validate(options)
-    return S3StorageBackend(**options)
+    return S3StorageBackend(tmp_root=tmp_root, **options)
 
 
 class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate directory, 'dir/' with contents?
-    def __init__(self, bucket, host, port, access_key, secret_access_key):
+    def __init__(self, bucket, host, port, access_key, secret_access_key, tmp_root):
         super(S3StorageBackend, self).__init__()
 
         self.bucket = bucket
         self._root = bucket
+        self._tmp_root = tmp_root
 
         self._resource = boto3.resource(
             service_name='s3',
@@ -78,7 +79,8 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
         archive_path = properties.core.archive_path
         physical_name = properties.core.physical_name
 
-        with util.TemporaryDirectory(prefix=".put-", suffix="-%s" % properties.core.uuid.hex) as tmp_path:
+        tmp_root = self.get_tmp_root(properties)
+        with util.TemporaryDirectory(dir=tmp_root, prefix=".put-", suffix="-%s" % properties.core.uuid.hex) as tmp_path:
             if retrieve_files:
                 paths = retrieve_files(tmp_path)
 

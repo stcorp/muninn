@@ -1,6 +1,14 @@
+import muninn.util as util
+
 class StorageBackend(object):
     def __init__(self):
         self.supports_symlinks = False
+
+    def get_tmp_root(self, product):
+        tmp_root = self._tmp_root
+        if tmp_root:
+            util.make_path(tmp_root)
+            return tmp_root
 
     def prepare(self):
         # Prepare storage for use.

@@ -6,6 +6,7 @@
 * Changed configuration file format due to new storage backends:
   - renamed `backend` parameter to `database` in `archive` section
   - added `storage` parameter to `archive` section
+  - added `tmp_root` parameter to `archive` section
   - added new sections for `fs`, `s3`, and 'swift`
   - moved `root` and `use_symlinks` parameters from `archive` section
     to `fs` section

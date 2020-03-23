@@ -22,17 +22,18 @@ class _SwiftConfig(Mapping):
     authurl = Text()
 
 
-def create(configuration):
+def create(configuration, tmp_root):
     options = config.parse(configuration.get("swift", {}), _SwiftConfig)
     _SwiftConfig.validate(options)
-    return SwiftStorageBackend(**options)
+    return SwiftStorageBackend(tmp_root=tmp_root, **options)
 
 class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate directory, 'dir/' with contents?
-    def __init__(self, container, user, key, authurl):
+    def __init__(self, container, user, key, authurl, tmp_root):
         super(SwiftStorageBackend, self).__init__()
 
         self.container = container
         self._root = container
+        self._tmp_root = tmp_root
 
         self._conn = swiftclient.Connection(
             user=user,
@@ -73,7 +74,8 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
         archive_path = properties.core.archive_path
         physical_name = properties.core.physical_name
 
-        with util.TemporaryDirectory(prefix=".put-", suffix="-%s" % properties.core.uuid.hex) as tmp_path:
+        tmp_root = self.get_tmp_root(properties)
+        with util.TemporaryDirectory(dir=tmp_root, prefix=".put-", suffix="-%s" % properties.core.uuid.hex) as tmp_path:
             if retrieve_files:
                 paths = retrieve_files(tmp_path)
 

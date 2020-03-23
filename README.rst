@@ -406,6 +406,8 @@ settings:
 - ``auth_file``: [Optional] JSON file containing the credentials to download
   using muninn-pull
 
+- ``tmp_root``: [Optional] path where temporary data should be stored.
+
 Deprecated settings:
 
 - ``root``: The root path on disk of the archive when using the file system

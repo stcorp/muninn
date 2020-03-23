@@ -16,7 +16,7 @@ class _FSConfig(Mapping):
     use_symlinks = Boolean(optional=True)
 
 
-def create(configuration):
+def create(configuration, tmp_root):
     fs_section = configuration.get("fs", {})
     if not fs_section:  # backward compatibility
         options = {}
@@ -33,16 +33,25 @@ def create(configuration):
         options = config.parse(fs_section, _FSConfig)
         _FSConfig.validate(options)
 
-    return FilesystemStorageBackend(**options)
+    return FilesystemStorageBackend(tmp_root=tmp_root, **options)
 
 
 class FilesystemStorageBackend(StorageBackend):
-    def __init__(self, root, use_symlinks=None):
+    def __init__(self, root, use_symlinks=None, tmp_root=None):
         super(FilesystemStorageBackend, self).__init__()
 
         self._root = root
         self._use_symlinks = use_symlinks or False
         self.supports_symlinks = True
+        self._tmp_root = tmp_root
+
+    def get_tmp_root(self, product):
+        if self._tmp_root:
+            tmp_root = self._tmp_root
+        else:
+            tmp_root = os.path.join(self._root, product.core.archive_path)
+        util.make_path(tmp_root)
+        return tmp_root
 
     def prepare(self):
         # Create the archive root path.
@@ -114,8 +123,9 @@ class FilesystemStorageBackend(StorageBackend):
             # Create a temporary directory and transfer the product there, then move the product to its
             # destination within the archive.
             try:
+                tmp_root = self.get_tmp_root(properties)
                 with util.TemporaryDirectory(prefix=".put-", suffix="-%s" % uuid.hex,
-                                             dir=abs_archive_path) as tmp_path:
+                                             dir=tmp_root) as tmp_path:
 
                     # Create enclosing directory if required.
                     if use_enclosing_directory:
@@ -191,8 +201,9 @@ class FilesystemStorageBackend(StorageBackend):
             return
 
         try:
+            tmp_root = self.get_tmp_root(properties)
             with util.TemporaryDirectory(prefix=".remove-", suffix="-%s" % properties.core.uuid.hex,
-                                         dir=os.path.dirname(product_path)) as tmp_path:
+                                         dir=tmp_root) as tmp_path:
 
                 # Move product into the temporary directory. When the temporary directory will be removed at the end of
                 # this scope, the product will be removed along with it.

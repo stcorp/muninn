@@ -53,6 +53,7 @@ class _ArchiveConfig(Mapping):
     product_type_extensions = _ExtensionList(optional=True)
     remote_backend_extensions = _ExtensionList(optional=True)
     auth_file = Text(optional=True)
+    tmp_root = Text(optional=True)
 
 
 def _load_backend_module(name):
@@ -101,7 +102,10 @@ def create(configuration):
 
     # Load and create the storage backend.
     storage_module = _load_storage_module(options.pop("storage", "fs"))
-    storage = storage_module.create(configuration)
+    tmp_root = None
+    if 'tmp_root' in options:
+        tmp_root = options.pop('tmp_root')
+    storage = storage_module.create(configuration, tmp_root)
 
     # Create the archive.
     namespace_extensions = options.pop("namespace_extensions", [])
@@ -178,7 +182,8 @@ class Archive(object):
         plugin = self.product_type_plugin(product.core.product_type)
 
         # Download/symlink product in temp directory and hash
-        with util.TemporaryDirectory(prefix=".calc_hash-", suffix="-%s" % product.core.uuid.hex) as tmp_path:
+        tmp_root = self._storage.get_tmp_root(product)
+        with util.TemporaryDirectory(dir=tmp_root, prefix=".calc_hash-", suffix="-%s" % product.core.uuid.hex) as tmp_path:
             use_symlinks = self._storage.supports_symlinks
             use_enclosing_directory = plugin.use_enclosing_directory
             self._storage.get(product, product_path, tmp_path, use_enclosing_directory, use_symlinks=use_symlinks)
@@ -832,7 +837,8 @@ class Archive(object):
         use_enclosing_directory = plugin.use_enclosing_directory
 
         # Download/symlink product in temp directory and analyze
-        with util.TemporaryDirectory(prefix=".calc_hash-", suffix="-%s" % product.core.uuid.hex) as tmp_path:
+        tmp_root = self._storage.get_tmp_root(product)
+        with util.TemporaryDirectory(dir=tmp_root, prefix=".rebuild-props-", suffix="-%s" % product.core.uuid.hex) as tmp_path:
             use_symlinks = self._storage.supports_symlinks
             self._storage.get(product, product_path, tmp_path, use_enclosing_directory, use_symlinks=use_symlinks)
 
