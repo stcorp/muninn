@@ -5,6 +5,7 @@ from .base import StorageBackend
 
 from muninn.schema import Mapping, Text
 from muninn.exceptions import Error
+import muninn.util as util
 import muninn.config as config
 
 import swiftclient
@@ -65,24 +66,28 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
     def current_archive_path(self, paths):
         raise Error("Swift storage backend does not (yet) support ingesting already ingested products")
 
-    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None, move_files=False):
+    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None, move_files=False, retrieve_files=None):
         if use_symlinks:
             raise Error("Swift storage backend does not support symlinks")
 
         archive_path = properties.core.archive_path
         physical_name = properties.core.physical_name
 
-        # Upload file(s)
-        for path in paths:
-            key = os.path.join(archive_path, physical_name)
+        with util.TemporaryDirectory(prefix=".put-", suffix="-%s" % properties.core.uuid.hex) as tmp_path:
+            if retrieve_files:
+                paths = retrieve_files(tmp_path)
 
-            # Add enclosing dir
-            if use_enclosing_directory:
-                key = os.path.join(key, os.path.basename(path))
+            # Upload file(s)
+            for path in paths:
+                key = os.path.join(archive_path, physical_name)
 
-            # Upload file
-            with open(path, 'rb') as f:
-                self._conn.put_object(self.container, key, contents=f.read())
+                # Add enclosing dir
+                if use_enclosing_directory:
+                    key = os.path.join(key, os.path.basename(path))
+
+                # Upload file
+                with open(path, 'rb') as f:
+                    self._conn.put_object(self.container, key, contents=f.read())
 
     def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=None):
         if use_symlinks:

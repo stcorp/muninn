@@ -28,14 +28,12 @@ class UrlBackend(RemoteBackend):
         if getattr(product.core, "archive_path", None) is None:
             raise Error("cannot pull files that do not have archive_path set")
 
-        # Create a temporary directory and download the product there, then move the product to its
-        # destination within the archive.
-        with util.TemporaryDirectory(prefix=".pull-", suffix="-%s" % product.core.uuid.hex) as tmp_path:
-
+        def retrieve_files(tmp_path):
             # Define a temp location and download the file
             tmp_file = os.path.join(tmp_path, product.core.physical_name)
             downloader = util.Downloader(product.core.remote_url, archive.auth_file())
             downloader.save(tmp_file)
+            return [tmp_file]
 
             # TODO: implement extraction of downloaded archives
             # for ftp and file check if url ends with 'core.physical_name + <archive ext>'
@@ -43,7 +41,7 @@ class UrlBackend(RemoteBackend):
             #    Content-Disposition: attachment; filename="**********"
             # end then use this ***** filename to match against core.physical_name + <archive ext>
 
-            archive._storage.put([tmp_file], product, use_enclosing_directory, use_symlinks=False, move_files=True)
+        archive._storage.put(None, product, use_enclosing_directory, use_symlinks=False, retrieve_files=retrieve_files)
 
 
 REMOTE_BACKENDS = {

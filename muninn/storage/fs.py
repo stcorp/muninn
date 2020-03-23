@@ -84,7 +84,7 @@ class FilesystemStorageBackend(StorageBackend):
                 os.path.dirname(os.path.realpath(paths[0])),
                 start=os.path.realpath(self._root))
 
-    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None, move_files=False):
+    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None, retrieve_files=None):
         if use_symlinks is None:
             use_symlinks = self._use_symlinks
 
@@ -96,7 +96,7 @@ class FilesystemStorageBackend(StorageBackend):
         abs_product_path = os.path.join(abs_archive_path, physical_name)
 
         # TODO separate this out like 'current_archive_path'
-        if util.is_sub_path(os.path.realpath(paths[0]), abs_product_path, allow_equal=True):
+        if paths is not None and util.is_sub_path(os.path.realpath(paths[0]), abs_product_path, allow_equal=True):
             # Product should already be in the target location
             for path in paths:
                 if not os.path.exists(path):
@@ -140,12 +140,11 @@ class FilesystemStorageBackend(StorageBackend):
                             else:
                                 os.symlink(path, os.path.join(tmp_path, os.path.basename(path)))
                     else:
-
-                        # Copy/move product (parts).
-                        for path in paths:
-                            if move_files:
-                                os.rename(path, os.path.join(tmp_path, os.path.basename(path)))
-                            else:
+                        # Copy/retrieve product (parts).
+                        if retrieve_files:
+                            paths = retrieve_files(tmp_path)
+                        else:
+                            for path in paths:
                                 util.copy_path(path, tmp_path, resolve_root=True)
 
                     # Move the transferred product into its destination within the archive.
