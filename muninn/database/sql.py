@@ -15,7 +15,7 @@ import re
 
 from muninn.exceptions import *
 from muninn.function import Prototype
-from muninn.language import parse_and_analyze
+from muninn.language import parse_and_analyze, Literal
 from muninn.schema import *
 from muninn.visitor import Visitor
 
@@ -276,6 +276,12 @@ class _WhereExpressionVisitor(Visitor):
 
         self._root_visitor = root_visitor or self
 
+    def do_visit(self, visitable):
+        where, parameters, namespaces = self.visit(visitable)
+        if isinstance(visitable, Literal) and visitable.type is UUID:
+            where = ("(uuid = %s)" % where)
+        return where, parameters, namespaces
+
     def visit(self, visitable):
         self._count, self._parameters, self._namespaces = 0, {}, set()
         return super(_WhereExpressionVisitor, self).visit(visitable), self._parameters, self._namespaces
@@ -405,7 +411,7 @@ class SQLBuilder(object):
         if where:
             ast = parse_and_analyze(where, self._namespace_schemas, parameters)
             visitor = _WhereExpressionVisitor(self._rewriter_table, self._column_name, self._named_placeholder)
-            where_expr, where_parameters, where_namespaces = visitor.visit(ast)
+            where_expr, where_parameters, where_namespaces = visitor.do_visit(ast)
             if where_expr:
                 join_set.update(where_namespaces)
                 where_clause = "WHERE %s" % where_expr
@@ -437,7 +443,7 @@ class SQLBuilder(object):
         if where:
             ast = parse_and_analyze(where, self._namespace_schemas, parameters)
             visitor = _WhereExpressionVisitor(self._rewriter_table, self._column_name, self._named_placeholder)
-            where_expr, where_parameters, where_namespaces = visitor.visit(ast)
+            where_expr, where_parameters, where_namespaces = visitor.do_visit(ast)
             if where_expr:
                 join_set.update(where_namespaces)
                 where_clause = 'WHERE %s' % where_expr
@@ -558,7 +564,7 @@ class SQLBuilder(object):
         if where:
             ast = parse_and_analyze(where, self._namespace_schemas, parameters)
             visitor = _WhereExpressionVisitor(self._rewriter_table, self._column_name, self._named_placeholder)
-            where_expr, where_parameters, where_namespaces = visitor.visit(ast)
+            where_expr, where_parameters, where_namespaces = visitor.do_visit(ast)
             if where_expr:
                 join_set.update(where_namespaces)
                 where_clause = "WHERE %s" % where_expr

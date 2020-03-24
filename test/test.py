@@ -415,7 +415,8 @@ class TestArchive:
         assert archive._checker.exists(path)
 
     def test_search(self, archive):
-        self._ingest_file(archive)
+        properties = self._ingest_file(archive)
+        uuid = properties.core.uuid
 
         # search all
         s = archive.search()
@@ -428,6 +429,12 @@ class TestArchive:
         assert len(s) == 1
         s = archive.search('product_name == "pr.txt"')
         assert len(s) == 0
+
+        # search on uuid
+        s = archive.search('uuid == %s' % uuid)
+        assert len(s) == 1
+        s = archive.search('%s' % uuid)
+        assert len(s) == 1
 
     def test_tag(self, archive):
         properties = self._ingest_file(archive)

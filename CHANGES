@@ -20,6 +20,8 @@
 
 * Added support for sub-queries (specify a sub-query instead of a uuid).
 
+* Added support for searching on UUID directly (without uuid==).
+
 * Several fixes for NOT expressions in queries.
 
 * Improved querying on NULL properties. For example, for 'property != b',
