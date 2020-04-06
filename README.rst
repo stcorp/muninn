@@ -26,14 +26,14 @@ Installation instructions
 =========================
 To be able to use muninn, you will need:
   - A Unix-based operating system (e.g. Linux).
-  - Python version 2.7 or higher, or Python 3.6 or higher.
+  - Python2 version 2.7 or Python3 version 3.6 or higher.
 
-For the postgresql backend:
+For the postgresql database backend:
   - psycopg2 version 2.2 or higher.
   - PostgreSQL version 8.4 or higher.
   - PostGIS version 2.0 or higher.
 
-For the sqlite backend:
+For the sqlite database backend:
   - pysqlite >=2.8.3 or python built with sqlite3 loadable extension support
   - libspatialite 4.2.0 or higher
 
@@ -55,8 +55,8 @@ Optional dependencies:
 
 Muninn is distributed as a source distribution created using setuptools version
 0.6. It can be installed in several ways, for example using pip or by invoking
-setup.py manually. Installation using setup.py requires super user privileges
-in most cases.
+setup.py manually. Installation using setup.py with the default prefix will
+often require super user privileges.
 
 Using pip: ::
 
@@ -275,9 +275,10 @@ The steps to create an archive are:
   2. Create a configuration file describing the archive.
   3. Run muninn-prepare to initialize the archive for use.
 
-When using the PostgreSQL backend, you need to create a PostGIS enabled
-database that muninn can use to store product properties. Multiple archives can
-share the same database, as long as they use a different schema name.
+When using the PostgreSQL database backend, you need to create a PostGIS
+enabled database that muninn can use to store product properties. Multiple
+archives can share the same database, as long as they use a different schema
+name.
 
 Depending on your PostgreSQL installation, creating a database could be as
 simple as: ::
