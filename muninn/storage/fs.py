@@ -40,7 +40,7 @@ class FilesystemStorageBackend(StorageBackend):
     def __init__(self, root, use_symlinks=None, tmp_root=None):
         super(FilesystemStorageBackend, self).__init__()
 
-        self._root = root
+        self._root = os.path.realpath(root)
         self._use_symlinks = use_symlinks or False
         self.supports_symlinks = True
         self._tmp_root = tmp_root
@@ -50,6 +50,7 @@ class FilesystemStorageBackend(StorageBackend):
             tmp_root = self._tmp_root
         else:
             tmp_root = os.path.join(self._root, product.core.archive_path)
+        tmp_root = os.path.realpath(tmp_root)
         util.make_path(tmp_root)
         return tmp_root
 
