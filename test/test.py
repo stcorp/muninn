@@ -485,6 +485,8 @@ class TestArchive:
                 if archive._params['use_enclosing_directory']:
                     target_path = os.path.join(target_path, 'pi.txt')
 
+                target_path = os.path.realpath(target_path)
+
                 assert os.path.isfile(target_path)
                 assert os.readlink(path) == target_path
         else:
