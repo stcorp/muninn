@@ -222,9 +222,11 @@ class SQLiteConnection(object):
 
 def binary_operator_rewriter(operator):
     if operator == '=':
-        return lambda arg0, arg1: '(%s) is (%s)' % (arg0, arg1)
+        return lambda arg0, arg1: '(%s) IS (%s)' % (arg0, arg1)
     elif operator == '!=':
-        return lambda arg0, arg1: '(%s) is not (%s)' % (arg0, arg1)
+        return lambda arg0, arg1: '(%s) IS NOT (%s)' % (arg0, arg1)
+    elif operator == 'LIKE':
+        return lambda arg0, arg1: '(COALESCE(%s,\'\')) LIKE (%s)' % (arg0, arg1)
     else:
         return lambda arg0, arg1: '((%s) %s (%s))' % (arg0, operator, arg1)
 
