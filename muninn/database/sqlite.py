@@ -220,6 +220,15 @@ class SQLiteConnection(object):
         return self._connection.cursor()
 
 
+def binary_operator_rewriter(operator):
+    if operator == '=':
+        return lambda arg0, arg1: '(%s) is (%s)' % (arg0, arg1)
+    elif operator == '!=':
+        return lambda arg0, arg1: '(%s) is not (%s)' % (arg0, arg1)
+    else:
+        return lambda arg0, arg1: '((%s) %s (%s))' % (arg0, operator, arg1)
+
+
 class SQLiteBackend(object):
     def __init__(self, connection_string="", mod_spatialite_path="mod_spatialite", table_prefix=""):
         dbapi2.register_converter("BOOLEAN", lambda x: bool(int(x)))
@@ -495,7 +504,7 @@ class SQLiteBackend(object):
         raise ValueError('Unsupported subscript: %s' % subscript)
 
     def _rewriter_table(self):
-        rewriter_table = sql.default_rewriter_table()
+        rewriter_table = sql.default_rewriter_table(binary_operator_rewriter)
 
         #
         # Timestamp binary minus operator.
