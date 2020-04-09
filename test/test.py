@@ -523,6 +523,9 @@ class TestArchive:
                             'multi',
                             name
                         )
+
+                        target_path = os.path.realpath(target_path)
+
                         assert os.path.isfile(target_path)
                         assert os.readlink(path) == target_path
             else:
