@@ -407,8 +407,6 @@ settings:
 - ``auth_file``: [Optional] JSON file containing the credentials to download
   using muninn-pull
 
-- ``tmp_root``: [Optional] path where temporary data should be stored.
-
 Deprecated settings:
 
 - ``root``: The root path on disk of the archive when using the file system
@@ -479,6 +477,8 @@ backend and may contain the following settings:
 - ``port``: Mandatory. S3 host port.
 - ``access_key``: Mandatory. S3 authentication access key.
 - ``secret_access_key``: Mandatory. S3 authentication secret access key.
+- ``tmp_root``: [Optional] path where temporary data should be stored.
+
 
 Section "swift"
 ----------------
@@ -489,6 +489,8 @@ backend and may contain the following settings:
 - ``user``: Mandatory. Swift authentication user name.
 - ``key``: Mandatory. Swift authentication key.
 - ``authurl``: Mandatory. Swift authentication auth URL.
+- ``tmp_root``: [Optional] path where temporary data should be stored.
+
 
 Example configuration file
 --------------------------

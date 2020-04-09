@@ -20,19 +20,23 @@ class _SwiftConfig(Mapping):
     user = Text()
     key = Text()
     authurl = Text()
+    tmp_root = Text(optional=True)
 
 
-def create(configuration, tmp_root):
+def create(configuration):
     options = config.parse(configuration.get("swift", {}), _SwiftConfig)
     _SwiftConfig.validate(options)
-    return SwiftStorageBackend(tmp_root=tmp_root, **options)
+    return SwiftStorageBackend(**options)
 
 class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate directory, 'dir/' with contents?
-    def __init__(self, container, user, key, authurl, tmp_root):
+    def __init__(self, container, user, key, authurl, tmp_root=None):
         super(SwiftStorageBackend, self).__init__()
 
         self.container = container
         self._root = container
+        if tmp_root:
+            tmp_root = os.path.realpath(tmp_root)
+            util.make_path(tmp_root)
         self._tmp_root = tmp_root
 
         self._conn = swiftclient.Connection(

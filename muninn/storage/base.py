@@ -1,3 +1,5 @@
+import os.path
+
 import muninn.util as util
 
 class StorageBackend(object):
@@ -5,8 +7,8 @@ class StorageBackend(object):
         self.supports_symlinks = False
 
     def get_tmp_root(self, product):
-        tmp_root = self._tmp_root
-        if tmp_root:
+        if self._tmp_root:
+            tmp_root = os.path.join(self._tmp_root, product.core.archive_path)
             util.make_path(tmp_root)
             return tmp_root
 

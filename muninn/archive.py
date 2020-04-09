@@ -53,7 +53,6 @@ class _ArchiveConfig(Mapping):
     product_type_extensions = _ExtensionList(optional=True)
     remote_backend_extensions = _ExtensionList(optional=True)
     auth_file = Text(optional=True)
-    tmp_root = Text(optional=True)
 
 
 def _load_backend_module(name):
@@ -102,10 +101,7 @@ def create(configuration):
 
     # Load and create the storage backend.
     storage_module = _load_storage_module(options.pop("storage", "fs"))
-    tmp_root = None
-    if 'tmp_root' in options:
-        tmp_root = options.pop('tmp_root')
-    storage = storage_module.create(configuration, tmp_root)
+    storage = storage_module.create(configuration)
 
     # Create the archive.
     namespace_extensions = options.pop("namespace_extensions", [])

@@ -22,20 +22,24 @@ class _S3Config(Mapping):
     bucket = Text()
     access_key = Text()
     secret_access_key = Text()
+    tmp_root = Text(optional=True)
 
 
-def create(configuration, tmp_root):
+def create(configuration):
     options = config.parse(configuration.get("s3", {}), _S3Config)
     _S3Config.validate(options)
-    return S3StorageBackend(tmp_root=tmp_root, **options)
+    return S3StorageBackend(**options)
 
 
 class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate directory, 'dir/' with contents?
-    def __init__(self, bucket, host, port, access_key, secret_access_key, tmp_root):
+    def __init__(self, bucket, host, port, access_key, secret_access_key, tmp_root=None):
         super(S3StorageBackend, self).__init__()
 
         self.bucket = bucket
         self._root = bucket
+        if tmp_root:
+            tmp_root = os.path.realpath(tmp_root)
+            util.make_path(tmp_root)
         self._tmp_root = tmp_root
 
         self._resource = boto3.resource(
