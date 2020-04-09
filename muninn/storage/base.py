@@ -12,6 +12,16 @@ class StorageBackend(object):
             util.make_path(tmp_root)
             return tmp_root
 
+    def run_for_product(self, product, fn, use_enclosing_directory):
+        tmp_root = self.get_tmp_root(product)
+        product_path = self.product_path(product)
+        with util.TemporaryDirectory(dir=tmp_root, prefix=".run_for_product-", suffix="-%s" % product.core.uuid.hex) as tmp_path:
+            self.get(product, product_path, tmp_path, use_enclosing_directory)
+
+            # Determine product hash
+            paths = [os.path.join(tmp_path, basename) for basename in os.listdir(tmp_path)]
+            return fn(paths)
+
     def prepare(self):
         # Prepare storage for use.
         raise NotImplementedError()

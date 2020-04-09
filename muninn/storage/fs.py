@@ -56,6 +56,14 @@ class FilesystemStorageBackend(StorageBackend):
         util.make_path(tmp_root)
         return tmp_root
 
+    def run_for_product(self, product, fn, use_enclosing_directory):
+        product_path = self.product_path(product)
+        if use_enclosing_directory:
+            paths = [os.path.join(product_path, basename) for basename in os.listdir(product_path)]
+        else:
+            paths = [product_path]
+        return fn(paths)
+
     def exists(self):
         return os.path.isdir(self._root)
 
