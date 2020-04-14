@@ -275,6 +275,8 @@ Methods
     A commonly used implementation of this method is to return the product
     name, i.e. ``properties.core.product_name``.
 
+    The returned value will be used for the ``physical_name`` property.
+
     This method is optional if ``use_enclosing_directory`` is ``False``.
 
 ``archive_path(self, properties)``
@@ -287,8 +289,8 @@ Methods
     relative path inside the archive where the product will be stored.
 
     A commonly used implementation is to return <product type>/<year>/<month>/
-    <day>/<uuid>/<logical product name>, where the date corresponds to the
-    validity start of the product.
+    <day>/<physical product name>, where the date corresponds to the validity
+    start of the product.
 
     In some cases, a different implementation is required. For example, when
     products cannot be said to cover a time range, as is the case for some
@@ -337,6 +339,9 @@ considered a bug.
 
 Methods
 -------
-``pull(self, archive, product)``
+``pull(self, archive, product, use_enclosing_directory)``
     Download the product specified. The existing product metadata should already
     specify the location of the file(s).
+    If enclosing_directory is True then ``core.physical_name`` indicates the
+    directory in which the product file(s) will be stored, otherwise it
+    indicates the target filename of the product.

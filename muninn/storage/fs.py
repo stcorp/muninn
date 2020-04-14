@@ -74,7 +74,7 @@ class FilesystemStorageBackend(StorageBackend):
             except EnvironmentError as _error:
                 raise Error("unable to remove archive root path '%s' [%s]" % (self._root, _error))
 
-    def product_path(self, product):  # TODO needed?
+    def product_path(self, product):
         return os.path.join(self._root, product.core.archive_path, product.core.physical_name)
 
     def current_archive_path(self, paths):
