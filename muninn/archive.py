@@ -266,9 +266,7 @@ class Archive(object):
             return
 
         # Remove the data associated with the product from disk.
-        plugin = self.product_type_plugin(product.core.product_type)
-        use_enclosing_directory = plugin.use_enclosing_directory
-        self._storage.delete(product_path, product, use_enclosing_directory)
+        self._storage.delete(product_path, product)
 
     def _retrieve(self, product, target_path, use_symlinks=False):
         # Determine the path of the product in storage.

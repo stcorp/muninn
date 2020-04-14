@@ -199,7 +199,7 @@ class FilesystemStorageBackend(StorageBackend):
     def size(self, product_path, use_enclosing_directory):
         return util.product_size(product_path)
 
-    def delete(self, product_path, properties, use_enclosing_directory):
+    def delete(self, product_path, properties):
         if not os.path.lexists(product_path):
             # If the product does not exist, do not consider this an error.
             return

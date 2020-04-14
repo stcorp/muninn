@@ -339,9 +339,12 @@ considered a bug.
 
 Methods
 -------
-``pull(self, archive, product, use_enclosing_directory)``
-    Download the product specified. The existing product metadata should already
-    specify the location of the file(s).
+``pull(self, archive, product, target_path)``
+    Download the product specified.
+    The product should be downloaded in the path indicated by ``target_path``.
+    The function should return the full path(s) to the file(s) that are
+    downloaded.
+    Muninn will then take care that it is put in the
     If enclosing_directory is True then ``core.physical_name`` indicates the
     directory in which the product file(s) will be stored, otherwise it
     indicates the target filename of the product.

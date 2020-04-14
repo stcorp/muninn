@@ -24,24 +24,19 @@ class RemoteBackend(object):
 
 class UrlBackend(RemoteBackend):
 
-    def pull(self, archive, product, use_enclosing_directory):
-        if getattr(product.core, "archive_path", None) is None:
-            raise Error("cannot pull files that do not have archive_path set")
+    def pull(self, archive, product, target_dir):
+        # Define a temp location and download the file
+        file_path = os.path.join(target_dir, product.core.physical_name)
+        downloader = util.Downloader(product.core.remote_url, archive.auth_file())
+        downloader.save(file_path)
+        return [file_path]
 
-        def retrieve_files(tmp_path):
-            # Define a temp location and download the file
-            tmp_file = os.path.join(tmp_path, product.core.physical_name)
-            downloader = util.Downloader(product.core.remote_url, archive.auth_file())
-            downloader.save(tmp_file)
-            return [tmp_file]
+        # TODO: implement extraction of downloaded archives
+        # for ftp and file check if url ends with 'core.physical_name + <archive ext>'
+        # for http/https check the header for the line:
+        #    Content-Disposition: attachment; filename="**********"
+        # end then use this ***** filename to match against core.physical_name + <archive ext>
 
-            # TODO: implement extraction of downloaded archives
-            # for ftp and file check if url ends with 'core.physical_name + <archive ext>'
-            # for http/https check the header for the line:
-            #    Content-Disposition: attachment; filename="**********"
-            # end then use this ***** filename to match against core.physical_name + <archive ext>
-
-        archive._storage.put(None, product, use_enclosing_directory, use_symlinks=False, retrieve_files=retrieve_files)
 
 
 REMOTE_BACKENDS = {
@@ -53,6 +48,9 @@ REMOTE_BACKENDS = {
 
 
 def pull(archive, product, use_enclosing_directory):
+    if getattr(product.core, "archive_path", None) is None:
+        raise Error("cannot pull files that do not have archive_path set")
+
     # determine the backend to use
     backend = None
     url = product.core.remote_url
@@ -63,4 +61,7 @@ def pull(archive, product, use_enclosing_directory):
     if backend is None:
         raise Error("The protocol of '%s' is not supported" % url)
 
-    backend.pull(archive, product, use_enclosing_directory)
+    def retrieve_files(target_dir):
+        return backend.pull(archive, product, target_dir)
+
+    archive._storage.put(None, product, use_enclosing_directory, use_symlinks=False, retrieve_files=retrieve_files)
