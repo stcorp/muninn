@@ -22,11 +22,11 @@ def create(configuration):
         options = {}
         arch_section = configuration.get('archive')
         try:
-            options['root'] = arch_section['root']
+            options['root'] = config.parse(arch_section['root'], Text)
         except KeyError:
             raise ValueError('archive: storage: fs: no value for mandatory item "root"')
         try:
-            options['use_symlinks'] = arch_section['use_symlinks']
+            options['use_symlinks'] = config.parse(arch_section['use_symlinks'], Boolean)
         except KeyError:
             pass
     else:
