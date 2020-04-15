@@ -185,7 +185,7 @@ class MetaMapping(type):
     def is_optional(cls, name):
         return cls._items[name][1]
 
-    def is_index(cls, name):
+    def has_index(cls, name):
         return cls._items[name][2]
 
     def __len__(cls):

@@ -283,7 +283,7 @@ class SQLiteBackend(object):
                 result.append("SELECT AddGeometryColumn('%s', '%s', 4326, 'GEOMETRY', 2)" %
                               (self._core_table_name, name,))
         for name in schema:
-            if schema.is_index(name):
+            if schema.has_index(name):
                 result.append("CREATE INDEX idx_%s_%s ON %s (%s)" %
                               (self._core_table_name, name, self._core_table_name, name))
 
@@ -312,7 +312,7 @@ class SQLiteBackend(object):
                     result.append("SELECT AddGeometryColumn('%s', '%s', 4326, 'GEOMETRY', 2)" %
                                   (self._table_name(namespace), name))
             for name in schema:
-                if schema.is_index(name):
+                if schema.has_index(name):
                     result.append("CREATE INDEX idx_%s_%s ON %s (%s)" %
                                   (self._table_name(namespace), name, self._table_name(namespace), name))
 

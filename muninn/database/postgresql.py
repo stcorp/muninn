@@ -235,7 +235,7 @@ class PostgresqlBackend(object):
 
         schema = self._namespace_schema("core")
         for name in schema:
-            if schema.is_index(name):
+            if schema.has_index(name):
                 result.append("CREATE INDEX idx_%s_%s ON %s (%s)" %
                               (self._core_table_name, name, self._core_table_name, name))
 
@@ -257,7 +257,7 @@ class PostgresqlBackend(object):
 
             schema = self._namespace_schema(namespace)
             for name in schema:
-                if schema.is_index(name):
+                if schema.has_index(name):
                     result.append("CREATE INDEX idx_%s_%s ON %s (%s)" %
                                   (self._table_name(namespace), name, self._table_name(namespace), name))
 
