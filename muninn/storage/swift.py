@@ -91,9 +91,15 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
                 if use_enclosing_directory:
                     key = os.path.join(key, os.path.basename(path))
 
-                # Upload file
-                with open(path, 'rb') as f:
-                    self._conn.put_object(self.container, key, contents=f.read())
+                if os.path.isdir(path):
+                    for fname in os.listdir(path): # TODO nesting?
+                        fkey = os.path.join(key, fname)
+                        fpath = os.path.join(path, fname)
+                        with open(fpath, 'rb') as f:
+                            self._conn.put_object(self.container, fkey, contents=f.read())
+                else:
+                    with open(path, 'rb') as f:
+                        self._conn.put_object(self.container, key, contents=f.read())
 
     def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=None):
         if use_symlinks:

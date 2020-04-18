@@ -249,7 +249,7 @@ class TestArchive:
 
         return properties
 
-    def _ingest_dir(self, archive, use_symlinks=False, intra=False):
+    def _ingest_multi_file(self, archive, use_symlinks=False, intra=False):
         paths = glob.glob('data/multi/*')
         sizes = [os.path.getsize(p) for p in paths]
 
@@ -316,6 +316,28 @@ class TestArchive:
 
         return properties
 
+    def _ingest_dir(self, archive, use_symlinks=False, intra=False):
+        # TODO add nested sub-directories?
+        dir_ = 'data/multi'
+
+        properties = archive.ingest(
+            [dir_],
+#            verify_hash=True,
+            use_symlinks=use_symlinks
+        )
+
+        for name in ('1.txt', '2.txt'):
+            size = os.path.getsize(os.path.join(dir_, name))
+
+            path = os.path.join(archive._params['archive_path'], 'multi')
+            if archive._params['use_enclosing_directory']:
+                path = os.path.join(path, 'multi')
+            path = os.path.join(path, name)
+
+            assert archive._checker.exists(path, size)
+
+        return properties
+
     def _pull(self, archive):
         URL = 'http://archive.debian.org/README'
         if PY3:
@@ -374,36 +396,40 @@ class TestArchive:
 
         assert not archive._checker.exists(path)
 
-    def test_ingest_dir(self, archive):
+    def test_ingest_multi_file(self, archive):
         # copy
-        self._ingest_dir(archive)
+        self._ingest_multi_file(archive)
 
         archive.remove()
 
         # symlink
         if archive._params['storage'] == 'fs':
-            self._ingest_dir(archive, use_symlinks=True)
+            self._ingest_multi_file(archive, use_symlinks=True)
 
         elif archive._params['use_enclosing_directory']:
             with pytest.raises(muninn.exceptions.Error) as excinfo:
-                self._ingest_dir(archive, use_symlinks=True)
+                self._ingest_multi_file(archive, use_symlinks=True)
             assert 'storage backend does not support symlinks' in str(excinfo)
 
         archive.remove()
 
         # intra-archive symlinks
         if archive._params['storage'] == 'fs':
-            self._ingest_dir(archive, use_symlinks=True, intra=True)
+            self._ingest_multi_file(archive, use_symlinks=True, intra=True)
 
-    def test_remove_dir(self, archive):
+    def test_remove_multi_file(self, archive):
         if archive._params['use_enclosing_directory']:
-            self._ingest_dir(archive)
+            self._ingest_multi_file(archive)
 
             archive.remove()
 
             for name in ('1.txt', '2.txt'):
                 path = os.path.join(archive._params['archive_path'], 'multi', name)
                 assert not archive._checker.exists(path)
+
+    def test_ingest_dir(self, archive):
+        # copy
+        self._ingest_dir(archive)
 
     def test_pull(self, archive):
         self._pull(archive)
@@ -450,9 +476,9 @@ class TestArchive:
         properties = self._ingest_file(archive)
         archive.rebuild_properties(properties.core.uuid)
 
-    def test_rebuild_properties_dir(self, archive):
+    def test_rebuild_properties_multi_file(self, archive):
         if archive._params['use_enclosing_directory']:
-            properties = self._ingest_dir(archive)
+            properties = self._ingest_multi_file(archive)
             archive.rebuild_properties(properties.core.uuid)
 
     def test_retrieve_file(self, archive):
@@ -495,9 +521,9 @@ class TestArchive:
                     archive.retrieve(target_path=tmp_path, use_symlinks=True)
             assert 'storage backend does not support symlinks' in str(excinfo)
 
-    def test_retrieve_dir(self, archive):
+    def test_retrieve_multi_file(self, archive):
         if archive._params['use_enclosing_directory'] == True:
-            self._ingest_dir(archive)
+            self._ingest_multi_file(archive)
 
             # copy
             with muninn.util.TemporaryDirectory() as tmp_path:
@@ -550,9 +576,9 @@ class TestArchive:
                 tf = tarfile.open(tarfile_path)
                 assert tf.getmember('pi.txt/pi.txt').size == 1015
 
-    def test_export_dir(self, archive):
+    def test_export_multi_file(self, archive):
         if archive._params['use_enclosing_directory']:
-            self._ingest_dir(archive)
+            self._ingest_multi_file(archive)
 
             with muninn.util.TemporaryDirectory() as tmp_path:
                 archive.export(format='tgz', target_path=tmp_path)
@@ -592,11 +618,11 @@ class TestArchive:
             path = os.path.join(path, 'pi.txt')
         assert archive._checker.exists(path)
 
-    def test_rebuild_properties_dir(self, archive):
+    def test_rebuild_properties_multi_file(self, archive):
         names = ['1.txt', '2.txt']
 
         if archive._params['use_enclosing_directory']:
-            properties = self._ingest_dir(archive)
+            properties = self._ingest_multi_file(archive)
 
             for name in names:
                 oldpath = os.path.join(

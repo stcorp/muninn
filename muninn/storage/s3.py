@@ -96,8 +96,13 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
                 if use_enclosing_directory:
                     key = os.path.join(key, os.path.basename(path))
 
-                # Upload file
-                self._resource.Object(self.bucket, key).upload_file(path)
+                if os.path.isdir(path):
+                    for fname in os.listdir(path): # TODO nesting?
+                        fkey = os.path.join(key, fname)
+                        fpath = os.path.join(path, fname)
+                        self._resource.Object(self.bucket, fkey).upload_file(fpath)
+                else:
+                    self._resource.Object(self.bucket, key).upload_file(path)
 
     def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=None):
         # TODO use_enclosing_directory not used?
