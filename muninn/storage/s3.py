@@ -114,7 +114,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             target = os.path.join(target_path, basename)
             self._resource.Object(self.bucket, obj.key).download_file(target)
 
-    def delete(self, product_path, properties, use_enclosing_directory):
+    def delete(self, product_path, properties):
         for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=product_path):  # TODO slow?
             obj.delete()
 

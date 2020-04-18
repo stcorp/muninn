@@ -56,7 +56,7 @@ class StorageBackend(object):
         # Return product storage size
         raise NotImplementedError()
 
-    def delete(self, product_path, properties, use_enclosing_directory):
+    def delete(self, product_path, properties):
         # Delete product file(s) from storage
         raise NotImplementedError()
 

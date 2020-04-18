@@ -119,12 +119,16 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
             with open(target, 'wb') as f:
                 f.write(binary)
 
-    def delete(self, product_path, properties, use_enclosing_directory):
-        if use_enclosing_directory:
-            for data in self._conn.get_container(self.container, path=product_path)[1]:
-                self._conn.delete_object(self.container, data['name'])
+    def _object_keys(self, product_path):
+        sub_objects = self._conn.get_container(self.container, path=product_path)[1]
+        if sub_objects:
+            return [sub_object['name'] for sub_object in sub_objects]
         else:
-            self._conn.delete_object(self.container, product_path)
+            return [product_path]
+
+    def delete(self, product_path, properties):
+        for key in self._object_keys(product_path):
+             self._conn.delete_object(self.container, key)
 
     def size(self, product_path, use_enclosing_directory):
         total = 0
