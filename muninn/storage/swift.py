@@ -45,6 +45,10 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
             authurl=authurl
         )
 
+    def _object_keys(self, product_path):
+        sub_objects = self._conn.get_container(self.container, prefix=product_path)[1]
+        return [sub_object['name'] for sub_object in sub_objects]
+
     def prepare(self):
         if not self.exists():
             self._conn.put_container(self.container)
@@ -105,26 +109,13 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
         if use_symlinks:
             raise Error("Swift storage backend does not support symlinks")
 
-        if use_enclosing_directory:
-            for data in self._conn.get_container(self.container, path=product_path)[1]:
-                basename = os.path.basename(data['name'])
-                target = os.path.join(target_path, basename)
-
-                binary = self._conn.get_object(self.container, data['name'])[1]
-                with open(target, 'wb') as f:
-                    f.write(binary)
-        else:
-            binary = self._conn.get_object(self.container, product_path)[1]
-            target = os.path.join(target_path, os.path.basename(product_path))
+        for key in self._object_keys(product_path):
+            basename = os.path.basename(key)
+            target = os.path.join(target_path, basename)
+            util.make_path(os.path.dirname(target))
+            binary = self._conn.get_object(self.container, key)[1]
             with open(target, 'wb') as f:
                 f.write(binary)
-
-    def _object_keys(self, product_path):
-        sub_objects = self._conn.get_container(self.container, path=product_path)[1]
-        if sub_objects:
-            return [sub_object['name'] for sub_object in sub_objects]
-        else:
-            return [product_path]
 
     def delete(self, product_path, properties):
         for key in self._object_keys(product_path):
