@@ -317,12 +317,12 @@ class TestArchive:
         return properties
 
     def _ingest_dir(self, archive, use_symlinks=False, intra=False):
-        # TODO add nested sub-directories?
+        # TODO add nested sub-directory
         dir_ = 'data/multi'
 
         properties = archive.ingest(
             [dir_],
-#            verify_hash=True,
+            verify_hash=True,
             use_symlinks=use_symlinks
         )
 
