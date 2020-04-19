@@ -105,7 +105,6 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
                     self._resource.Object(self.bucket, key).upload_file(path)
 
     def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=None):
-        # TODO use_enclosing_directory not used?
         if use_symlinks:
             raise Error("S3 storage backend does not support symlinks")
 
@@ -120,11 +119,8 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
 
     def size(self, product_path, use_enclosing_directory):
         total = 0
-        if use_enclosing_directory:
-            for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=product_path):  # TODO slow?
-                total += obj.size
-        else:
-            total = self._resource.Object(self.bucket, product_path).content_length
+        for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=product_path):  # TODO slow?
+            total += obj.size
         return total
 
     def move(self, product, archive_path, use_enclosing_directory):

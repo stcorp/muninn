@@ -123,13 +123,8 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
 
     def size(self, product_path, use_enclosing_directory):
         total = 0
-        if use_enclosing_directory:
-            for data in self._conn.get_container(self.container, path=product_path)[1]:
-                total += data['bytes']
-        else:
-            data = self._conn.get_object(self.container, product_path)  # TODO slow?
-            total = int(data[0]['content-length'])
-
+        for data in self._conn.get_container(self.container, prefix=product_path)[1]:
+            total += data['bytes']
         return total
 
     def move(self, product, archive_path, use_enclosing_directory):
@@ -137,17 +132,10 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
         if product.core.archive_path == archive_path:
             return
 
-        old_key = self.product_path(product)
-        moves = []
+        product_path = self.product_path(product)
+        new_product_path = os.path.join(archive_path, product.core.physical_name)
 
-        if use_enclosing_directory:
-            for data in self._conn.get_container(self.container, path=old_key)[1]:
-                new_key = os.path.join(archive_path, product.core.physical_name, os.path.basename(data['name']))
-                moves.append((data['name'], new_key))
-        else:
-            new_key = os.path.join(archive_path, product.core.physical_name)
-            moves.append((old_key, new_key))
-
-        for old_key, new_key in moves:
-            self._conn.copy_object(self.container, old_key, os.path.join(self.container, new_key))
-            self._conn.delete_object(self.container, old_key)
+        for key in self._object_keys(product_path):
+            new_key = os.path.normpath(os.path.join(new_product_path, os.path.relpath(key, product_path)))
+            self._conn.copy_object(self.container, key, os.path.join(self.container, new_key))
+            self._conn.delete_object(self.container, key)
