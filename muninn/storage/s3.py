@@ -124,28 +124,22 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
         for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=product_path):  # TODO slow?
             obj.delete()
 
-    def size(self, product_path, use_enclosing_directory):
+    def size(self, product_path):
         total = 0
         for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=product_path):  # TODO slow?
             total += obj.size
         return total
 
-    def move(self, product, archive_path, use_enclosing_directory):
+    def move(self, product, archive_path):
         # Ignore if product already there
         if product.core.archive_path == archive_path:
             return
 
-        old_key = self.product_path(product)
-        moves = []
+        product_path = self.product_path(product)
+        new_product_path = os.path.join(archive_path, product.core.physical_name)
 
-        if use_enclosing_directory:
-            for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=old_key):  # TODO slow?
-                new_key = os.path.join(archive_path, product.core.physical_name, os.path.basename(obj.key))
-                moves.append((obj.key, new_key))
-        else:
-            new_key = os.path.join(archive_path, product.core.physical_name)
-            moves.append((old_key, new_key))
+        for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=product_path):  # TODO slow?
+            new_key = os.path.normpath(os.path.join(new_product_path, os.path.relpath(obj.key, product_path)))
 
-        for old_key, new_key in moves:
-            self._resource.Object(self.bucket, new_key).copy_from(CopySource=os.path.join(self.bucket, old_key))
-            self._resource.Object(self.bucket, old_key).delete()
+            self._resource.Object(self.bucket, new_key).copy_from(CopySource=os.path.join(self.bucket, obj.key))
+            self._resource.Object(self.bucket, obj.key).delete()

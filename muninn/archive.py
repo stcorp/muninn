@@ -252,10 +252,9 @@ class Archive(object):
             product.update(properties)
         plugin = self.product_type_plugin(product.core.product_type)
         plugin_archive_path = plugin.archive_path(product)
-        use_enclosing_directory = plugin.use_enclosing_directory
 
         if product_archive_path != plugin_archive_path:
-            self._storage.move(product, plugin_archive_path, use_enclosing_directory)
+            self._storage.move(product, plugin_archive_path)
             return plugin_archive_path
 
     def _remove(self, product):
@@ -777,7 +776,7 @@ class Archive(object):
 
             # reactivate and update size
             product_path = self._product_path(product)
-            size = self._storage.size(product_path, use_enclosing_directory)
+            size = self._storage.size(product_path)
             metadata = {'active': True, 'archive_date': self._database.server_time_utc(), 'size': size}
             self.update_properties(Struct({'core': metadata}), product.core.uuid)
 
@@ -837,7 +836,7 @@ class Archive(object):
                 pass
 
         # update size
-        properties.core.size = self._storage.size(product_path, use_enclosing_directory)
+        properties.core.size = self._storage.size(product_path)
 
         # Make sure product is stored in the correct location
         if not use_current_path:
@@ -890,8 +889,7 @@ class Archive(object):
 
         # update size
         product_path = self._product_path(product)
-        use_enclosing_directory = plugin.use_enclosing_directory
-        product.core.size = self._storage.size(product_path, use_enclosing_directory)
+        product.core.size = self._storage.size(product_path)
 
         # verify product hash.
         if verify_hash and 'hash' in product.core:

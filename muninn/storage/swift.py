@@ -127,13 +127,13 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
         for key in self._object_keys(product_path):
              self._conn.delete_object(self.container, key)
 
-    def size(self, product_path, use_enclosing_directory):
+    def size(self, product_path):
         total = 0
         for data in self._conn.get_container(self.container, prefix=product_path)[1]:
             total += data['bytes']
         return total
 
-    def move(self, product, archive_path, use_enclosing_directory):
+    def move(self, product, archive_path):
         # Ignore if product already there
         if product.core.archive_path == archive_path:
             return

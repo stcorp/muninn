@@ -52,7 +52,7 @@ class StorageBackend(object):
         # Retrieve product file(s) from storage
         raise NotImplementedError()
 
-    def size(self, product_path, use_enclosing_directory):
+    def size(self, product_path):
         # Return product storage size
         raise NotImplementedError()
 
@@ -60,6 +60,6 @@ class StorageBackend(object):
         # Delete product file(s) from storage
         raise NotImplementedError()
 
-    def move(self, product, archive_path, use_enclosing_directory):
+    def move(self, product, archive_path):
         # Move product
         raise NotImplementedError()
