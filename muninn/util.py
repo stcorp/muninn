@@ -193,6 +193,7 @@ def hash_file(path, block_size=65536, hash_func=hashlib.sha1):
 # NB. os.path.exists() is False for a dangling symbolic link, even if the symbolic link itself does exist.
 def product_hash(roots, resolve_root=True, resolve_links=False, force_encapsulation=False,
                  hash_func=hashlib.sha1, block_size=65536):
+
     def _product_hash_rec(root, resolve_root, resolve_links, hash_func, block_size):
         if os.path.islink(root) and not (resolve_root or resolve_links):
             # Hash link _contents_.

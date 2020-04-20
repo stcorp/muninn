@@ -318,20 +318,20 @@ class TestArchive:
 
     def _ingest_dir(self, archive, use_symlinks=False, intra=False):
         # TODO add nested sub-directory
-        dir_ = 'data/multi'
+        dir_ = 'data/dir'
 
         properties = archive.ingest(
             [dir_],
-            verify_hash=True,
+#            verify_hash=True,
             use_symlinks=use_symlinks
         )
 
-        for name in ('1.txt', '2.txt'):
+        for name in ('pi.txt', 'multi/1.txt', 'multi/2.txt'):
             size = os.path.getsize(os.path.join(dir_, name))
 
-            path = os.path.join(archive._params['archive_path'], 'multi')
+            path = os.path.join(archive._params['archive_path'], 'dir')
             if archive._params['use_enclosing_directory']:
-                path = os.path.join(path, 'multi')
+                path = os.path.join(path, 'dir')
             path = os.path.join(path, name)
 
             assert archive._checker.exists(path, size)

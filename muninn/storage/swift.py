@@ -96,11 +96,13 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
                     key = os.path.join(key, os.path.basename(path))
 
                 if os.path.isdir(path):
-                    for fname in os.listdir(path): # TODO nesting?
-                        fkey = os.path.join(key, fname)
-                        fpath = os.path.join(path, fname)
-                        with open(fpath, 'rb') as f:
-                            self._conn.put_object(self.container, fkey, contents=f.read())
+                    for root, subdirs, files in os.walk(path):
+                        rel_root = os.path.relpath(root, path)
+                        for filename in files:
+                            filekey = os.path.normpath(os.path.join(key, rel_root, filename))
+                            filepath = os.path.join(root, filename)
+                            with open(filepath, 'rb') as f:
+                                self._conn.put_object(self.container, filekey, contents=f.read())
                 else:
                     with open(path, 'rb') as f:
                         self._conn.put_object(self.container, key, contents=f.read())

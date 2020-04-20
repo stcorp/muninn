@@ -97,10 +97,12 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
                     key = os.path.join(key, os.path.basename(path))
 
                 if os.path.isdir(path):
-                    for fname in os.listdir(path): # TODO nesting?
-                        fkey = os.path.join(key, fname)
-                        fpath = os.path.join(path, fname)
-                        self._resource.Object(self.bucket, fkey).upload_file(fpath)
+                    for root, subdirs, files in os.walk(path):
+                        rel_root = os.path.relpath(root, path)
+                        for filename in files:
+                            filekey = os.path.normpath(os.path.join(key, rel_root, filename))
+                            filepath = os.path.join(root, filename)
+                            self._resource.Object(self.bucket, filekey).upload_file(filepath)
                 else:
                     self._resource.Object(self.bucket, key).upload_file(path)
 
