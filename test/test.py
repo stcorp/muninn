@@ -322,7 +322,7 @@ class TestArchive:
 
         properties = archive.ingest(
             [dir_],
-#            verify_hash=True,
+            verify_hash=True,
             use_symlinks=use_symlinks
         )
 

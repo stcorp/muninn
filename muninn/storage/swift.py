@@ -111,9 +111,13 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
         if use_symlinks:
             raise Error("Swift storage backend does not support symlinks")
 
+        archive_path = product.core.archive_path
+
         for key in self._object_keys(product_path):
-            basename = os.path.basename(key)
-            target = os.path.join(target_path, basename)
+            rel_path = os.path.relpath(key, archive_path)
+            if use_enclosing_directory:
+                rel_path = '/'.join(rel_path.split('/')[1:])
+            target = os.path.normpath(os.path.join(target_path, rel_path))
             util.make_path(os.path.dirname(target))
             binary = self._conn.get_object(self.container, key)[1]
             with open(target, 'wb') as f:

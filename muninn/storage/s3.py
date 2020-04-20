@@ -110,9 +110,14 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
         if use_symlinks:
             raise Error("S3 storage backend does not support symlinks")
 
+        archive_path = product.core.archive_path
+
         for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=product_path):  # TODO slow?
-            basename = os.path.basename(obj.key)
-            target = os.path.join(target_path, basename)
+            rel_path = os.path.relpath(obj.key, archive_path)
+            if use_enclosing_directory:
+                rel_path = '/'.join(rel_path.split('/')[1:])
+            target = os.path.normpath(os.path.join(target_path, rel_path))
+            util.make_path(os.path.dirname(target))
             self._resource.Object(self.bucket, obj.key).download_file(target)
 
     def delete(self, product_path, properties):
