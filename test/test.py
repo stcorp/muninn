@@ -431,6 +431,21 @@ class TestArchive:
         # copy
         self._ingest_dir(archive)
 
+        # TODO: fs: symlinks/intra
+
+    def test_remove_dir(self, archive):
+        self._ingest_dir(archive)
+
+        archive.remove()
+
+        for name in ('pi.txt', 'multi/1.txt', 'multi/2.txt'):  # TODO merge existence checks
+            path = os.path.join(archive._params['archive_path'], 'dir')
+            if archive._params['use_enclosing_directory']:
+                path = os.path.join(path, 'dir')
+            path = os.path.join(path, name)
+
+            assert not archive._checker.exists(path)
+
     def test_pull(self, archive):
         self._pull(archive)
 
@@ -471,15 +486,6 @@ class TestArchive:
         assert len(s) == 1
         s = archive.search('has_tag("nothing")')
         assert len(s) == 0
-
-    def test_rebuild_properties_file(self, archive):
-        properties = self._ingest_file(archive)
-        archive.rebuild_properties(properties.core.uuid)
-
-    def test_rebuild_properties_multi_file(self, archive):
-        if archive._params['use_enclosing_directory']:
-            properties = self._ingest_multi_file(archive)
-            archive.rebuild_properties(properties.core.uuid)
 
     def test_retrieve_file(self, archive):
         self._ingest_file(archive)
@@ -560,6 +566,18 @@ class TestArchive:
                         archive.retrieve(target_path=tmp_path, use_symlinks=True)
                 assert 'storage backend does not support symlinks' in str(excinfo)
 
+    def test_retrieve_dir(self, archive):  # TODO fs: symlink/intra
+        self._ingest_dir(archive)
+
+        with muninn.util.TemporaryDirectory() as tmp_path:
+            archive.retrieve(target_path=tmp_path)
+
+            for name in ('dir/pi.txt', 'dir/multi/1.txt', 'dir/multi/2.txt'):
+                path = os.path.join(tmp_path, name)
+
+                assert os.path.isfile(path)
+                assert os.path.getsize(path) == os.path.getsize(os.path.join('data', name))
+
     def test_export_file(self, archive):
         if archive._params['use_enclosing_directory']:  # TODO plugin doesn't compress single files?
             self._ingest_file(archive)
@@ -618,7 +636,7 @@ class TestArchive:
             path = os.path.join(path, 'pi.txt')
         assert archive._checker.exists(path)
 
-    def test_rebuild_properties_multi_file(self, archive):
+    def test_rebuild_properties_multi_file(self, archive):  # TODO would rebuild_properties_dir add anything?
         names = ['1.txt', '2.txt']
 
         if archive._params['use_enclosing_directory']:
