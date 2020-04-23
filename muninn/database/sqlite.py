@@ -220,17 +220,6 @@ class SQLiteConnection(object):
         return self._connection.cursor()
 
 
-def binary_operator_rewriter(operator):
-    if operator == '=':
-        return lambda arg0, arg1: '(%s) IS (%s)' % (arg0, arg1)
-    elif operator == '!=':
-        return lambda arg0, arg1: '(%s) IS NOT (%s)' % (arg0, arg1)
-    elif operator == 'LIKE':
-        return lambda arg0, arg1: '(COALESCE(%s,\'\')) LIKE (%s)' % (arg0, arg1)
-    else:
-        return lambda arg0, arg1: '((%s) %s (%s))' % (arg0, operator, arg1)
-
-
 class SQLiteBackend(object):
     def __init__(self, connection_string="", mod_spatialite_path="mod_spatialite", table_prefix=""):
         dbapi2.register_converter("BOOLEAN", lambda x: bool(int(x)))
@@ -506,7 +495,7 @@ class SQLiteBackend(object):
         raise ValueError('Unsupported subscript: %s' % subscript)
 
     def _rewriter_table(self):
-        rewriter_table = sql.default_rewriter_table(binary_operator_rewriter)
+        rewriter_table = sql.default_rewriter_table()
 
         #
         # Timestamp binary minus operator.
@@ -518,7 +507,7 @@ class SQLiteBackend(object):
         # Enable escape sequences with the LIKE operator
         #
         rewriter_table[Prototype("~=", (Text, Text), Boolean)] = \
-            lambda arg0, arg1: "((%s) LIKE (%s) ESCAPE '\\' AND (%s) IS NOT NULL)" % (arg0, arg1, arg0)
+            lambda arg0, arg1: "(%s) LIKE (%s) ESCAPE '\\'" % (arg0, arg1)
 
         #
         # Functions.

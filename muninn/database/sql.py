@@ -77,6 +77,10 @@ def unary_operator_rewriter(operator):
     return lambda arg0: "%s (%s)" % (operator, arg0)
 
 
+def binary_operator_rewriter(operator):
+    return lambda arg0, arg1: "(%s) %s (%s)" % (arg0, operator, arg1)
+
+
 def unary_function_rewriter(name):
     return lambda arg0: "%s(%s)" % (name, arg0)
 
@@ -85,7 +89,7 @@ def binary_function_rewriter(name):
     return lambda arg0, arg1: "%s(%s, %s)" % (name, arg0, arg1)
 
 
-def default_rewriter_table(binary_operator_rewriter):
+def default_rewriter_table():
     #
     # Table of all supported operators and functions that can be rewritten in standard SQL and without backend specific
     # knowledge. NB. This is a subset of the set of all supported operators and functions. Database specific backends

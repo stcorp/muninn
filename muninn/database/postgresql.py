@@ -196,17 +196,6 @@ class PostgresqlConnection(object):
         return self._connection.encoding
 
 
-def binary_operator_rewriter(operator):
-    if operator == '=':
-        return lambda arg0, arg1: '(%s) IS NOT DISTINCT FROM (%s)' % (arg0, arg1)
-    elif operator == '!=':
-        return lambda arg0, arg1: '(%s) IS DISTINCT FROM (%s)' % (arg0, arg1)
-    elif operator == 'LIKE':
-        return lambda arg0, arg1: '(COALESCE(%s,\'\')) LIKE (%s)' % (arg0, arg1)
-    else:
-        return lambda arg0, arg1: '((%s) %s (%s))' % (arg0, operator, arg1)
-
-
 class PostgresqlBackend(object):
     def __init__(self, connection_string="", table_prefix=""):
         self._connection = PostgresqlConnection(connection_string)
@@ -451,7 +440,7 @@ class PostgresqlBackend(object):
         raise ValueError('Unsupported subscript: %s' % subscript)
 
     def _rewriter_table(self):
-        rewriter_table = sql.default_rewriter_table(binary_operator_rewriter)
+        rewriter_table = sql.default_rewriter_table()
 
         #
         # Timestamp binary minus operator.
