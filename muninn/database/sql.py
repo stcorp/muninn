@@ -15,7 +15,7 @@ import re
 
 from muninn.exceptions import *
 from muninn.function import Prototype
-from muninn.language import parse_and_analyze, Literal
+from muninn.language import parse_and_analyze, Literal, Name
 from muninn.schema import *
 from muninn.visitor import Visitor
 
@@ -322,13 +322,28 @@ class _WhereExpressionVisitor(Visitor):
             if 'core' in where_namespaces:
                 where_namespaces.remove('core')
 
-            arguments = [where_expr, where_namespaces]
+            return rewriter_func(where_expr, where_namespaces)
 
         # non-sub-query
         else:
             arguments = [super(_WhereExpressionVisitor, self).visit(argument) for argument in visitable.arguments]
+            sql_expr = rewriter_func(*arguments)
 
-        return rewriter_func(*arguments)
+            # SQL-improved NULL checking (e.g., field != "blah" also matches NULL)
+            if visitable.name in ('==', '!=', '~='):
+                if (isinstance(visitable.arguments[0], Name) and isinstance(visitable.arguments[1], Literal)):
+                    name = arguments[0]
+                elif (isinstance(visitable.arguments[0], Literal) and isinstance(visitable.arguments[1], Name)):
+                    name = arguments[1]
+                else:
+                    return sql_expr
+
+                if visitable.name == '!=':
+                    return '(%s OR %s IS NULL)' % (sql_expr, name)
+                else:
+                    return '(%s AND %s IS NOT NULL)' % (sql_expr, name)
+
+            return sql_expr
 
     def default(self, visitable):
         raise Error("unsupported abstract syntax tree node type: %r" % type(visitable).__name__)
