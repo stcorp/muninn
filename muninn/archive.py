@@ -146,8 +146,6 @@ class Archive(object):
 
     def __init__(self, backend, storage, use_symlinks=False, cascade_grace_period=0, max_cascade_cycles=25,
                  auth_file=None, root=None):
-        self._root = root
-
         self._cascade_grace_period = datetime.timedelta(minutes=cascade_grace_period)
         self._max_cascade_cycles = max_cascade_cycles
         self._auth_file = auth_file
@@ -1104,7 +1102,7 @@ class Archive(object):
 
     def root(self):
         """Return the archive root path."""
-        return self._root
+        return self._storage._root
 
     def search(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], property_names=[]):
         """Search the product catalogue for products matching the specified search expression.
