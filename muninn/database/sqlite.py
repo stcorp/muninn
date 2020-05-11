@@ -187,24 +187,6 @@ class SQLiteConnection(object):
         self._connection.close()
         self._connection = None
 
-    def _get_db_type_id(self, typename):
-        try:
-            cursor = self._connection.cursor()
-            try:
-                cursor.execute("SELECT NULL::%s" % typename.lower())
-                if not cursor.description:
-                    raise InternalError("unable to retrieve type object id of database type: \"%s\"" % typename.upper())
-                type_id = cursor.description[0][1]
-            finally:
-                cursor.close()
-        except:
-            self._connection.rollback()
-            raise
-        else:
-            self._connection.commit()
-
-        return type_id
-
     def close(self):
         if self._in_transaction:
             raise InternalError("unable to close the connection with the database while a transaction is in progress")
