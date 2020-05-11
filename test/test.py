@@ -33,6 +33,7 @@ os.environ['MUNINN_CONFIG_PATH'] = '.'
 import shutil
 
 from muninn.schema import Mapping, optional, Text
+from muninn.geometry import Polygon, LinearRing, Point
 
 CFG = ConfigParser()
 CFG.read(u'test.cfg')
@@ -682,6 +683,9 @@ class TestQuery:
         archive.update_properties(muninn.Struct({'mynamespace': {'hello': 'hohoho'}}), self.uuid_a, True)
         archive.update_properties(muninn.Struct({'mynamespace': {'hello': 'hohoho'}}), self.uuid_b, True)
 
+        polygon = Polygon([LinearRing([Point(0,0), Point(4,0), Point(4,4), Point(0,4)])])
+        archive.update_properties(muninn.Struct({'core': {'footprint': polygon}}), self.uuid_c, True)
+
         archive.link(self.uuid_b, [self.uuid_a])
         archive.link(self.uuid_c, [self.uuid_a, self.uuid_b])
 
@@ -791,9 +795,33 @@ class TestQuery:
         assert len(s) == 1
 
         # namespace/core property
-#        s = archive.search('is_defined(core)') # TODO fails under postgresql?
-#        assert len(s) == 3
+        s = archive.search('is_defined(core)') # TODO fails under postgresql?
+        if archive._params['database'] == 'sqlite':
+            assert len(s) == 3
         s = archive.search('is_defined(mynamespace)')
         assert len(s) == 2
         s = archive.search('is_defined(physical_name)')
         assert len(s) == 3
+
+    def test_Geometry(self, archive):
+        self._prep_data(archive)
+
+        s = archive.search('covers(core.footprint, POINT (1.0 3.0))')
+        assert len(s) == 1
+        assert s[0].core.uuid == self.uuid_c
+
+        s = archive.search('not covers(core.footprint, POINT (1.0 3.0))')
+        if archive._params['database'] == 'postgresql':
+            assert len(s) == 0  # TODO sqlite/postgresql difference
+        else:
+            assert len(s) == 2
+
+        s = archive.search('covers(core.footprint, POINT (5.0 5.0))')
+        assert len(s) == 0
+
+        s = archive.search('not covers(core.footprint, POINT (5.0 5.0))')
+        if archive._params['database'] == 'postgresql':
+            assert len(s) == 1  # TODO sqlite/postgresql difference
+            assert s[0].core.uuid == self.uuid_c
+        else:
+            assert len(s) == 3
