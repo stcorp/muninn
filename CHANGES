@@ -3,6 +3,9 @@
 
 * Added a storage backend framework, including S3 and Swift backends.
 
+* Added support for pg8000 as a fallback postgresql driver (used
+  when psycopg2 is not available).
+
 * Changed configuration file format due to new storage backends:
   - renamed `backend` parameter to `database` in `archive` section
   - added `storage` parameter to `archive` section

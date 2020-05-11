@@ -8,10 +8,17 @@ from muninn._compat import dictkeys, dictvalues, is_python2_unicode
 
 import re
 import functools
-import psycopg2
-import psycopg2.errorcodes
-import psycopg2.extensions
-import psycopg2.extras
+
+try:
+    import psycopg2
+    import psycopg2.errorcodes
+    import psycopg2.extensions
+    import psycopg2.extras
+    _backend = psycopg2
+except ImportError:
+    import pg8000
+    pg8000.paramstyle = 'pyformat'
+    _backend = pg8000
 
 import muninn.config as config
 import muninn.database.sql as sql
@@ -22,6 +29,89 @@ from muninn.exceptions import *
 from muninn.function import Prototype
 from muninn.schema import *
 from muninn.struct import Struct
+
+PG_UNIQUE_VIOLATION = '23505'
+
+
+def _get_db_type_id(connection, typename):
+    try:
+        cursor = connection.cursor()
+        try:
+            cursor.execute("SELECT NULL::%s" % typename.lower())
+            if not cursor.description:
+                raise InternalError("unable to retrieve type object id of database type: \"%s\"" % typename.upper())
+            type_id = cursor.description[0][1]
+        finally:
+            cursor.close()
+    except:
+        connection.rollback()
+        raise
+    else:
+        connection.commit()
+
+    return type_id
+
+
+def geometry_recv(data, offset, length):
+    return ewkb.decode_ewkb(data[offset:offset+length])
+
+
+def geometry_send(geometry):
+    return ewkb.encode_ewkb(geometry)
+
+
+def _connect_pg8000(connection_string):
+    _connection = pg8000.connect(user='postgres', password='postgres')
+
+    geography_oid = _get_db_type_id(_connection, "geography")
+    _connection.pg_types[geography_oid] = (pg8000.core.FC_BINARY, geometry_recv)
+    for type_ in (
+        geometry.Point,
+        geometry.Polygon,
+        geometry.LineString,
+        geometry.MultiPoint,
+        geometry.MultiPolygon,
+        geometry.MultiLineString,
+    ):
+        _connection.py_types[type_] = (geography_oid, pg8000.core.FC_BINARY, geometry_send)
+
+    return _connection
+
+
+def _adapt_geometry(geometry):
+    """Return the hexadecimal extended well known binary format (hexewkb) representation of a Geometry instance."""
+    return psycopg2.extensions.AsIs("'%s'" % ewkb.encode_hexewkb(geometry))
+
+
+def _cast_geography(hexewkb, cursor):
+    """Construct a Geometry instance from its hexadecimal extended well known binary format (hexewkb) representation."""
+    if hexewkb is None:
+        return hexewkb
+    return ewkb.decode_hexewkb(hexewkb)
+
+
+def _connect_psycopg2(connection_string):
+    _connection = psycopg2.connect(connection_string)
+
+    # Register adapter and cast for the UUID type.
+    psycopg2.extras.register_uuid(conn_or_curs=_connection)
+
+    # Register adapter for the Geometry type.
+    psycopg2.extensions.register_adapter(geometry.Geometry, _adapt_geometry)
+
+    # Register cast for the Geometry type.
+    geography_oid = _get_db_type_id(_connection, "geography")
+    geography_type = psycopg2.extensions.new_type((geography_oid,), "GEOGRAPHY", _cast_geography)
+    psycopg2.extensions.register_type(geography_type, _connection)
+
+    return _connection
+
+
+try:
+    psycopg2
+    _connect = _connect_psycopg2
+except NameError:
+    _connect = _connect_pg8000
 
 
 class _PostgresqlConfig(Mapping):
@@ -43,64 +133,50 @@ class PostgresqlError(Error):
         super(PostgresqlError, self).__init__(message)
 
 
-def translate_psycopg_errors(func):
-    """Decorator that translates psycopg2 exceptions into muninn exceptions."""
+def translate_errors(func):
+    """Decorator that translates db 2.0 api exceptions into muninn exceptions."""
     @functools.wraps(func)
-    def translate_psycopg_errors_(*args, **kwargs):
+    def translate_errors_(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except psycopg2.Error as _error:
+        except _backend.Error as _error:
+            message = None
+
+            # psycopg2
             try:
                 message = _error.diag.message_primary
+                if message is not None:
+                    try:
+                        message_detail = _error.diag.message_detail
+                        if message_detail:
+                            message += " [" + message_detail + "]"
+                    except AttributeError:
+                        pass
             except AttributeError:
-                message = None
+                pass
 
-            if message:
-                try:
-                    message_detail = _error.diag.message_detail
+            # pg8000
+            if message is None:
+                try: # pg8000
+                    args = _error.args
+                    if len(args) == 1:
+                        message = str(args[0])
+                    elif len(args) >= 4:
+                        message = str(args[3])
                 except AttributeError:
-                    message_detail = None
+                    pass
 
-                if message_detail:
-                    message += " [" + message_detail + "]"
-            else:
-                # Remove newlines and excessive whitespace from the original Postgresql exception message.
-                message = " ".join(str(_error).split())
+            # fallback
+            if message is None:
+                message = ' '.join(str(_error).split())
 
             raise PostgresqlError(message)
 
-    return translate_psycopg_errors_
-
-
-def swallow_psycopg2_errors(error_codes):
-    """Decorator that swallows a set of specific psycopg2 exceptions."""
-    def swallow_psycopg2_errors_(func):
-        @functools.wraps(func)
-        def swallow_psycopg2_errors__(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except psycopg2.Error as _error:
-                if _error.pgcode not in error_codes:
-                    raise
-
-        return swallow_psycopg2_errors__
-    return swallow_psycopg2_errors_
-
-
-def _adapt_geometry(geometry):
-    """Return the hexadecimal extended well known binary format (hexewkb) representation of a Geometry instance."""
-    return psycopg2.extensions.AsIs("'%s'" % ewkb.encode_hexewkb(geometry))
-
-
-def _cast_geography(hexewkb, cursor):
-    """Construct a Geometry instance from its hexadecimal extended well known binary format (hexewkb) representation."""
-    if hexewkb is None:
-        return hexewkb
-    return ewkb.decode_hexewkb(hexewkb)
+    return translate_errors_
 
 
 class PostgresqlConnection(object):
-    """Wrapper for a psycopg2 database connection that defers (re)connection until an attempt is made to use the
+    """Wrapper for a database connection that defers (re)connection until an attempt is made to use the
     connection.
 
     Only non-nested transactions are supported, no auto-commit or nested transactions. A transaction can be started
@@ -142,40 +218,12 @@ class PostgresqlConnection(object):
 
     def _connect(self):
         # Re-establish the connection to the database.
-        self._connection = psycopg2.connect(self._connection_string)
-
-        # Register adapter and cast for the UUID type.
-        psycopg2.extras.register_uuid(conn_or_curs=self._connection)
-
-        # Register adapter for the Geometry type.
-        psycopg2.extensions.register_adapter(geometry.Geometry, _adapt_geometry)
-
-        # Register cast for the Geometry type.
-        geography_oid = self._get_db_type_id("geography")
-        geography_type = psycopg2.extensions.new_type((geography_oid,), "GEOGRAPHY", _cast_geography)
-        psycopg2.extensions.register_type(geography_type, self._connection)
+        self._connection = _connect(self._connection_string)
 
     def _disconnect(self):
         self._connection.close()
         self._connection = None
 
-    def _get_db_type_id(self, typename):
-        try:
-            cursor = self._connection.cursor()
-            try:
-                cursor.execute("SELECT NULL::%s" % typename.lower())
-                if not cursor.description:
-                    raise InternalError("unable to retrieve type object id of database type: \"%s\"" % typename.upper())
-                type_id = cursor.description[0][1]
-            finally:
-                cursor.close()
-        except:
-            self._connection.rollback()
-            raise
-        else:
-            self._connection.commit()
-
-        return type_id
 
     def close(self):
         if self._in_transaction:
@@ -407,10 +455,11 @@ class PostgresqlBackend(object):
                 cursor = self._connection.cursor()
                 try:
                     cursor.execute(query, (uuid, source_uuid, uuid, source_uuid))
-                except psycopg2.Error as _error:
+                except _backend.Error as _error:
                     # There is still a small chance due to concurrency that the link already exists.
                     # For those cases we swallow the exception.
-                    if _error.pgcode != psycopg2.errorcodes.UNIQUE_VIOLATION:
+                    # TODO pg8000
+                    if not hasattr(_error, 'pgcode') or _error.pgcode != PG_UNIQUE_VIOLATION:
                         raise
                 finally:
                     cursor.close()
@@ -538,10 +587,11 @@ class PostgresqlBackend(object):
                 cursor = self._connection.cursor()
                 try:
                     cursor.execute(query, (uuid, tag, uuid, tag))
-                except psycopg2.Error as _error:
+                except _backend.Error as _error:
                     # There is still a small chance due to concurrency that the tag already exists.
                     # For those cases we swallow the exception.
-                    if _error.pgcode != psycopg2.errorcodes.UNIQUE_VIOLATION:
+                    # TODO pg8000
+                    if not hasattr(_error, 'pgcode') or _error.pgcode != PG_UNIQUE_VIOLATION:
                         raise
                 finally:
                     cursor.close()
@@ -643,7 +693,7 @@ class PostgresqlBackend(object):
         unpacked_properties = Struct()
         schema = self._namespace_schema(namespace)
         for identifier, value in zip(description, values):
-            # We may get unicode from the psycopg2 connection
+            # We may get unicode from the (psycopg2) connection
             # if, possibly by a third party, the UNICODE adapter is loaded.
             # Muninn assumes strs
             if is_python2_unicode(value):
@@ -684,7 +734,7 @@ class PostgresqlBackend(object):
     def _validate_namespace_properties(self, namespace, properties, partial=False):
         self._namespace_schema(namespace).validate(properties, partial)
 
-    @translate_psycopg_errors
+    @translate_errors
     def count(self, where="", parameters={}):
         query, query_parameters = self._sql_builder.build_count_query(where, parameters)
 
@@ -697,27 +747,27 @@ class PostgresqlBackend(object):
             finally:
                 cursor.close()
 
-    @translate_psycopg_errors
+    @translate_errors
     def delete_product_properties(self, uuid):
         with self._connection:
             self._delete_product_properties(uuid)
 
-    @translate_psycopg_errors
+    @translate_errors
     def derived_products(self, uuid):
         with self._connection:
             return self._derived_products(uuid)
 
-    @translate_psycopg_errors
+    @translate_errors
     def destroy(self):
         self._drop_tables()
 
-    @translate_psycopg_errors
+    @translate_errors
     def disconnect(self):
         """Drop the connection to the database in order to free up resources. The connection will be re-established
         automatically when required."""
         self._connection.close()
 
-    @translate_psycopg_errors
+    @translate_errors
     def exists(self):
         with self._connection:
             query = "SELECT relname FROM pg_class WHERE relname=%s" % (self._placeholder(),)
@@ -729,7 +779,7 @@ class PostgresqlBackend(object):
             finally:
                 cursor.close()
 
-    @translate_psycopg_errors
+    @translate_errors
     def find_products_without_available_source(self, product_type=None, grace_period=datetime.timedelta()):
         """Return the core properties of all products that are linked to one or more source products, all of which are
            unavailable. A product is unavailable if there is no data associated with it, only properties. Products that
@@ -743,7 +793,7 @@ class PostgresqlBackend(object):
         with self._connection:
             return self._find_products_without_available_source(product_type, grace_period)
 
-    @translate_psycopg_errors
+    @translate_errors
     def find_products_without_source(self, product_type=None, grace_period=datetime.timedelta(),
                                      archived_only=False):
         """Return the core properties of all products that are not linked to any source products.
@@ -761,7 +811,7 @@ class PostgresqlBackend(object):
                                            self._table_name, self._placeholder, self._placeholder,
                                            self._rewriter_property)
 
-    @translate_psycopg_errors
+    @translate_errors
     def insert_product_properties(self, properties):
         with self._connection:
             self._insert_namespace_properties(properties.core.uuid, "core", properties.core)
@@ -770,11 +820,11 @@ class PostgresqlBackend(object):
                     continue
                 self._insert_namespace_properties(properties.core.uuid, ns_name, ns_properties)
 
-    @translate_psycopg_errors
+    @translate_errors
     def link(self, uuid, source_uuids):
         self._link(uuid, source_uuids)
 
-    @translate_psycopg_errors
+    @translate_errors
     def prepare(self, dry_run=False):
         sqls = self._create_tables_sql()
         if not dry_run:
@@ -782,7 +832,7 @@ class PostgresqlBackend(object):
                 self._execute_list(sqls)
         return sqls
 
-    @translate_psycopg_errors
+    @translate_errors
     def search(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], property_names=[]):
         query, query_parameters, query_description = \
             self._sql_builder.build_search_query(where, order_by, limit, parameters, namespaces, property_names)
@@ -795,7 +845,7 @@ class PostgresqlBackend(object):
             finally:
                 cursor.close()
 
-    @translate_psycopg_errors
+    @translate_errors
     def server_time_utc(self):
         with self._connection:
             cursor = self._connection.cursor()
@@ -806,12 +856,12 @@ class PostgresqlBackend(object):
             finally:
                 cursor.close()
 
-    @translate_psycopg_errors
+    @translate_errors
     def source_products(self, uuid):
         with self._connection:
             return self._source_products(uuid)
 
-    @translate_psycopg_errors
+    @translate_errors
     def summary(self, where="", parameters=None, aggregates=None, group_by=None, group_by_tag=False, order_by=None):
         query, query_parameters, query_description = self._sql_builder.build_summary_query(
             where, parameters, aggregates, group_by, group_by_tag, order_by)
@@ -824,26 +874,26 @@ class PostgresqlBackend(object):
             finally:
                 cursor.close()
 
-    @translate_psycopg_errors
+    @translate_errors
     def tag(self, uuid, tags):
         self._tag(uuid, tags)
 
-    @translate_psycopg_errors
+    @translate_errors
     def tags(self, uuid):
         with self._connection:
             return self._tags(uuid)
 
-    @translate_psycopg_errors
+    @translate_errors
     def unlink(self, uuid, source_uuids=None):
         with self._connection:
             self._unlink(uuid, source_uuids)
 
-    @translate_psycopg_errors
+    @translate_errors
     def untag(self, uuid, tags=None):
         with self._connection:
             self._untag(uuid, tags)
 
-    @translate_psycopg_errors
+    @translate_errors
     def update_product_properties(self, properties, uuid=None, new_namespaces=None):
         new_namespaces = new_namespaces or []
         if "core" in properties:
