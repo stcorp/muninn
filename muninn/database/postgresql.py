@@ -63,7 +63,8 @@ def geometry_send(geometry):
 
 
 def _connect_pg8000(connection_string):
-    _connection = pg8000.connect(user='postgres', password='postgres')
+    kwargs = dict(arg.split('=') for arg in connection_string.split(' '))
+    _connection = pg8000.connect(**kwargs)
 
     geography_oid = _get_db_type_id(_connection, "geography")
     _connection.pg_types[geography_oid] = (pg8000.core.FC_BINARY, geometry_recv)
