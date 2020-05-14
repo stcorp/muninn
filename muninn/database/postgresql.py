@@ -15,10 +15,12 @@ try:
     import psycopg2.extensions
     import psycopg2.extras
     _backend = psycopg2
+    _backend_name = 'psycopg2'
 except ImportError:
     import pg8000
     pg8000.paramstyle = 'pyformat'
     _backend = pg8000
+    _backend_name = 'pg8000'
 
 import muninn.config as config
 import muninn.database.sql as sql
@@ -143,28 +145,21 @@ def translate_errors(func):
             message = None
 
             # psycopg2
-            try:
-                message = _error.diag.message_primary
-                if message is not None:
-                    try:
-                        message_detail = _error.diag.message_detail
-                        if message_detail:
-                            message += " [" + message_detail + "]"
-                    except AttributeError:
-                        pass
-            except AttributeError:
-                pass
-
-            # pg8000
-            if message is None:
-                try: # pg8000
-                    args = _error.args
-                    if len(args) == 1:
-                        message = str(args[0])
-                    elif len(args) >= 4:
-                        message = str(args[3])
+            if _backend_name == 'psycopg2':
+                try:
+                    message = _error.diag.message_primary
+                    if message is not None:
+                        try:
+                            message_detail = _error.diag.message_detail
+                            if message_detail:
+                                message += " [" + message_detail + "]"
+                        except AttributeError:
+                            pass
                 except AttributeError:
                     pass
+
+            elif _backend_name == 'pg8000':
+                pass # TODO pg8000: issue filed on github
 
             # fallback
             if message is None:
@@ -243,6 +238,22 @@ class PostgresqlConnection(object):
     def encoding(self):
         return self._connection.encoding
 
+
+def _swallow_unique_violation(_error):
+    # There is still a small chance due to concurrency that a link/tag already exists.
+    # For those cases we swallow the exception.
+    swallow = False
+
+    if _backend_name == 'psycopg2':
+        if hasattr(_error, 'pgcode') and _error.pgcode == PG_UNIQUE_VIOLATION:
+            swallow = True
+
+    elif _backend_name == 'pg8000': # TODO positional - issue filed on github
+        if len(_error.args) >= 3 and _error.args[2] == PG_UNIQUE_VIOLATION:
+            swallow = True
+
+    if not swallow:
+        raise
 
 class PostgresqlBackend(object):
     def __init__(self, connection_string="", table_prefix=""):
@@ -456,11 +467,7 @@ class PostgresqlBackend(object):
                 try:
                     cursor.execute(query, (uuid, source_uuid, uuid, source_uuid))
                 except _backend.Error as _error:
-                    # There is still a small chance due to concurrency that the link already exists.
-                    # For those cases we swallow the exception.
-                    # TODO pg8000
-                    if not hasattr(_error, 'pgcode') or _error.pgcode != PG_UNIQUE_VIOLATION:
-                        raise
+                    _swallow_unique_violation(_error)
                 finally:
                     cursor.close()
 
@@ -588,11 +595,7 @@ class PostgresqlBackend(object):
                 try:
                     cursor.execute(query, (uuid, tag, uuid, tag))
                 except _backend.Error as _error:
-                    # There is still a small chance due to concurrency that the tag already exists.
-                    # For those cases we swallow the exception.
-                    # TODO pg8000
-                    if not hasattr(_error, 'pgcode') or _error.pgcode != PG_UNIQUE_VIOLATION:
-                        raise
+                    _swallow_unique_violation(_error)
                 finally:
                     cursor.close()
 
