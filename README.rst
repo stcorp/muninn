@@ -29,7 +29,7 @@ To be able to use muninn, you will need:
   - Python2 version 2.7 or Python3 version 3.6 or higher.
 
 For the postgresql database backend:
-  - psycopg2 version 2.2 or higher (alternatively, pg8000 version 1.10 or higher)
+  - psycopg2 version 2.2 or higher (alternatively, pg8000 version 1.13 or higher)
   - PostgreSQL version 8.4 or higher.
   - PostGIS version 2.0 or higher.
 

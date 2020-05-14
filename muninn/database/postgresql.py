@@ -160,7 +160,10 @@ def translate_errors(func):
                     pass
 
             elif _backend_name == 'pg8000':
-                pass # TODO pg8000: issue filed on github
+                try:
+                    message = _error.args[0]['M']
+                except (TypeError, IndexError, AttributeError, KeyError):
+                    pass
 
             # fallback
             if message is None:
@@ -246,12 +249,18 @@ def _swallow_unique_violation(_error):
     swallow = False
 
     if _backend_name == 'psycopg2':
-        if hasattr(_error, 'pgcode') and _error.pgcode == PG_UNIQUE_VIOLATION:
-            swallow = True
+        try:
+            if _error.pgcode == PG_UNIQUE_VIOLATION:
+                swallow = True
+        except AttributeError:
+            pass
 
     elif _backend_name == 'pg8000': # TODO positional - issue filed on github
-        if len(_error.args) >= 3 and _error.args[2] == PG_UNIQUE_VIOLATION:
-            swallow = True
+        try:
+            if _error.args[0]['C'] == PG_UNIQUE_VIOLATION:
+                swallow = True
+        except (TypeError, IndexError, AttributeError, KeyError):
+            pass
 
     if not swallow:
         raise
