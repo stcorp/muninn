@@ -456,7 +456,7 @@ class TestArchive:
 
         assert archive._checker.exists(path)
 
-    def test_search(self, archive):
+    def test_search(self, archive):  # TODO move to TestQuery?
         properties = self._ingest_file(archive)
         uuid = properties.core.uuid
 
@@ -472,21 +472,31 @@ class TestArchive:
         s = archive.search('product_name == "pr.txt"')
         assert len(s) == 0
 
-        # search on uuid
-        s = archive.search('uuid == %s' % uuid)
-        assert len(s) == 1
-        s = archive.search('%s' % uuid)
-        assert len(s) == 1
+        # search on uuid (using count)
+        c = archive.count('uuid == %s' % uuid)
+        assert c == 1
+        c = archive.count('%s' % uuid)
+        assert c == 1
 
-    def test_tag(self, archive):
+    def test_tags(self, archive):
         properties = self._ingest_file(archive)
+        uuid = properties.core.uuid
 
-        archive.tag(properties.core.uuid, 'mytag')
+        archive.tag(uuid, ['green', 'blue'])
 
-        s = archive.search('has_tag("mytag")')
+        s = archive.search('has_tag("green")')  # TODO move to TestQuery?
         assert len(s) == 1
-        s = archive.search('has_tag("nothing")')
+        s = archive.search('has_tag("yellow")')
         assert len(s) == 0
+
+        archive.tag(uuid, 'yellow')
+        tags = archive.tags(uuid)
+        assert set(tags) == set(['green', 'blue', 'yellow'])
+
+        archive.untag(uuid, ['blue', 'yellow'])
+        archive.untag(uuid, 'blue')
+        tags = archive.tags(uuid)
+        assert tags == ['green']
 
     def test_retrieve_file(self, archive):
         self._ingest_file(archive)
