@@ -472,11 +472,11 @@ class TestArchive:
         s = archive.search('product_name == "pr.txt"')
         assert len(s) == 0
 
-        # search on uuid (using count)
-        c = archive.count('uuid == %s' % uuid)
-        assert c == 1
-        c = archive.count('%s' % uuid)
-        assert c == 1
+        # search on uuid
+        s = archive.search('uuid == %s' % uuid)
+        assert len(s) == 1
+        s = archive.search('%s' % uuid)
+        assert len(s) == 1
 
     def test_tags(self, archive):
         properties = self._ingest_file(archive)
@@ -702,6 +702,9 @@ class TestQuery:
     def test_IsDerivedFrom(self, archive):
         self._prep_data(archive)
 
+        uuids = archive.derived_products(self.uuid_a)
+        assert len(uuids) == 2
+
         for (count, name, uuid) in [
             (2, 'a.txt', self.uuid_a),
             (1, 'b.txt', self.uuid_b),
@@ -730,6 +733,27 @@ class TestQuery:
         assert len(s) == 2
         s = archive.search('not (is_derived_from(physical_name==\"a.txt\") or is_derived_from(is_derived_from(physical_name==\"a.txt\")))')
         assert len(s) == 1
+
+    def test_IsSourceOf(self, archive):
+        self._prep_data(archive)
+
+        uuids = archive.source_products(self.uuid_b)
+        assert len(uuids) == 1
+
+        c = archive.count('is_source_of(%s)' % self.uuid_a)
+        assert c == 0
+        c = archive.count('is_source_of(%s)' % self.uuid_b)
+        assert c == 1
+        c = archive.count('is_source_of(%s)' % self.uuid_c)
+        assert c == 2
+
+        c = archive.count('is_source_of(physical_name==\"c.txt\")')
+        assert c == 2
+        c = archive.count('not is_source_of(physical_name==\"c.txt\")')
+        assert c == 1
+
+        c = archive.count('not is_source_of(%s)' % self.uuid_b)
+        assert c == 2
 
     def test_Namespaces(self, archive):
         self._prep_data(archive)
