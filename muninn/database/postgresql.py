@@ -638,30 +638,30 @@ class PostgresqlBackend(object):
             query = "DELETE FROM %s WHERE uuid = %s" % (self._link_table_name, self._placeholder())
             parameters = (uuid,)
         else:
-            query = "DELETE FROM %s WHERE uuid = %s AND source_uuid IN %s" % (self._link_table_name,
-                                                                              self._placeholder(), self._placeholder())
-            parameters = (uuid, tuple(source_uuids))
-
-        cursor = self._connection.cursor()
-        try:
-            cursor.execute(query, parameters)
-        finally:
-            cursor.close()
+            for source_uuid in source_uuids:
+                query = "DELETE FROM %s WHERE uuid = %s AND source_uuid = %s" % (self._link_table_name,
+                                                                                 self._placeholder(), self._placeholder())
+                parameters = (uuid, source_uuid)
+                cursor = self._connection.cursor()
+                try:
+                    cursor.execute(query, parameters)
+                finally:
+                    cursor.close()
 
     def _untag(self, uuid, tags=None):
         if tags is None:
             query = "DELETE FROM %s WHERE uuid = %s" % (self._tag_table_name, self._placeholder())
             parameters = (uuid,)
         else:
-            query = "DELETE FROM %s WHERE uuid = %s AND tag IN %s" % (self._tag_table_name, self._placeholder(),
-                                                                      self._placeholder())
-            parameters = (uuid, tuple(tags))
-
-        cursor = self._connection.cursor()
-        try:
-            cursor.execute(query, parameters)
-        finally:
-            cursor.close()
+            for tag in tags:
+                query = "DELETE FROM %s WHERE uuid = %s AND tag = %s" % (self._tag_table_name,
+                                                                         self._placeholder(), self._placeholder())
+                parameters = (uuid, tag)
+                cursor = self._connection.cursor()
+                try:
+                    cursor.execute(query, parameters)
+                finally:
+                    cursor.close()
 
     def _update_namespace_properties(self, uuid, name, properties):
         self._validate_namespace_properties(name, properties, partial=True)
