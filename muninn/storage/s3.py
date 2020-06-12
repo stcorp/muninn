@@ -74,7 +74,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
         return os.path.join(product.core.archive_path, product.core.physical_name)
 
     def current_archive_path(self, paths):
-        raise Error("S3 storage backend does not (yet) support ingesting already ingested products")
+        raise Error("S3 storage backend does not support ingesting already archived products")
 
     def put(self, paths, properties, use_enclosing_directory, use_symlinks=None, move_files=False, retrieve_files=None):
         if use_symlinks:
