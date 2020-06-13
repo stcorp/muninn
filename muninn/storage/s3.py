@@ -22,6 +22,7 @@ class _S3Config(Mapping):
     bucket = Text()
     access_key = Text()
     secret_access_key = Text()
+    prefix = Text(optional=True)
     tmp_root = Text(optional=True)
 
 
@@ -32,10 +33,11 @@ def create(configuration):
 
 
 class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate directory, 'dir/' with contents?
-    def __init__(self, bucket, host, port, access_key, secret_access_key, tmp_root=None):
+    def __init__(self, bucket, host, port, access_key, secret_access_key, prefix="", tmp_root=None):
         super(S3StorageBackend, self).__init__()
 
         self.bucket = bucket
+        self._prefix = prefix
         self._root = bucket
         if tmp_root:
             tmp_root = os.path.realpath(tmp_root)
@@ -50,25 +52,33 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
         )
 
     def prepare(self):
-        if not self.exists():
-            self._resource.create_bucket(Bucket=self.bucket)
+        if not self._prefix:
+            if not self.exists():
+                self._resource.create_bucket(Bucket=self.bucket)
 
     def exists(self):
-        try:
-            # TODO ugly trick using creation_date
-            creation_date = self._resource.Bucket(self.bucket).creation_date
-            return (creation_date is not None)
-        except botocore.exceptions.ClientError as e:
-            if e.response['Error']['Code'] == "404":
-                return False
-            else:
-                raise
+        if self._prefix:
+            objs = list(self._resource.Bucket(self.bucket).objects.limit(count=1).filter(Prefix=self._prefix))
+            return len(objs) == 1:
+        else:
+            try:
+                # TODO ugly trick using creation_date
+                creation_date = self._resource.Bucket(self.bucket).creation_date
+                return (creation_date is not None)
+            except botocore.exceptions.ClientError as e:
+                if e.response['Error']['Code'] == "404":
+                    return False
+                else:
+                    raise
 
-    def destroy(self):  # TODO individually deleting objects?
-        if self.exists():
-            bucket = self._resource.Bucket(self.bucket)
-            bucket.objects.all().delete()
-            bucket.delete()
+    def destroy(self):
+        if self._prefix:
+            self._resource.Bucket(self.bucket).objects.filter(Prefix=self._prefix).delete()
+        else:
+            if self.exists():
+                bucket = self._resource.Bucket(self.bucket)
+                bucket.objects.all().delete()
+                bucket.delete()
 
     def product_path(self, product):  # TODO needed?
         return os.path.join(product.core.archive_path, product.core.physical_name)
@@ -111,8 +121,9 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             raise Error("S3 storage backend does not support symlinks")
 
         archive_path = product.core.archive_path
+        prefix = self._prefix + product_path
 
-        for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=product_path):  # TODO slow?
+        for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=prefix):
             rel_path = os.path.relpath(obj.key, archive_path)
             if use_enclosing_directory:
                 rel_path = '/'.join(rel_path.split('/')[1:])
@@ -121,12 +132,14 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             self._resource.Object(self.bucket, obj.key).download_file(target)
 
     def delete(self, product_path, properties):
-        for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=product_path):  # TODO slow?
+        prefix = self._prefix + product_path
+        for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=prefix):
             obj.delete()
 
     def size(self, product_path):
         total = 0
-        for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=product_path):  # TODO slow?
+        prefix = self._prefix + product_path
+        for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=prefix):
             total += obj.size
         return total
 
@@ -135,8 +148,8 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
         if product.core.archive_path == archive_path:
             return
 
-        product_path = self.product_path(product)
-        new_product_path = os.path.join(archive_path, product.core.physical_name)
+        product_path = self._prefix + self.product_path(product)
+        new_product_path = self._prefix + os.path.join(archive_path, product.core.physical_name)
 
         for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=product_path):  # TODO slow?
             new_key = os.path.normpath(os.path.join(new_product_path, os.path.relpath(obj.key, product_path)))

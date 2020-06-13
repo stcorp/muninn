@@ -177,9 +177,6 @@ class Archive(object):
 
         return self._storage.run_for_product(product, util.product_hash, plugin.use_enclosing_directory)
 
-    def _catalogue_exists(self):
-        return self._database.exists()
-
     def _establish_invariants(self):
         repeat = True
         cycle = 0
@@ -384,7 +381,7 @@ class Archive(object):
 
         """
         # Call the backend to remove anything related to the archive.
-        if self._catalogue_exists():
+        if self._database.exists():
             self._database.destroy()
 
     def export(self, where="", parameters={}, target_path=os.path.curdir, format=None):
@@ -677,9 +674,9 @@ class Archive(object):
         """
         if not force:
             if self._storage.exists():
-                raise Error("archive directory already exists")
-            if self._catalogue_exists():
-                raise Error("catalogue already exists")
+                raise Error("storage already exists")
+            if self._database.exists():
+                raise Error("database already exists")
 
         # Remove anything related to the archive.
         self.destroy()
