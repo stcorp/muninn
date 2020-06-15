@@ -528,9 +528,6 @@ class Archive(object):
         if not paths:
             raise Error("nothing to ingest")
 
-        if not self._storage.exists():
-            raise Error("archive root path '%s' does not exist" % self._storage._root)
-
         # Use absolute paths to make error messages more useful, and to avoid broken links when ingesting a product
         # using symbolic links.
         paths = [os.path.realpath(path) for path in paths]

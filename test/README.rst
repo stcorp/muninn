@@ -8,6 +8,7 @@ Steps to run the Muninn tests:
   - pytest
   - boto3
   - swiftclient
+  - psycopg2 or pg8000 (latter is used if former not available)
 - Configure the following:
   - A Postgresql server
   - an S3 server (e.g., Minio)

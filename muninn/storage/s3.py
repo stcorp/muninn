@@ -33,11 +33,14 @@ def create(configuration):
 
 
 class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate directory, 'dir/' with contents?
-    def __init__(self, bucket, host, port, access_key, secret_access_key, prefix="", tmp_root=None):
+    def __init__(self, bucket, host, port, access_key, secret_access_key, prefix='', tmp_root=None):
         super(S3StorageBackend, self).__init__()
 
         self.bucket = bucket
+        if prefix and not prefix.endswith('/'):
+            prefix += '/'
         self._prefix = prefix
+
         self._root = bucket
         if tmp_root:
             tmp_root = os.path.realpath(tmp_root)
@@ -51,34 +54,38 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             endpoint_url='http://%s:%s' % (host, port),
         )
 
+    def _bucket_exists(self):
+        try:
+            # TODO ugly trick using creation_date
+            creation_date = self._resource.Bucket(self.bucket).creation_date
+            return (creation_date is not None)
+        except botocore.exceptions.ClientError as e:
+            if e.response['Error']['Code'] == "404":
+                return False
+            else:
+                raise
+
+    def _prefix_exists(self):
+        if self._prefix: # TODO created but still empty archive
+            objs = list(self._resource.Bucket(self.bucket).objects.limit(count=1).filter(Prefix=self._prefix))
+            return len(objs) == 1
+        else:
+            return True
+
     def prepare(self):
-        if not self._prefix:
-            if not self.exists():
-                self._resource.create_bucket(Bucket=self.bucket)
+        if not self._bucket_exists():
+            self._resource.create_bucket(Bucket=self.bucket)
 
     def exists(self):
-        if self._prefix:
-            objs = list(self._resource.Bucket(self.bucket).objects.limit(count=1).filter(Prefix=self._prefix))
-            return len(objs) == 1:
-        else:
-            try:
-                # TODO ugly trick using creation_date
-                creation_date = self._resource.Bucket(self.bucket).creation_date
-                return (creation_date is not None)
-            except botocore.exceptions.ClientError as e:
-                if e.response['Error']['Code'] == "404":
-                    return False
-                else:
-                    raise
+        return self._bucket_exists() and self._prefix_exists()
 
     def destroy(self):
         if self._prefix:
             self._resource.Bucket(self.bucket).objects.filter(Prefix=self._prefix).delete()
-        else:
-            if self.exists():
-                bucket = self._resource.Bucket(self.bucket)
-                bucket.objects.all().delete()
-                bucket.delete()
+        elif self._bucket_exists():
+            bucket = self._resource.Bucket(self.bucket)
+            bucket.objects.all().delete()
+            bucket.delete()
 
     def product_path(self, product):  # TODO needed?
         return os.path.join(product.core.archive_path, product.core.physical_name)
@@ -100,7 +107,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
 
             # Upload file(s)
             for path in paths:
-                key = os.path.join(archive_path, physical_name)
+                key = self._prefix + os.path.join(archive_path, physical_name)
 
                 # Add enclosing dir
                 if use_enclosing_directory:
@@ -124,7 +131,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
         prefix = self._prefix + product_path
 
         for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=prefix):
-            rel_path = os.path.relpath(obj.key, archive_path)
+            rel_path = os.path.relpath(obj.key, self._prefix + archive_path)
             if use_enclosing_directory:
                 rel_path = '/'.join(rel_path.split('/')[1:])
             target = os.path.normpath(os.path.join(target_path, rel_path))

@@ -473,6 +473,7 @@ This section contains backend specific settings for the S3 storage
 backend and may contain the following settings:
 
 - ``bucket``: Mandatory. The bucket containing the archive.
+- ``prefix``: [Optional] archive prefix within bucket.
 - ``host``: Mandatory. S3 host URL.
 - ``port``: Mandatory. S3 host port.
 - ``access_key``: Mandatory. S3 authentication access key.
