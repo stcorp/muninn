@@ -563,8 +563,10 @@ class PostgresqlBackend(object):
             sql.as_is("now() AT TIME ZONE 'UTC'")
 
         def is_defined_rewriter(arg):
-            if arg is None: # namespace
-                return '1 > 0'
+            namespace_name = arg.split('.')
+            if len(namespace_name) == 1:
+                return 'EXISTS (SELECT 1 FROM %s WHERE uuid = %s.uuid)' % \
+                    (arg, self._core_table_name)
             else:
                 return "(%s) IS NOT NULL" % arg
 

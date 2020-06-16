@@ -829,9 +829,8 @@ class TestQuery:
         assert len(s) == 1
 
         # namespace/core property
-        s = archive.search('is_defined(core)') # TODO fails under postgresql?
-        if archive._params['database'] == 'sqlite':
-            assert len(s) == 3
+        s = archive.search('is_defined(core)')
+        assert len(s) == 3
         s = archive.search('is_defined(mynamespace)')
         assert len(s) == 2
         s = archive.search('is_defined(physical_name)')
