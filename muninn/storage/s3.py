@@ -56,9 +56,8 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
 
     def _bucket_exists(self):
         try:
-            # TODO ugly trick using creation_date
-            creation_date = self._resource.Bucket(self.bucket).creation_date
-            return (creation_date is not None)
+            self._resource.meta.client.head_bucket(Bucket=self.bucket)
+            return True
         except botocore.exceptions.ClientError as e:
             if e.response['Error']['Code'] == "404":
                 return False
