@@ -16,10 +16,6 @@ Steps to run the Muninn tests:
 - Update settings in test.cfg (DEFAULT section: desired combinations for which to run all tests)
 - Run:
 
-$ python3 -m pytest test.py
-
-  Or:
-
 $ python -m pytest test.py
 
 
