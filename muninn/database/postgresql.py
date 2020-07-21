@@ -11,16 +11,16 @@ import functools
 
 try:
     import psycopg2
-    import psycopg2.errorcodes
     import psycopg2.extensions
     import psycopg2.extras
-    _backend = psycopg2
-    _backend_name = 'psycopg2'
 except ImportError:
+    pass
+
+try:
     import pg8000
     pg8000.paramstyle = 'pyformat'
-    _backend = pg8000
-    _backend_name = 'pg8000'
+except ImportError:
+    pass
 
 import muninn.config as config
 import muninn.database.sql as sql
@@ -110,18 +110,12 @@ def _connect_psycopg2(connection_string):
     return _connection
 
 
-try:
-    psycopg2
-    _connect = _connect_psycopg2
-except NameError:
-    _connect = _connect_pg8000
-
-
 class _PostgresqlConfig(Mapping):
     _alias = "postgresql"
 
-    connection_string = Text
-    table_prefix = optional(Text)
+    library = Text(optional=True)
+    connection_string = Text()
+    table_prefix = Text(optional=True)
 
 
 def create(configuration):
@@ -139,14 +133,14 @@ class PostgresqlError(Error):
 def translate_errors(func):
     """Decorator that translates db 2.0 api exceptions into muninn exceptions."""
     @functools.wraps(func)
-    def translate_errors_(*args, **kwargs):
+    def translate_errors_(self, *args, **kwargs):
         try:
-            return func(*args, **kwargs)
-        except _backend.Error as _error:
+            return func(self, *args, **kwargs)
+        except self._connection._backend.Error as _error:
             message = None
 
             # psycopg2
-            if _backend_name == 'psycopg2':
+            if self._library == 'psycopg2':
                 try:
                     message = _error.diag.message_primary
                     if message is not None:
@@ -159,7 +153,7 @@ def translate_errors(func):
                 except AttributeError:
                     pass
 
-            elif _backend_name == 'pg8000':
+            elif self._library == 'pg8000':
                 try:
                     message = _error.args[0]['M']
                 except (TypeError, IndexError, AttributeError, KeyError):
@@ -174,6 +168,8 @@ def translate_errors(func):
     return translate_errors_
 
 
+# TODO use sub-classes for psycopg2, pg8000
+
 class PostgresqlConnection(object):
     """Wrapper for a database connection that defers (re)connection until an attempt is made to use the
     connection.
@@ -182,10 +178,26 @@ class PostgresqlConnection(object):
     using the context manager interface.
 
     """
-    def __init__(self, connection_string):
+    def __init__(self, connection_string, library):
         self._connection_string = connection_string
+        self._library = library
         self._connection = None
         self._in_transaction = False
+
+        if library == 'psycopg2':
+            try:
+                self._backend = psycopg2
+            except NameError:
+                raise Error('could not import psycopg2')
+
+        elif library == 'pg8000':
+            try:
+                self._backend = pg8000
+            except NameError:
+                raise Error('could not import pg8000')
+        else:
+            raise Error('no such library: %s' % library)
+
 
     def __enter__(self):
         # Begin a transaction. The transaction is not started immediately, but a state change is recorded such that
@@ -217,7 +229,10 @@ class PostgresqlConnection(object):
 
     def _connect(self):
         # Re-establish the connection to the database.
-        self._connection = _connect(self._connection_string)
+        if self._library == 'psycopg2':
+            self._connection = _connect_psycopg2(self._connection_string)
+        else:
+            self._connection = _connect_pg8000(self._connection_string)
 
     def _disconnect(self):
         self._connection.close()
@@ -243,31 +258,10 @@ class PostgresqlConnection(object):
         return self._connection.encoding
 
 
-def _swallow_unique_violation(_error):
-    # There is still a small chance due to concurrency that a link/tag already exists.
-    # For those cases we swallow the exception.
-    swallow = False
-
-    if _backend_name == 'psycopg2':
-        try:
-            if _error.pgcode == PG_UNIQUE_VIOLATION:
-                swallow = True
-        except AttributeError:
-            pass
-
-    elif _backend_name == 'pg8000': # TODO positional - issue filed on github
-        try:
-            if _error.args[0]['C'] == PG_UNIQUE_VIOLATION:
-                swallow = True
-        except (TypeError, IndexError, AttributeError, KeyError):
-            pass
-
-    if not swallow:
-        raise
-
 class PostgresqlBackend(object):
-    def __init__(self, connection_string="", table_prefix=""):
-        self._connection = PostgresqlConnection(connection_string)
+    def __init__(self, connection_string="", table_prefix="", library="psycopg2"):
+        self._connection = PostgresqlConnection(connection_string, library)
+        self._library = library
 
         if table_prefix and not re.match(r"[a-z][_a-z]*(\.[a-z][_a-z]*)*", table_prefix):
             raise ValueError("invalid table_prefix %s" % table_prefix)
@@ -464,6 +458,28 @@ class PostgresqlBackend(object):
         finally:
             cursor.close()
 
+    def _swallow_unique_violation(self, _error):
+        # There is still a small chance due to concurrency that a link/tag already exists.
+        # For those cases we swallow the exception.
+        swallow = False
+
+        if self._library == 'psycopg2':
+            try:
+                if _error.pgcode == PG_UNIQUE_VIOLATION:
+                    swallow = True
+            except AttributeError:
+                pass
+
+        elif self._library == 'pg8000': # TODO positional - issue filed on github
+            try:
+                if _error.args[0]['C'] == PG_UNIQUE_VIOLATION:
+                    swallow = True
+            except (TypeError, IndexError, AttributeError, KeyError):
+                pass
+
+        if not swallow:
+            raise
+
     def _link(self, uuid, source_uuids):
         query = "INSERT INTO %s (uuid, source_uuid) SELECT %s, %s" % (self._link_table_name, self._placeholder(),
                                                                       self._placeholder())
@@ -476,8 +492,8 @@ class PostgresqlBackend(object):
                 cursor = self._connection.cursor()
                 try:
                     cursor.execute(query, (uuid, source_uuid, uuid, source_uuid))
-                except _backend.Error as _error:
-                    _swallow_unique_violation(_error)
+                except self._connection._backend.Error as _error:
+                    self._swallow_unique_violation(_error)
                 finally:
                     cursor.close()
 
@@ -606,8 +622,8 @@ class PostgresqlBackend(object):
                 cursor = self._connection.cursor()
                 try:
                     cursor.execute(query, (uuid, tag, uuid, tag))
-                except _backend.Error as _error:
-                    _swallow_unique_violation(_error)
+                except self._connection._backend.Error as _error:
+                    self._swallow_unique_violation(_error)
                 finally:
                     cursor.close()
 

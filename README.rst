@@ -424,10 +424,13 @@ Section "postgresql"
 This section contains backend specific settings for the postgresql backend and
 may contain the following settings:
 
+- ``library``: Python library used to connect to postgresql. The default is
+  ``psycopg2``. The only other library that is currently supported is ``pg8000``.
+
 - ``connection_string``: Mandatory. A postgresql connection string of the database
   containing product properties. The default is the empty string, which will
   connect to the default database for the user invoking muninn. See psycopg
-  documentation for the syntax.
+  and/or pg8000 documentation for the syntax.
 
 - ``table_prefix``: Prefix that should be used for all table names, indices, and
   constraints. This is to allow multiple muninn catalogues inside a single
