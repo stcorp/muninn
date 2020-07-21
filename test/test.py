@@ -178,24 +178,21 @@ def archive(database, storage, use_enclosing_directory, archive_path):
     os.system('rm *.pyc -f')
 
     # create clean archive
-    archive = muninn.open('my_arch')
-    archive.register_namespace('mynamespace', MyNamespace)
-    archive.destroy()
-    archive.prepare()
+    with muninn.open('my_arch') as archive:
+        archive.register_namespace('mynamespace', MyNamespace)
+        archive.destroy()
+        archive.prepare()
 
-    # store params  # TODO this could be nicer
-    archive._params = {
-        'database': database,
-        'storage': storage,
-        'use_enclosing_directory': use_enclosing_directory,
-        'archive_path':  archive_path,
-    }
-    archive._checker = STORAGE_CHECKERS[storage](storage)
+        # store params  # TODO this could be nicer
+        archive._params = {
+            'database': database,
+            'storage': storage,
+            'use_enclosing_directory': use_enclosing_directory,
+            'archive_path':  archive_path,
+        }
+        archive._checker = STORAGE_CHECKERS[storage](storage)
 
-    yield archive
-
-    # close archive
-    archive.close()
+        yield archive
 
 
 class TestArchive:
