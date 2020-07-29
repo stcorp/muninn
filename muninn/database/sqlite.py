@@ -811,13 +811,13 @@ class SQLiteBackend(object):
     def prepare(self, dry_run=False):
         sqls = self._create_tables_sql()
         if not dry_run:
-            dbexists = os.path.isfile(self._connection_string)
-            # If the db did not exist before, then the table creation was already done when the db was created
-            if dbexists:
+            if os.path.isfile(self._connection_string):
                 with self._connection:
                     self._execute_list(sqls)
             else:
-                sqls = []
+                # If the db did not exist before, then trigger the table creation by simply making a connection
+                with self._connection:
+                    pass
         return sqls
 
     @translate_sqlite_errors
