@@ -1,10 +1,7 @@
-5.0 2020-03-xx
+5.0 2020-07-30
 ~~~~~~~~~~~~~~
 
 * Added a storage backend framework, including S3 and Swift backends.
-
-* Added support for pg8000 as postgresql driver. Added 'library'
-  parameter to 'postgresql' section to specify library to use.
 
 * Changed configuration file format due to new storage backends:
   - renamed `backend` parameter to `database` in `archive` section
@@ -14,27 +11,32 @@
     to `fs` section
   - added `tmp_root` parameter to `s3` and `swift` sections
 
+* Added support for pg8000 as postgresql driver. Added 'library'
+  parameter to 'postgresql' section to specify library to use.
+
 * Added a basic test/coverage framework.
 
 * Changed the syntax for defining namespace properties, allowing
   one to specify if a property should be indexed in the database backend.
+  The old approach is still supported for backward compatibility.
 
 * Added -c/--catalogue-only option to muninn-remove.
 
-* Added support for sub-queries (specify a sub-query instead of a uuid).
+* Added support for sub-queries in is_source_of and is_derived_from
+  (specify a sub-query instead of a uuid).
 
 * Added support for searching on UUID directly (without uuid==).
 
 * Several fixes for NOT expressions in queries.
 
 * Improved querying on NULL properties. For example, for 'property != b',
-  we now return products for which b is NULL.
+  we now also return products for which b is NULL.
 
 * Added property_names argument to archive.retrieve_properties().
 
 * Added archive.delete_properties().
 
-* Fixed issue with intra-archive links without enclosing dir (resulting
+* Fixed issue with intra-archive symlinks without enclosing dir (resulting
   in broken symlinks).
 
 * Fixed issue where product hashes were not actually verified.
