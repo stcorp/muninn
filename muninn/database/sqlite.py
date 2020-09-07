@@ -552,6 +552,7 @@ class SQLiteBackend(object):
         rewriter_table[Prototype("is_defined", (Real,), Boolean)] = is_defined_rewriter
         rewriter_table[Prototype("is_defined", (Boolean,), Boolean)] = is_defined_rewriter
         rewriter_table[Prototype("is_defined", (Text,), Boolean)] = is_defined_rewriter
+        rewriter_table[Prototype("is_defined", (Namespace,), Boolean)] = is_defined_rewriter
         rewriter_table[Prototype("is_defined", (Timestamp,), Boolean)] = is_defined_rewriter
         rewriter_table[Prototype("is_defined", (UUID,), Boolean)] = is_defined_rewriter
         rewriter_table[Prototype("is_defined", (Geometry,), Boolean)] = is_defined_rewriter

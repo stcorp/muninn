@@ -79,6 +79,13 @@ class Text(Type):
             raise ValueError("invalid value %r for type %r" % (value, cls.name()))
 
 
+class Namespace(Type):
+    @classmethod
+    def validate(cls, value):
+        if not isinstance(value, basestring):
+            raise ValueError("invalid value %r for type %r" % (value, cls.name()))
+
+
 class Timestamp(Type):
     @classmethod
     def validate(cls, value):

@@ -174,6 +174,7 @@ function_table.add(Prototype("is_defined", (Integer,), Boolean))
 function_table.add(Prototype("is_defined", (Real,), Boolean))
 function_table.add(Prototype("is_defined", (Boolean,), Boolean))
 function_table.add(Prototype("is_defined", (Text,), Boolean))
+function_table.add(Prototype("is_defined", (Namespace,), Boolean))
 function_table.add(Prototype("is_defined", (Timestamp,), Boolean))
 function_table.add(Prototype("is_defined", (UUID,), Boolean))
 function_table.add(Prototype("is_defined", (Geometry,), Boolean))
@@ -614,17 +615,20 @@ class SemanticAnalysis(Visitor):
         # namespace
         if name is None:
             visitable.value = split_name[0]
-            visitable.type = Text
+            visitable.type = Namespace
 
         # namespace.property
         else:
             try:
-                type = schema[name]
+                type_ = schema[name]
             except KeyError:
-                raise Error("no property: \"%s\" defined within namespace: \"%s\"" % (name, namespace))
+                if len(split_name) == 2:
+                    raise Error("undefined property: \"%s\"" % visitable.value)
+                else:
+                    raise Error("undefined name: \"%s\"" % name)
 
             visitable.value = "%s.%s" % (namespace, name)
-            visitable.type = type
+            visitable.type = type_
 
     def visit_ParameterReference(self, visitable):
         try:
