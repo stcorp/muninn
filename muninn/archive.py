@@ -1021,7 +1021,7 @@ class Archive(object):
         return count
 
     def retrieve(self, where="", parameters={}, target_path=os.path.curdir, use_symlinks=False):
-        """Retrieve one or more products from the archive. Return the number of products retrieved.
+        """Retrieve one or more products from the archive. Return a list of target paths of the retrieved products.
 
         Keyword arguments:
         where           --  Search expression that determines which products to retrieve.
@@ -1032,6 +1032,7 @@ class Archive(object):
                             By default, products will be retrieved as copies.
 
         """
+        result = []
         products = self.search(where=where, parameters=parameters,
                                property_names=['uuid', 'active', 'product_type', 'product_name', 'archive_path',
                                                'physical_name'])
@@ -1039,9 +1040,9 @@ class Archive(object):
             if not product.core.active or 'archive_path' not in product.core:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
 
-            self._retrieve(product, target_path, use_symlinks)
+            result.append(self._retrieve(product, target_path, use_symlinks))
 
-        return len(products)
+        return result
 
     def retrieve_by_name(self, product_name, target_path=os.path.curdir, use_symlinks=False):
         """Retrieve a product from the archive by name.
@@ -1056,26 +1057,26 @@ class Archive(object):
         An exception will be raised if no products with the specified name can be found.
 
         """
-        count = self.retrieve("product_name == @product_name", {"product_name": product_name}, target_path,
+        products = self.retrieve("product_name == @product_name", {"product_name": product_name}, target_path,
                               use_symlinks)
-        if count == 0:
+        if len(products) == 0:
             raise Error("no products found with name '%s'" % product_name)
-        return count
+        return products
 
     def retrieve_by_uuid(self, uuid, target_path=os.path.curdir, use_symlinks=False):
         """Retrieve a product from the archive by uuid.
 
         This is a convenience function that is equivalent to:
 
-            self.retrieve("uuid == @uuid", {"uuid": uuid}, target_path, use_symlinks)
+            self.retrieve("uuid == @uuid", {"uuid": uuid}, target_path, use_symlinks)[0]
 
         An exception will be raised if no product with the specified uuid can be found.
 
         """
-        count = self.retrieve("uuid == @uuid", {"uuid": uuid}, target_path, use_symlinks)
-        if count == 0:
+        products = self.retrieve("uuid == @uuid", {"uuid": uuid}, target_path, use_symlinks)
+        if len(products) == 0:
             raise Error("product with uuid '%s' not found" % uuid)
-        return count
+        return products[0]
 
     def retrieve_properties(self, uuid, namespaces=[], property_names=[]):
         """Retrieve product properties for the product with the specified UUID.

@@ -1,3 +1,6 @@
+* Archive.retrieve() and Archive.retrieve_by_name() now return a list of
+  product paths. Archive.retrieve_by_uuid() now returns a single path.
+
 5.0 2020-07-30
 ~~~~~~~~~~~~~~
 
@@ -32,9 +35,9 @@
 * Improved querying on NULL properties. For example, for 'property != b',
   we now also return products for which b is NULL.
 
-* Added property_names argument to archive.retrieve_properties().
+* Added property_names argument to Archive.retrieve_properties().
 
-* Added archive.delete_properties().
+* Added Archive.delete_properties().
 
 * Fixed issue with intra-archive symlinks without enclosing dir (resulting
   in broken symlinks).
@@ -53,7 +56,7 @@
 
 * Added --processes option to muninn-update.
 
-* Added property_names argument to archive.search().
+* Added property_names argument to Archive.search().
 
 * Cleaned up terminology: we now use 'properties' instead of 'attributes'
   everywhere when refering to product metadata.
