@@ -1264,7 +1264,7 @@ class Archive(object):
                     raise Error("specified uuid does not match uuid included in the specified product properties")
             existing_product = self.search(where='uuid == @uuid', parameters={'uuid': uuid},
                                            namespaces=self.namespaces())[0]
-            new_namespaces = list(set(vars(properties).keys()) - set(vars(existing_product).keys()))
+            new_namespaces = list(set(vars(properties)) - set(vars(existing_product)))
         else:
             new_namespaces = None
         self._update_metadata_date(properties)

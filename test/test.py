@@ -833,6 +833,24 @@ class TestQuery:
         s = archive.search('is_defined(physical_name)')
         assert len(s) == 3
 
+    def test_RemoveProperties(self, archive):
+        self._prep_data(archive)
+
+        p = archive.retrieve_properties(uuid=self.uuid_a, namespaces=['mynamespace'])
+        assert hasattr(p, 'core')
+        assert hasattr(p, 'mynamespace')
+        assert hasattr(p.mynamespace, 'hello')
+
+        # remove property
+        archive.update_properties(muninn.Struct({'mynamespace': muninn.Struct({'hello': None})}), p.core.uuid)
+        p = archive.retrieve_properties(uuid=self.uuid_a, namespaces=['mynamespace'])
+        assert not hasattr(p.mynamespace, 'hello')
+
+        # remove namespace
+        archive.update_properties(muninn.Struct({'mynamespace': None}), p.core.uuid)
+        p = archive.retrieve_properties(uuid=self.uuid_a, namespaces=['mynamespace'])
+        assert not hasattr(p, 'mynamespace')
+
     def test_Geometry(self, archive):
         self._prep_data(archive)
 

@@ -458,6 +458,14 @@ class PostgresqlBackend(object):
         finally:
             cursor.close()
 
+    def _delete_namespace_properties(self, uuid, name):
+        query = "DELETE FROM %s WHERE uuid=%s" % (self._table_name(name), self._placeholder())
+        cursor = self._connection.cursor()
+        try:
+            cursor.execute(query, [uuid])
+        finally:
+            cursor.close()
+
     def _swallow_unique_violation(self, _error):
         # There is still a small chance due to concurrency that a link/tag already exists.
         # For those cases we swallow the exception.
@@ -945,5 +953,7 @@ class PostgresqlBackend(object):
                     continue
                 if ns_name in new_namespaces:
                     self._insert_namespace_properties(uuid, ns_name, ns_properties)
+                elif ns_properties is None:
+                    self._delete_namespace_properties(uuid, ns_name)
                 else:
                     self._update_namespace_properties(uuid, ns_name, ns_properties)

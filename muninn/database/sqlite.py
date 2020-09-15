@@ -440,6 +440,14 @@ class SQLiteBackend(object):
         finally:
             cursor.close()
 
+    def _delete_namespace_properties(self, uuid, name):
+        query = "DELETE FROM %s WHERE uuid=%s" % (self._table_name(name), self._placeholder())
+        cursor = self._connection.cursor()
+        try:
+            cursor.execute(query, [uuid])
+        finally:
+            cursor.close()
+
     def _link(self, uuid, source_uuids):
         query = "INSERT OR IGNORE INTO %s (uuid, source_uuid) VALUES (%s, %s)" % \
             (self._link_table_name, self._placeholder(), self._placeholder())
@@ -885,6 +893,8 @@ class SQLiteBackend(object):
                     continue
                 if ns_name in new_namespaces:
                     self._insert_namespace_properties(uuid, ns_name, ns_properties)
+                elif ns_properties is None:
+                    self._delete_namespace_properties(uuid, ns_name)
                 else:
                     self._update_namespace_properties(uuid, ns_name, ns_properties)
 
