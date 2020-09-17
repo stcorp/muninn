@@ -443,6 +443,8 @@ class SQLBuilder(object):
     def build_summary_query(self, where='', parameters=None, aggregates=None, group_by=None, group_by_tag=False,
                             order_by=None):
         aggregates = aggregates or []
+        group_by = group_by or []
+        order_by = order_by or []
         if group_by_tag:
             group_by = group_by + ['tag']
         result_fields = group_by + ['count'] + aggregates
