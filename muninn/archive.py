@@ -357,6 +357,17 @@ class Archive(object):
             self._database.delete_product_properties(product.core.uuid)
         return len(products)
 
+    def delete_properties_by_uuid(self, uuid):
+        """Remove properties from the catalogue for product with the given uuid.
+
+        This function will _not_ remove any product files from storage and will _not_ trigger any of the specific
+        cascade rules.
+
+        Keyword arguments:
+        uuid  --  UUID of the product whose metadata needs to be removed from the catalogue.
+        """
+        self._database.delete_product_properties(uuid)
+
     def derived_products(self, uuid):
         """Return the UUIDs of the products that are linked to the given product as derived products."""
         return self._database.derived_products(uuid)
