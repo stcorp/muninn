@@ -65,7 +65,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
                 raise
 
     def _prefix_exists(self):
-        if self._prefix: # TODO created but still empty archive
+        if self._prefix:  # TODO created but still empty archive
             objs = list(self._resource.Bucket(self.bucket).objects.limit(count=1).filter(Prefix=self._prefix))
             return len(objs) == 1
         else:

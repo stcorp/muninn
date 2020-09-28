@@ -28,6 +28,7 @@ def create(configuration):
     _SwiftConfig.validate(options)
     return SwiftStorageBackend(**options)
 
+
 class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate directory, 'dir/' with contents?
     def __init__(self, container, user, key, authurl, tmp_root=None):
         super(SwiftStorageBackend, self).__init__()
@@ -58,7 +59,7 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
             self._conn.get_container(self.container)
             return True
         except swiftclient.exceptions.ClientException as e:
-            if e.http_status==404:
+            if e.http_status == 404:
                 return False
             else:
                 raise
@@ -66,7 +67,7 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
     def destroy(self):  # TODO individually deleting objects
         if self.exists():
             for data in self._conn.get_container(self.container)[1]:
-                 self._conn.delete_object(self.container, data['name'])
+                self._conn.delete_object(self.container, data['name'])
             self._conn.delete_container(self.container)
 
     def product_path(self, product):  # TODO needed?
@@ -125,7 +126,7 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
 
     def delete(self, product_path, properties):
         for key in self._object_keys(product_path):
-             self._conn.delete_object(self.container, key)
+            self._conn.delete_object(self.container, key)
 
     def size(self, product_path):
         total = 0

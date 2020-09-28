@@ -312,11 +312,11 @@ class _WhereExpressionVisitor(Visitor):
 
         # sub-query
         prototype = visitable.prototype
-        if (prototype.name in ('is_source_of', 'is_derived_from') and \
-            prototype.argument_types and \
-            prototype.argument_types[0].name() == 'boolean'):
+        if (prototype.name in ('is_source_of', 'is_derived_from') and prototype.argument_types and
+                prototype.argument_types[0].name() == 'boolean'):
 
-            visitor = _WhereExpressionVisitor(self._rewriter_table, self._column_name, self._named_placeholder, self._root_visitor)
+            visitor = _WhereExpressionVisitor(self._rewriter_table, self._column_name, self._named_placeholder,
+                                              self._root_visitor)
             where_expr, where_parameters, where_namespaces = visitor.visit(visitable.arguments[0])
 
             if 'core' in where_namespaces:

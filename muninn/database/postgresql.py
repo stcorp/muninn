@@ -198,7 +198,6 @@ class PostgresqlConnection(object):
         else:
             raise Error('no such library: %s' % library)
 
-
     def __enter__(self):
         # Begin a transaction. The transaction is not started immediately, but a state change is recorded such that
         # attempts to start nested transactions can be detected. Also, the connection with the database is
@@ -237,7 +236,6 @@ class PostgresqlConnection(object):
     def _disconnect(self):
         self._connection.close()
         self._connection = None
-
 
     def close(self):
         if self._in_transaction:
@@ -478,7 +476,7 @@ class PostgresqlBackend(object):
             except AttributeError:
                 pass
 
-        elif self._library == 'pg8000': # TODO positional - issue filed on github
+        elif self._library == 'pg8000':  # TODO positional - issue filed on github
             try:
                 if _error.args[0]['C'] == PG_UNIQUE_VIOLATION:
                     swallow = True
@@ -666,8 +664,8 @@ class PostgresqlBackend(object):
             parameters = (uuid,)
         else:
             for source_uuid in source_uuids:
-                query = "DELETE FROM %s WHERE uuid = %s AND source_uuid = %s" % (self._link_table_name,
-                                                                                 self._placeholder(), self._placeholder())
+                query = "DELETE FROM %s WHERE uuid = %s AND source_uuid = %s" % \
+                    (self._link_table_name, self._placeholder(), self._placeholder())
                 parameters = (uuid, source_uuid)
                 cursor = self._connection.cursor()
                 try:

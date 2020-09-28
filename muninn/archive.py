@@ -729,7 +729,8 @@ class Archive(object):
         try:
             return self._product_type_plugins[product_type]
         except KeyError:
-            raise Error("undefined product type: \"%s\"; defined product types: %s" % (product_type, util.quoted_list(self._product_type_plugins.keys())))
+            raise Error("undefined product type: \"%s\"; defined product types: %s" %
+                        (product_type, util.quoted_list(self._product_type_plugins.keys())))
 
     def product_types(self):
         """Return a list of supported product types."""
@@ -964,7 +965,8 @@ class Archive(object):
         try:
             return self._remote_backend_plugins[remote_backend]
         except KeyError:
-            raise Error("undefined remote backend: \"%s\"; defined remote backends: %s" % (remote_backend, util.quoted_list(self._remote_backend.keys())))
+            raise Error("undefined remote backend: \"%s\"; defined remote backends: %s" %
+                        (remote_backend, util.quoted_list(self._remote_backend.keys())))
 
     def remote_backends(self):
         """Return a list of supported remote_backends."""
@@ -985,7 +987,8 @@ class Archive(object):
                         this option with care.
         """
         products = self.search(where=where, parameters=parameters,
-                               property_names=['uuid', 'active', 'product_name', 'archive_path', 'physical_name', 'product_type'])
+                               property_names=['uuid', 'active', 'product_name', 'archive_path', 'physical_name',
+                                               'product_type'])
         for product in products:
             if not product.core.active and not force:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
@@ -1069,7 +1072,7 @@ class Archive(object):
 
         """
         products = self.retrieve("product_name == @product_name", {"product_name": product_name}, target_path,
-                              use_symlinks)
+                                 use_symlinks)
         if len(products) == 0:
             raise Error("no products found with name '%s'" % product_name)
         return products

@@ -38,7 +38,6 @@ class UrlBackend(RemoteBackend):
         # end then use this ***** filename to match against core.physical_name + <archive ext>
 
 
-
 REMOTE_BACKENDS = {
     'http': UrlBackend(prefix='http://'),
     'https': UrlBackend(prefix='https://'),

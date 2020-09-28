@@ -2,6 +2,7 @@ import os.path
 
 import muninn.util as util
 
+
 class StorageBackend(object):
     def __init__(self):
         self.supports_symlinks = False
@@ -15,7 +16,8 @@ class StorageBackend(object):
     def run_for_product(self, product, fn, use_enclosing_directory):
         tmp_root = self.get_tmp_root(product)
         product_path = self.product_path(product)
-        with util.TemporaryDirectory(dir=tmp_root, prefix=".run_for_product-", suffix="-%s" % product.core.uuid.hex) as tmp_path:
+        with util.TemporaryDirectory(dir=tmp_root, prefix=".run_for_product-",
+                                     suffix="-%s" % product.core.uuid.hex) as tmp_path:
             self.get(product, product_path, tmp_path, use_enclosing_directory)
 
             # Determine product hash
