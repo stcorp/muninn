@@ -24,6 +24,7 @@ class _S3Config(Mapping):
     secret_access_key = Text()
     prefix = Text(optional=True)
     tmp_root = Text(optional=True)
+    object_acl = Text(optional=True)
 
 
 def create(configuration):
@@ -33,7 +34,7 @@ def create(configuration):
 
 
 class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate directory, 'dir/' with contents?
-    def __init__(self, bucket, host, port, access_key, secret_access_key, prefix='', tmp_root=None):
+    def __init__(self, bucket, host, port, access_key, secret_access_key, prefix='', tmp_root=None, object_acl=None):
         super(S3StorageBackend, self).__init__()
 
         self.bucket = bucket
@@ -46,6 +47,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             tmp_root = os.path.realpath(tmp_root)
             util.make_path(tmp_root)
         self._tmp_root = tmp_root
+        self._object_acl = object_acl
 
         self._resource = boto3.resource(
             service_name='s3',
@@ -98,6 +100,9 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
 
         archive_path = properties.core.archive_path
         physical_name = properties.core.physical_name
+        extra_args = None
+        if self._object_acl is not None:
+            extra_args = {'ACL': self._object_acl}
 
         tmp_root = self.get_tmp_root(properties)
         with util.TemporaryDirectory(dir=tmp_root, prefix=".put-", suffix="-%s" % properties.core.uuid.hex) as tmp_path:
@@ -118,9 +123,9 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
                         for filename in files:
                             filekey = os.path.normpath(os.path.join(key, rel_root, filename))
                             filepath = os.path.join(root, filename)
-                            self._resource.Object(self.bucket, filekey).upload_file(filepath)
+                            self._resource.Object(self.bucket, filekey).upload_file(filepath, extra_args)
                 else:
-                    self._resource.Object(self.bucket, key).upload_file(path)
+                    self._resource.Object(self.bucket, key).upload_file(path, extra_args)
 
     def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=None):
         if use_symlinks:
@@ -157,8 +162,12 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
         product_path = self._prefix + self.product_path(product)
         new_product_path = self._prefix + os.path.join(archive_path, product.core.physical_name)
 
-        for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=product_path):  # TODO slow?
+        for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=product_path):
             new_key = os.path.normpath(os.path.join(new_product_path, os.path.relpath(obj.key, product_path)))
 
-            self._resource.Object(self.bucket, new_key).copy_from(CopySource=os.path.join(self.bucket, obj.key))
+            if self._object_acl is not None:
+                self._resource.Object(self.bucket, new_key).copy_from(ACL=self._object_acl,
+                                                                      CopySource=os.path.join(self.bucket, obj.key))
+            else:
+                self._resource.Object(self.bucket, new_key).copy_from(CopySource=os.path.join(self.bucket, obj.key))
             self._resource.Object(self.bucket, obj.key).delete()
