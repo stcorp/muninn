@@ -482,6 +482,10 @@ backend and may contain the following settings:
 - ``access_key``: Mandatory. S3 authentication access key.
 - ``secret_access_key``: Mandatory. S3 authentication secret access key.
 - ``tmp_root``: [Optional] path where temporary data should be stored.
+- ``download_args``: [Optional] JSON representation of boto3 download_file ExtraArgs parameter.
+- ``upload_args``: [Optional] JSON representation of boto3 upload_file ExtraArgs parameter.
+- ``copy_args``: [Optional] JSON representation of boto3 copy ExtraArgs parameter.
+- ``transfer_config``: [Optional] JSON representation of boto3.s3.transfer.TransferConfig parameters.
 
 
 Section "swift"

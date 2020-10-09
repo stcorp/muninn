@@ -1,5 +1,6 @@
 import logging
 import os
+import json
 
 from .base import StorageBackend
 
@@ -9,6 +10,7 @@ import muninn.util as util
 from muninn.exceptions import Error
 
 import boto3
+import boto3.s3
 import botocore
 
 logging.getLogger("boto3").setLevel(logging.CRITICAL)
@@ -24,7 +26,10 @@ class _S3Config(Mapping):
     secret_access_key = Text()
     prefix = Text(optional=True)
     tmp_root = Text(optional=True)
-    object_acl = Text(optional=True)
+    download_args = Text(optional=True)  # JSON representation of boto3 download_file ExtraArgs parameter
+    upload_args = Text(optional=True)  # JSON representation of boto3 upload_file ExtraArgs parameter
+    copy_args = Text(optional=True)  # JSON representation of boto3 copy ExtraArgs parameter
+    transfer_config = Text(optional=True)  # JSON representation of boto3.s3.transfer.TransferConfig parameters
 
 
 def create(configuration):
@@ -34,7 +39,8 @@ def create(configuration):
 
 
 class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate directory, 'dir/' with contents?
-    def __init__(self, bucket, host, port, access_key, secret_access_key, prefix='', tmp_root=None, object_acl=None):
+    def __init__(self, bucket, host, port, access_key, secret_access_key, prefix='', tmp_root=None, download_args=None,
+                 upload_args=None, copy_args=None, transfer_config=None):
         super(S3StorageBackend, self).__init__()
 
         self.bucket = bucket
@@ -47,7 +53,6 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             tmp_root = os.path.realpath(tmp_root)
             util.make_path(tmp_root)
         self._tmp_root = tmp_root
-        self._object_acl = object_acl
 
         self._resource = boto3.resource(
             service_name='s3',
@@ -55,6 +60,20 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             aws_secret_access_key=secret_access_key,
             endpoint_url='http://%s:%s' % (host, port),
         )
+
+        self._download_args = None
+        if download_args:
+            self._download_args = json.loads(download_args)
+        self._upload_args = None
+        if upload_args:
+            self._upload_args = json.loads(upload_args)
+        self._copy_args = None
+        if copy_args:
+            self._copy_args = json.loads(copy_args)
+        if transfer_config:
+            self._transfer_config = boto3.s3.transfer.TransferConfig(**json.loads(transfer_config))
+        else:
+            self._transfer_config = boto3.s3.transfer.TransferConfig()
 
     def _bucket_exists(self):
         try:
@@ -100,9 +119,6 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
 
         archive_path = properties.core.archive_path
         physical_name = properties.core.physical_name
-        extra_args = None
-        if self._object_acl is not None:
-            extra_args = {'ACL': self._object_acl}
 
         tmp_root = self.get_tmp_root(properties)
         with util.TemporaryDirectory(dir=tmp_root, prefix=".put-", suffix="-%s" % properties.core.uuid.hex) as tmp_path:
@@ -123,9 +139,12 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
                         for filename in files:
                             filekey = os.path.normpath(os.path.join(key, rel_root, filename))
                             filepath = os.path.join(root, filename)
-                            self._resource.Object(self.bucket, filekey).upload_file(filepath, extra_args)
+                            self._resource.Object(self.bucket, filekey).upload_file(filepath,
+                                                                                    ExtraArgs=self._upload_args,
+                                                                                    Config=self._transfer_config)
                 else:
-                    self._resource.Object(self.bucket, key).upload_file(path, extra_args)
+                    self._resource.Object(self.bucket, key).upload_file(path, ExtraArgs=self._upload_args,
+                                                                        Config=self._transfer_config)
 
     def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=None):
         if use_symlinks:
@@ -140,7 +159,8 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
                 rel_path = '/'.join(rel_path.split('/')[1:])
             target = os.path.normpath(os.path.join(target_path, rel_path))
             util.make_path(os.path.dirname(target))
-            self._resource.Object(self.bucket, obj.key).download_file(target)
+            self._resource.Object(self.bucket, obj.key).download_file(target, ExtraArgs=self._download_args,
+                                                                      Config=self._transfer_config)
 
     def delete(self, product_path, properties):
         prefix = self._prefix + product_path
@@ -164,10 +184,6 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
 
         for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=product_path):
             new_key = os.path.normpath(os.path.join(new_product_path, os.path.relpath(obj.key, product_path)))
-
-            if self._object_acl is not None:
-                self._resource.Object(self.bucket, new_key).copy_from(ACL=self._object_acl,
-                                                                      CopySource=os.path.join(self.bucket, obj.key))
-            else:
-                self._resource.Object(self.bucket, new_key).copy_from(CopySource=os.path.join(self.bucket, obj.key))
+            self._resource.Object(self.bucket, new_key).copy(CopySource={'Bucket': self.bucket, 'Key': obj.key},
+                                                             ExtraArgs=self._copy_args, Config=self._transfer_config)
             self._resource.Object(self.bucket, obj.key).delete()
