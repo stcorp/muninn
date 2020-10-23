@@ -66,11 +66,6 @@ def update(args):
     if args.expression:
         expression += " and (%s)" % args.expression
 
-    namespaces = []
-    if args.namespaces:
-        for namespace in args.namespaces:
-            namespaces += namespace.split(' ')
-
     if args.action == 'pull':
         # only get products with a remote_url
         if expression:
@@ -84,7 +79,7 @@ def update(args):
             # we only need the uuid and the product_name
             products = archive.search(expression, property_names=['uuid', 'product_name'])
         else:
-            products = archive.search(expression, namespaces=namespaces)
+            products = archive.search(expression, namespaces=archive.namespaces())
         if args.parallel:
             if args.processes is not None:
                 pool = multiprocessing.Pool(args.processes)
@@ -107,9 +102,6 @@ def main():
     parser.add_argument("-a", "--action", choices=ACTIONS, required=True, help="action name")
     parser.add_argument("--disable-hooks", action="store_true",
                         help="do not run the hooks associated with the action")
-    parser.add_argument("--namespaces", action="append",
-                        help="white space separated list of namespaces to make available "
-                             "(for post_ingest and post_pull actions)")
     parser.add_argument("--parallel", action="store_true", help="use multi-processing to perform update")
     parser.add_argument("--processes", type=int, help="use a specific amount of processes for --parallel")
     parser.add_argument("--verify-hash", action="store_true",

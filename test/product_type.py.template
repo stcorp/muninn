@@ -37,13 +37,17 @@ class MyTypePlugin(object):
         self.use_hash = True
         self.use_enclosing_directory = {use_enclosing_directory}
 
-    def enclosing_directory(self, properties):
-        assert isinstance(properties, Struct)
+        self.namespaces = ['mynamespace2']
 
-        return properties.core.product_name
+    def enclosing_directory(self, product):
+        assert isinstance(product, Struct)
+        assert product.mynamespace2.counter == 28
 
-    def archive_path(self, properties):
-        assert isinstance(properties, Struct)
+        return product.core.product_name
+
+    def archive_path(self, product):
+        assert isinstance(product, Struct)
+        assert product.mynamespace2.counter == 28
 
         return ARCHIVE_PATH
 
@@ -67,9 +71,13 @@ class MyTypePlugin(object):
         else:
             core_properties.product_name = os.path.basename(path)
 
+        ns2_properties = result.mynamespace2 = Struct()
+        ns2_properties.counter = 28
+
         return result
 
     def export_tgz(self, archive, product, target_path):
+        assert product.mynamespace2.counter == 28
         product_filepath = archive.product_path(product)
 
         target_filepath = os.path.join(os.path.abspath(target_path), product.core.archive_path, product.core.physical_name + ".tgz")
@@ -85,6 +93,13 @@ class MyTypePlugin(object):
             compress(tmp_path, target_filepath)
 
         return target_filepath
+
+    def post_ingest_hook(self, archive, product):
+        assert product.mynamespace2.counter == 28
+
+    def post_pull_hook(self, archive, product):
+        assert product.mynamespace2.counter == 28
+
 
 _plugin = MyTypePlugin()
 

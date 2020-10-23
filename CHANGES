@@ -6,6 +6,14 @@
 * Added download_args, upload_args, copy_args, and transfer_config options
   to S3 storage backend.
 
+* Added (optional) product type plugin attribute 'namespaces', which
+  contains a list of names of non-core namespace names of properties that
+  that plugin.analyze may return. Non-core properties are now also passed
+  to the other plugin methods.
+
+* Removed muninn-update --namespaces option, as this should now work
+  automatically.
+
 5.0 2020-07-30
 ~~~~~~~~~~~~~~
 

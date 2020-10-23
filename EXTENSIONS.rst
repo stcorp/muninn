@@ -236,6 +236,11 @@ Attributes
     This attribute is optional. If it is left undefined, ``CascadeRule.IGNORE``
     is assumed.
 
+``namespaces``
+    This (optional) variable contains a list with all non-core namespace
+    names of all properties that the ``analyze()`` function (see below) may
+    return.
+
 Methods
 -------
 ``identify(self, paths)``
@@ -264,6 +269,8 @@ Methods
     two elements. The first element should be the nested Struct (key, value)
     pair structure containing product properties, and the second element should
     be the list of tags.
+
+    See also the ``namespaces`` attribute above.
 
 ``enclosing_directory(self, properties)``
     Return the name to be used for the enclosing directory.

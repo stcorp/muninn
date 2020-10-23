@@ -32,7 +32,7 @@ os.environ['MUNINN_CONFIG_PATH'] = '.'
 
 import shutil
 
-from muninn.schema import Mapping, optional, Text
+from muninn.schema import Mapping, optional, Text, Integer
 from muninn.geometry import Polygon, LinearRing, Point
 
 CFG = ConfigParser()
@@ -46,6 +46,9 @@ USE_ENCLOSING_DIR = [s.strip()=='true' for s in CFG.get('DEFAULT', 'use_enclosin
 
 class MyNamespace(Mapping):
     hello = optional(Text)
+
+class MyNamespace2(Mapping):
+    counter = optional(Integer)
 
 
 class BaseChecker(object):
@@ -180,6 +183,7 @@ def archive(database, storage, use_enclosing_directory, archive_path):
     # create clean archive
     with muninn.open('my_arch') as archive:
         archive.register_namespace('mynamespace', MyNamespace)
+        archive.register_namespace('mynamespace2', MyNamespace2)
         archive.destroy()
         archive.prepare()
 
@@ -217,7 +221,6 @@ class TestArchive:
             verify_hash=True,
             use_symlinks=use_symlinks
         )
-
         path = os.path.join(archive._params['archive_path'], 'pi.txt')
 
         if archive._params['use_enclosing_directory']:

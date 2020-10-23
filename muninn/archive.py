@@ -12,6 +12,7 @@ import os
 import re
 import sys
 import uuid
+import warnings
 
 import muninn.config as config
 import muninn.util as util
@@ -217,7 +218,7 @@ class Archive(object):
                         self._purge(product)
 
     def _get_product(self, uuid):
-        products = self.search('uuid == @uuid', parameters={'uuid': uuid})
+        products = self.search('uuid == @uuid', parameters={'uuid': uuid}, namespaces=self.namespaces())
         if len(products) == 0:
             raise Error('No product found with UUID: %s' % uuid)
         assert len(products) == 1
@@ -416,9 +417,8 @@ class Archive(object):
             export_method_name = export_method_name + "_" + format
 
         result = []
-        products = self.search(where=where, parameters=parameters,
-                               property_names=['uuid', 'active', 'product_type', 'product_name', 'archive_path',
-                                               'physical_name'])
+        products = self.search(where=where, parameters=parameters, namespaces=self.namespaces())
+
         for product in products:
             if not product.core.active:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
@@ -557,6 +557,13 @@ class Archive(object):
         # Extract product metadata.
         if properties is None:
             metadata = plugin.analyze(paths)
+            if hasattr(plugin, 'namespaces'):
+                namespaces = plugin.namespaces
+            else:
+                namespaces = []
+            for namespace in metadata:
+                if namespace != 'core' and namespace not in namespaces:
+                    warnings.warn("plugin.namespaces does not contain '%s'" % namespace, DeprecationWarning)
             if isinstance(metadata, (tuple, list)):
                 properties, tags = metadata
             else:
@@ -750,7 +757,7 @@ class Archive(object):
                           the hash from the metadata (only if the metadata contained a hash).
 
         """
-        queue = self.search(where=where, parameters=parameters)
+        queue = self.search(where=where, parameters=parameters, namespaces=self.namespaces())
         for product in queue:
             if not product.core.active:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
