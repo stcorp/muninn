@@ -231,11 +231,19 @@ class Archive(object):
         return self._storage.product_path(product)
 
     def _purge(self, product):
+        # get full product
+        product = self._get_product(product.core.uuid)
+
         # Remove the product from the product catalogue.
         self._database.delete_product_properties(product.core.uuid)
 
         # Remove any data in storage associated with the product.
         self._remove(product)
+
+        # Run the post remove hook (if defined by the product type plug-in).
+        plugin = self.product_type_plugin(product.core.product_type)
+        if hasattr(plugin, "post_remove_hook"):
+            plugin.post_remove_hook(self, product)
 
     def _relocate(self, product, properties=None):
         """Relocate a product to the archive_path reported by the product type plugin.

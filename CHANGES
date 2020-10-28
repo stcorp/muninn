@@ -14,6 +14,9 @@
 * Removed muninn-update --namespaces option, as this should now work
   automatically.
 
+* Added product plugin method 'post_remove_hook' that is called after a
+  successful remove.
+
 5.0 2020-07-30
 ~~~~~~~~~~~~~~
 
