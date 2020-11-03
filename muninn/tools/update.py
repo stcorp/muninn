@@ -99,7 +99,6 @@ def main():
     parser = create_parser(description="""Updates properties of existing products.
         This is an archive maintenance tool, meant to be used when the archive structure has changed.
         Use with care!""")
-    parser.add_argument("-a", "--action", choices=ACTIONS, required=True, help="action name")
     parser.add_argument("--disable-hooks", action="store_true",
                         help="do not run the hooks associated with the action")
     parser.add_argument("--parallel", action="store_true", help="use multi-processing to perform update")
@@ -109,6 +108,7 @@ def main():
     parser.add_argument("-k", "--keep", action="store_true",
                         help="do not attempt to relocate the product to the location specified in the "
                              "product type plug-in (useful for read-only archives)")
+    parser.add_argument("action", metavar="ACTION", choices=ACTIONS, help="action name (%s)" % ', '.join(ACTIONS))
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
     parser.add_argument("expression", metavar="EXPRESSION", default="", help="expression to select products")
     return parse_args_and_run(parser, update)

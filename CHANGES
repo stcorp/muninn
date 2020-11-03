@@ -17,6 +17,8 @@
 * Added product plugin method 'post_remove_hook' that is called after a
   successful remove.
 
+* Changed 'muninn-update -a <action>' command to 'munnin-update <action>'
+
 5.0 2020-07-30
 ~~~~~~~~~~~~~~
 
