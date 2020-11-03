@@ -250,7 +250,6 @@ class Archive(object):
         Returns the new archive_path if the product was moved."""
         result = None
         product_archive_path = product.core.archive_path
-        product_path = self._product_path(product)
         if properties:
             product = copy.deepcopy(product)
             product.update(properties)
@@ -264,7 +263,7 @@ class Archive(object):
     def _remove(self, product):
         # If the product has no data in storage associated with it, return.
         product_path = self._product_path(product)
-        if product_path is None:
+        if not product_path:
             # If the product does not exist, do not consider this an error.
             return
 
