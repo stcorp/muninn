@@ -736,7 +736,7 @@ class Archive(object):
                 raise Error("more than one product found with name '%s'" % uuid_or_name_or_properties)
             product = products[0]
 
-        return self._product_path(product)
+        return os.path.join(self._storage.global_prefix, self._product_path(product))
 
     def product_type_plugin(self, product_type):
         """Return a reference to the product type plugin for a product type."""

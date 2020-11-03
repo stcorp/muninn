@@ -6,6 +6,7 @@ import muninn.util as util
 class StorageBackend(object):
     def __init__(self):
         self.supports_symlinks = False
+        self.global_prefix = ''
 
     def get_tmp_root(self, product):
         if self._tmp_root:
