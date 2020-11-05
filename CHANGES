@@ -19,6 +19,8 @@
 
 * Changed 'muninn-update -a <action>' command to 'munnin-update <action>'
 
+* Changed 'muninn-ingest -c' command to mean 'catalogue only'
+
 5.0 2020-07-30
 ~~~~~~~~~~~~~~
 

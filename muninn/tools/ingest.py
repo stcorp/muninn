@@ -74,10 +74,11 @@ class IngestProcessor(Processor):
 
     def __init__(self, args):
         super(IngestProcessor, self).__init__(args.archive)
-        assert not args.link or not args.copy or not args.keep
+        assert not args.link or not args.keep
         self.path_expansion_function = get_path_expansion_function(args.path_is_stem, args.path_is_enclosing_directory)
-        self.use_symlinks = True if args.link else False if args.copy else None
-        self.verify_hash = True if args.verify_hash else False
+        self.use_symlinks = args.link
+        self.verify_hash = args.verify_hash
+        self.ingest_product = not args.catalogue_only
         self.exclude = args.exclude
         self.product_type = args.product_type
         self.keep = args.keep
@@ -104,7 +105,8 @@ class IngestProcessor(Processor):
 
         try:
             properties = archive.ingest(product_paths, self.product_type, use_symlinks=self.use_symlinks,
-                                        verify_hash=self.verify_hash, use_current_path=self.keep, force=self.force)
+                                        verify_hash=self.verify_hash, use_current_path=self.keep,
+                                        ingest_product=self.ingest_product, force=self.force)
         except muninn.Error as error:
             logging.error("%s: unable to ingest product [%s]" % (path, error))
             return 0
@@ -163,7 +165,7 @@ def main():
     parser.add_argument("-T", "--tag", action="append", default=[], help="tag to set on the product")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-l", "--link", action="store_true", help="ingest symbolic links to each product")
-    group.add_argument("-c", "--copy", action="store_true", help="ingest a copy of each product")
+    group.add_argument("-c", "--catalogue-only", action="store_true", help="only ingest product properties")
     group.add_argument("-k", "--keep", action="store_true", help="ingest product, using the current product path if it "
                                                                  "is in the muninn path, otherwise throws an error")
     parser.add_argument("-f", "--force", action="store_true", help="remove any existing product with the same type and "
