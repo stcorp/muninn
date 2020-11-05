@@ -170,7 +170,7 @@ class Archive(object):
     def _calculate_hash(self, product):
         """ calculate the hash on a product in the archive """
         product_path = self._product_path(product)
-        if not product_path:
+        if product_path is None:
             raise Error("no data available for product '%s' (%s)" % (product.core.product_name, product.core.uuid))
 
         # Get the product type specific plug-in.
@@ -263,7 +263,7 @@ class Archive(object):
     def _remove(self, product):
         # If the product has no data in storage associated with it, return.
         product_path = self._product_path(product)
-        if not product_path:
+        if product_path is None:
             # If the product does not exist, do not consider this an error.
             return
 
@@ -273,7 +273,7 @@ class Archive(object):
     def _retrieve(self, product, target_path, use_symlinks=False):
         # Determine the path of the product in storage.
         product_path = self._product_path(product)
-        if not product_path:
+        if product_path is None:
             raise Error("no data available for product '%s' (%s)" % (product.core.product_name, product.core.uuid))
 
         # Get the product type specific plug-in.
@@ -831,7 +831,7 @@ class Archive(object):
 
         # Determine the path of the product within storage
         product_path = self._product_path(product)
-        if not product_path:
+        if product_path is None:
             raise Error("no data available for product '%s' (%s)" % (product.core.product_name, product.core.uuid))
 
         # Extract product metadata.
