@@ -80,10 +80,11 @@ def unary_operator_rewriter(operator):
 def binary_operator_rewriter(operator):
     return lambda arg0, arg1: "(%s) %s (%s)" % (arg0, operator, arg1)
 
-
 def unary_function_rewriter(name):
     return lambda arg0: "%s(%s)" % (name, arg0)
 
+def membership_operator_rewriter(operator):
+    return lambda arg0, arg1: "(%s) %s %s" % (arg0, operator, arg1)
 
 def binary_function_rewriter(name):
     return lambda arg0, arg1: "%s(%s, %s)" % (name, arg0, arg1)
@@ -98,14 +99,28 @@ def default_rewriter_table():
     rewriter_table = {}
 
     #
-    # Logical operators.
+    # Logical operators
     #
     rewriter_table[Prototype("not", (Boolean,), Boolean)] = unary_operator_rewriter("NOT")
     rewriter_table[Prototype("and", (Boolean, Boolean), Boolean)] = binary_operator_rewriter("AND")
     rewriter_table[Prototype("or", (Boolean, Boolean), Boolean)] = binary_operator_rewriter("OR")
 
     #
-    # Comparison operators.
+    # Membership operators
+    #
+    in_rewriter = membership_operator_rewriter("in")
+    rewriter_table[Prototype("in", (Integer, Sequence), Boolean)] = in_rewriter
+    rewriter_table[Prototype("in", (Long, Sequence), Boolean)] = in_rewriter
+    rewriter_table[Prototype("in", (Real, Sequence), Boolean)] = in_rewriter
+    rewriter_table[Prototype("in", (Text, Sequence), Boolean)] = in_rewriter
+    not_in_rewriter = membership_operator_rewriter("not in")
+    rewriter_table[Prototype("not in", (Integer, Sequence), Boolean)] = not_in_rewriter
+    rewriter_table[Prototype("not in", (Long, Sequence), Boolean)] = not_in_rewriter
+    rewriter_table[Prototype("not in", (Real, Sequence), Boolean)] = not_in_rewriter
+    rewriter_table[Prototype("not in", (Text, Sequence), Boolean)] = not_in_rewriter
+
+    #
+    # Comparison operators
     #
     eq_rewriter = binary_operator_rewriter("=")
     rewriter_table[Prototype("==", (Long, Long), Boolean)] = eq_rewriter
@@ -297,6 +312,9 @@ class _WhereExpressionVisitor(Visitor):
             name = self._column_name(namespace, name)
         self._namespaces.add(namespace)
         return name
+
+    def visit_List(self, visitable): # TODO parameters?
+        return '(' + ','.join(repr(v) for v in visitable.value) + ')'
 
     def visit_ParameterReference(self, visitable):
         parameter_name = str(self._root_visitor._count)

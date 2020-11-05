@@ -836,6 +836,50 @@ class TestQuery:
         s = archive.search('is_defined(physical_name)')
         assert len(s) == 3
 
+    def test_InList(self, archive):
+        self._prep_data(archive)
+        s = archive.search('size in [1015]')
+        assert len(s) == 3
+        s = archive.search('not size in [1015]')
+        assert len(s) == 0
+        s = archive.search('size not in [1015]')
+        assert len(s) == 0
+
+        s = archive.search('size in [1016]')
+        assert len(s) == 0
+        s = archive.search('not size in [1016]')
+        assert len(s) == 3
+        s = archive.search('size not in [1016]')
+        assert len(s) == 3
+
+        s = archive.search('size in [1015, 1016]')
+        assert len(s) == 3
+        s = archive.search('not size in [1015, 1016]')
+        assert len(s) == 0
+        s = archive.search('size not in [1015, 1016]')
+        assert len(s) == 0
+
+        s = archive.search('size in [1016, 1017]')
+        assert len(s) == 0
+        s = archive.search('not size in [1016, 1017]')
+        assert len(s) == 3
+        s = archive.search('size not in [1016, 1017]')
+        assert len(s) == 3
+
+        s = archive.search('physical_name in ["a.txt"]')
+        assert len(s) == 1
+        s = archive.search('not physical_name in ["a.txt"]')
+        assert len(s) == 2
+        s = archive.search('physical_name not in ["a.txt"]')
+        assert len(s) == 2
+
+        s = archive.search('physical_name in ["b.txt", "c.txt"]')
+        assert len(s) == 2
+        s = archive.search('not physical_name in ["b.txt", "c.txt"]')
+        assert len(s) == 1
+        s = archive.search('physical_name not in ["b.txt", "c.txt"]')
+        assert len(s) == 1
+
     def test_RemoveProperties(self, archive):
         self._prep_data(archive)
 

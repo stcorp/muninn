@@ -747,6 +747,13 @@ The comparison operators ``<`` (less than), ``>`` (greater than), ``<=`` (less
 than or equal), ``>=`` (greater than or equal) are supported for all types
 except boolean, uuid, and geometry.
 
+The membership operators ``in`` and ``not in`` are supported for all types
+except boolean, uuid, timestamp and geometry. They only work with lists of
+literals. Example syntax:
+
+    expression in [1, 2, 3]
+    not text in ["text1", "text2"]
+
 The comparison operator ``~=`` (matches pattern) is supported only for text.
 The syntax is:
 

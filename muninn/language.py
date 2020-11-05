@@ -20,19 +20,28 @@ from muninn.schema import *
 from muninn.visitor import Visitor
 
 #
-# Table of all supported operators and functions.
+# Table of all supported operators and functions
 #
 function_table = FunctionTable()
-
 #
-# Logical operators.
+# Logical operators
 #
 function_table.add(Prototype("not", (Boolean,), Boolean))
 function_table.add(Prototype("and", (Boolean, Boolean), Boolean))
 function_table.add(Prototype("or", (Boolean, Boolean), Boolean))
-
 #
-# Comparison operators.
+# Membership operators
+#
+function_table.add(Prototype("in", (Integer, Sequence), Boolean))
+function_table.add(Prototype("in", (Long, Sequence), Boolean))
+function_table.add(Prototype("in", (Real, Sequence), Boolean))
+function_table.add(Prototype("in", (Text, Sequence), Boolean))
+function_table.add(Prototype("not in", (Integer, Sequence), Boolean))
+function_table.add(Prototype("not in", (Long, Sequence), Boolean))
+function_table.add(Prototype("not in", (Real, Sequence), Boolean))
+function_table.add(Prototype("not in", (Text, Sequence), Boolean))
+#
+# Comparison operators
 #
 function_table.add(Prototype("==", (Long, Long), Boolean))
 function_table.add(Prototype("==", (Long, Integer), Boolean))
@@ -208,8 +217,8 @@ class TokenStream(object):
             r"""\d+(?:\.\d*(?:[eE][+-]?\d+)?|[eE][+-]?\d+)""",               # Real literals
             r"""\d+""",                                                      # Integer literals
             r"""true|false""",                                               # Boolean literals
+            r"""<=|>=|==|!=|~=|in|not in|[*<>@()\[\],.+-/]""",               # Operators and delimiters
             r"""[a-zA-Z]\w*""",                                              # Names
-            r"""<=|>=|==|!=|~=|[*<>@(),.+-/]"""                              # Operators and delimiters
         )
 
     _pattern = r"""(?:%s)""" % ("|".join(["(%s)" % sub_pattern for sub_pattern in _sub_patterns]))
@@ -305,7 +314,7 @@ class TokenStream(object):
                         self.text[self.token_start_position:]))
 
         self.token_start_position, self.token_end_position = match_object.span()
-        text, timestamp, uuid_, real, integer, boolean, name, operator = match_object.groups()
+        text, timestamp, uuid_, real, integer, boolean, operator, name = match_object.groups()
 
         if text is not None:
             return Token(TokenType.TEXT, string_unescape(text[1:-1]))
@@ -373,6 +382,13 @@ class Name(AbstractSyntaxTreeNode):
     def __str__(self):
         return "(%s %s)" % (type(self).__name__, self.value)
 
+class List(AbstractSyntaxTreeNode):
+    def __init__(self, values):
+        self.values = values
+
+    def __str__(self):
+        return "(%s %s)" % (type(self).__name__, self.value)
+
 
 class ParameterReference(AbstractSyntaxTreeNode):
     def __init__(self, name):
@@ -393,15 +409,15 @@ class FunctionCall(AbstractSyntaxTreeNode):
         return "(%s %s %s)" % (type(self).__name__, self.name, " ".join(map(str, self.arguments)))
 
 
-def parse_sequence(stream, parse_item_function):
-    stream.expect(TokenType.OPERATOR, "(")
-    if stream.accept(TokenType.OPERATOR, ")"):
+def parse_sequence(stream, parse_item_function, start='(', end=')'):
+    stream.expect(TokenType.OPERATOR, start)
+    if stream.accept(TokenType.OPERATOR, end):
         return []
 
     sequence = [parse_item_function(stream)]
     while stream.accept(TokenType.OPERATOR, ","):
         sequence.append(parse_item_function(stream))
-    stream.expect(TokenType.OPERATOR, ")")
+    stream.expect(TokenType.OPERATOR, end)
     return sequence
 
 
@@ -514,6 +530,9 @@ def parse_atom(stream):
             parts.append(name_token.value)
         return Name(".".join(parts))
 
+    if stream.test(TokenType.OPERATOR, "["):
+        return List(parse_sequence(stream, parse_expression, "[", "]"))
+
     # Literal.
     token = stream.expect((TokenType.TEXT, TokenType.TIMESTAMP, TokenType.UUID, TokenType.REAL, TokenType.INTEGER,
                            TokenType.BOOLEAN))
@@ -537,8 +556,8 @@ def parse_arithmetic_expression(stream):
 
 def parse_comparison(stream):
     lhs = parse_arithmetic_expression(stream)
-    if stream.test(TokenType.OPERATOR, ("<", ">", "==", ">=", "<=", "!=", "~=")):
-        operator_token = stream.expect(TokenType.OPERATOR, ("<", ">", "==", ">=", "<=", "!=", "~="))
+    if stream.test(TokenType.OPERATOR, ("<", ">", "==", ">=", "<=", "!=", "~=", "in", "not in")):
+        operator_token = stream.expect(TokenType.OPERATOR, ("<", ">", "==", ">=", "<=", "!=", "~=", "in", "not in"))
         return FunctionCall(operator_token.value, lhs, parse_comparison(stream))
     return lhs
 
@@ -629,6 +648,15 @@ class SemanticAnalysis(Visitor):
 
             visitable.value = "%s.%s" % (namespace, name)
             visitable.type = type_
+
+    def visit_List(self, visitable): # TODO check same literal type
+        values = []
+        for value in visitable.values:
+            if not isinstance(value, Literal):
+                raise Error("list contains non-literal")
+            values.append(value.value)
+        visitable.value = values
+        visitable.type = Sequence
 
     def visit_ParameterReference(self, visitable):
         try:
