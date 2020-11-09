@@ -216,9 +216,8 @@ class TokenStream(object):
             r"""[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}""",  # UUID literals
             r"""\d+(?:\.\d*(?:[eE][+-]?\d+)?|[eE][+-]?\d+)""",               # Real literals
             r"""\d+""",                                                      # Integer literals
-            r"""true|false""",                                               # Boolean literals
-            r"""<=|>=|==|!=|~=|in|not in|[*<>@()\[\],.+-/]""",               # Operators and delimiters
-            r"""[a-zA-Z]\w*""",                                              # Names
+            r"""<=|>=|==|!=|~=|not in|[*<>@()\[\],.+-/]""",                  # Operators and delimiters
+            r"""[a-zA-Z]\w*""",                                              # Names (incl. true, false, in)
         )
 
     _pattern = r"""(?:%s)""" % ("|".join(["(%s)" % sub_pattern for sub_pattern in _sub_patterns]))
@@ -314,16 +313,16 @@ class TokenStream(object):
                         self.text[self.token_start_position:]))
 
         self.token_start_position, self.token_end_position = match_object.span()
-        text, timestamp, uuid_, real, integer, boolean, operator, name = match_object.groups()
+        text, timestamp, uuid_, real, integer, operator, name = match_object.groups()
 
         if text is not None:
             return Token(TokenType.TEXT, string_unescape(text[1:-1]))
 
-        if uuid_ is not None:
-            return Token(TokenType.UUID, uuid.UUID(uuid_))
-
         if timestamp is not None:
             return Token(TokenType.TIMESTAMP, self._parse_timestamp(timestamp))
+
+        if uuid_ is not None:
+            return Token(TokenType.UUID, uuid.UUID(uuid_))
 
         if real is not None:
             return Token(TokenType.REAL, float(real))
@@ -331,14 +330,16 @@ class TokenStream(object):
         if integer is not None:
             return Token(TokenType.INTEGER, int(integer))
 
-        if boolean is not None:
-            return Token(TokenType.BOOLEAN, boolean == "true")
-
-        if name is not None:
-            return Token(TokenType.NAME, name)
-
         if operator is not None:
             return Token(TokenType.OPERATOR, operator)
+
+        if name is not None:
+            if name in ["true", "false"]:
+                return Token(TokenType.BOOLEAN, name == "true")
+            elif name == "in":
+                return Token(TokenType.OPERATOR, name)
+            else:
+                return Token(TokenType.NAME, name)
 
         raise Error("char %d: syntax error: \"%s\"" % (self.token_start_position + 1, match_object.group()))
 
