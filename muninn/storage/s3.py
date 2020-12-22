@@ -47,7 +47,12 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
         if prefix and not prefix.endswith('/'):
             prefix += '/'
         self._prefix = prefix
-        self.global_prefix = os.path.join('http://%s:%d/%s' % (host, port, bucket), prefix)
+
+        if port == 80:
+            export_port = ''
+        else:
+            export_port = ':%d' % port
+        self.global_prefix = os.path.join('http://%s%s/%s' % (host, export_port, bucket), prefix)
 
         self._root = bucket
         if tmp_root:
