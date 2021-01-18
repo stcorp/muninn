@@ -34,7 +34,7 @@ class MyTypePlugin(object):
         self.is_multi_part_product = False
         self.is_auxiliary_product = False
 
-        self.use_hash = True
+        self.hash_type = 'md5'
         self.use_enclosing_directory = {use_enclosing_directory}
 
         self.namespaces = ['mynamespace2']

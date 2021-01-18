@@ -189,11 +189,16 @@ Attributes
     them already being grouped together into a single top-level directory),
     this attribute should be set to ``True``.
 
-``use_hash``
-    Determines if a SHA1 hash will be computed for products of the type the
-    plug-in is designed to handle. Since computing a hash is an expensive
-    operation, it is useful to set this attribute to False if storing a hash
-    is not required.
+``hash_type``
+    Determines the hashing algorithm to be used for products of the type the
+    plug-in is designed to handle, e.g. ``md5`` or ``sha1``. The available
+    algorithms are those supported by the standard Python ``hashlib`` module.
+
+    If the attribute is set to ``None`` or the empty string, hashing is
+    disabled for the respective products. This can be useful, as hashing is
+    an expensive operation.
+
+    If the attribute is not set, the ``md5`` algorithm is used by default.
 
 ``cascade_rule``
     Determines what should happen to products of the type the plug-in is

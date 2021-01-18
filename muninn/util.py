@@ -170,13 +170,13 @@ def remove_path(path):
         shutil.rmtree(path)
 
 
-def hash_string(string, hash_func=hashlib.sha1):
+def hash_string(string, hash_func):
     hash = hash_func()
     hash.update(string)
     return encode(hash.hexdigest())
 
 
-def hash_file(path, block_size=65536, hash_func=hashlib.sha1):
+def hash_file(path, block_size, hash_func):
     hash = hash_func()
     with open(path, "rb") as stream:
         while True:
@@ -192,7 +192,8 @@ def hash_file(path, block_size=65536, hash_func=hashlib.sha1):
 # NB. os.path.islink() can be True even if neither os.path.isdir() nor os.path.isfile() is True.
 # NB. os.path.exists() is False for a dangling symbolic link, even if the symbolic link itself does exist.
 def product_hash(roots, resolve_root=True, resolve_links=False, force_encapsulation=False,
-                 hash_func=hashlib.sha1, block_size=65536):
+                 block_size=65536, hash_type=None):
+    hash_func = getattr(hashlib, hash_type or 'sha1')
 
     def _product_hash_rec(root, resolve_root, resolve_links, hash_func, block_size):
         if os.path.islink(root) and not (resolve_root or resolve_links):
@@ -230,11 +231,11 @@ def product_hash(roots, resolve_root=True, resolve_links=False, force_encapsulat
         roots = [roots]
 
     if len(roots) == 1 and not force_encapsulation:
-        return decode(_product_hash_rec(roots[0], resolve_root, resolve_links, hash_func, block_size))
+        return hash_type + ':' + decode(_product_hash_rec(roots[0], resolve_root, resolve_links, hash_func, block_size))
 
     hash = hash_func()
     for root in sorted(roots):
-        hash.update(hash_string(path_utf8(os.path.basename(root))))
+        hash.update(hash_string(path_utf8(os.path.basename(root)), hash_func))
 
         if os.path.islink(root) and not (resolve_root or resolve_links):
             hash.update(b"l")
@@ -245,7 +246,7 @@ def product_hash(roots, resolve_root=True, resolve_links=False, force_encapsulat
 
         hash.update(_product_hash_rec(root, resolve_root, resolve_links, hash_func, block_size))
 
-    return hash.hexdigest()
+    return hash_type + ':' + hash.hexdigest()
 
 
 def product_size(roots, resolve_root=True, resolve_links=False):

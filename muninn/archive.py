@@ -8,6 +8,8 @@ from muninn._compat import string_types as basestring
 import copy
 import datetime
 import errno
+import functools
+import hashlib
 import os
 import re
 import sys
@@ -23,6 +25,8 @@ from muninn.extension import CascadeRule
 from muninn.schema import *
 from muninn.struct import Struct
 from muninn import remote
+
+HASH_ALGORITHMS = set(hashlib.algorithms_guaranteed)
 
 
 class _ExtensionName(Text):
@@ -167,16 +171,38 @@ class Archive(object):
     def __exit__(self, type, value, traceback):
         self.close()
 
-    def _calculate_hash(self, product):
+    def _plugin_hash_type(self, plugin):
+        if hasattr(plugin, 'use_hash'):
+            if plugin.use_hash:
+                return 'sha1'
+            else:
+                return None
+
+        elif hasattr(plugin, 'hash_type'):
+            if not plugin.hash_type:
+                return None
+            else:
+                return plugin.hash_type
+
+        else:
+            return 'md5'
+
+    def _extract_hash_type(self, hash_value):
+        prefix, middle, _ = hash_value.partition(':')
+        if middle == ':' and prefix in HASH_ALGORITHMS:
+            return prefix
+
+    def _calculate_hash(self, product, hash_type):
         """ calculate the hash on a product in the archive """
         product_path = self._product_path(product)
         if product_path is None:
             raise Error("no data available for product '%s' (%s)" % (product.core.product_name, product.core.uuid))
 
-        # Get the product type specific plug-in.
         plugin = self.product_type_plugin(product.core.product_type)
 
-        return self._storage.run_for_product(product, util.product_hash, plugin.use_enclosing_directory)
+        product_hash = functools.partial(util.product_hash, hash_type=hash_type)
+
+        return self._storage.run_for_product(product, product_hash, plugin.use_enclosing_directory)
 
     def _establish_invariants(self):
         repeat = True
@@ -622,9 +648,10 @@ class Archive(object):
         try:
             # Determine product hash. Since it is an expensive operation, the hash is computed after inserting the
             # product properties so we won't needlessly compute it for products that fail ingestion into the catalogue.
-            if plugin.use_hash:
+            hash_type = self._plugin_hash_type(plugin)
+            if hash_type is not None:
                 try:
-                    properties.core.hash = util.product_hash(paths)
+                    properties.core.hash = util.product_hash(paths, hash_type=hash_type)
                 except EnvironmentError as _error:
                     raise Error("cannot determine product hash [%s]" % (_error,))
                 # Update the product hash in the product catalogue.
@@ -856,6 +883,25 @@ class Archive(object):
         # update size
         properties.core.size = self._storage.size(product_path)
 
+        # if product type has disabled hashing, remove existing hash values
+        plugin_hash_type = self._plugin_hash_type(plugin)
+        stored_hash = product.core.hash
+
+        if plugin_hash_type is None:
+            if stored_hash is not None:
+                product.core.hash = None
+
+        # if product type hash different hash algorithm, update hash values
+        else:
+            if stored_hash is None:
+                properties.core.hash = self._calculate_hash(product, plugin_hash_type)
+            else:
+                hash_type = self._extract_hash_type(stored_hash)
+                if hash_type is None:
+                    properties.core.hash = + plugin_hash_type + ':' + properties.core.hash
+                elif hash_type != plugin_hash_type:
+                    properties.core.hash = self._calculate_hash(product, plugin_hash_type)
+
         # Make sure product is stored in the correct location
         if not use_current_path:
             new_archive_path = self._relocate(product, properties)
@@ -947,9 +993,13 @@ class Archive(object):
             raise Error("redefinition of product type: \"%s\"" % product_type)
 
         # Quick verify of the plugin interface
-        for attr in ['use_enclosing_directory', 'use_hash']:
+        for attr in ['use_enclosing_directory']:
             if not hasattr(plugin, attr):
                 raise Error("missing '%s' attribute in plugin for product type \"%s\"" % (attr, product_type))
+
+        if hasattr(plugin, 'use_hash'):
+            warnings.warn("'use_hash' option is deprecated (use 'hash_type')")
+
         methods = ['identify', 'analyze', 'archive_path']
         if plugin.use_enclosing_directory:
             methods += ['enclosing_directory']
@@ -1320,6 +1370,18 @@ class Archive(object):
                 if 'hash' not in product.core:
                     raise Error("no hash available for product '%s' (%s)" %
                                 (product.core.product_name, product.core.uuid))
-                if self._calculate_hash(product) != product.core.hash:
+
+                stored_hash = product.core.hash
+                hash_type = self._extract_hash_type(stored_hash)
+
+                if hash_type is None:
+                    plugin = self.product_type_plugin(product.core.product_type)
+                    hash_type = self._plugin_hash_type(plugin)
+                    stored_hash = hash_type + ':' + stored_hash
+
+                current_hash = self._calculate_hash(product, hash_type)
+
+                if current_hash != stored_hash:
                     failed_products.append(product.core.uuid)
+
         return failed_products
