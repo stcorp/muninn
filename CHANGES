@@ -8,21 +8,24 @@
 
 * Added (optional) product type plugin attribute 'namespaces', which
   contains a list of names of non-core namespace names of properties that
-  that plugin.analyze may return. Non-core properties are now also passed
-  to the other plugin methods.
+  plugin.analyze may return. Those non-core properties are now also passed to
+  the other plugin methods.
 
-* Removed muninn-update --namespaces option, as this should now work
+* Removed `muninn-update --namespaces` option, as this should now work
   automatically.
 
 * Added product plugin method 'post_remove_hook' that is called after a
   successful remove.
 
-* Changed 'muninn-update -a <action>' command to 'munnin-update <action>'
+* Changed `muninn-update -a <action>` command to `munnin-update <action>`.
 
-* Changed 'muninn-ingest -c' command to mean 'catalogue only'
+* Changed `muninn-ingest -c` command to mean 'catalogue only'.
 
 * Added basic 'in' and 'not in' operators (so that e.g. the following works:
- 'physical_name not in ["a", "b"])
+ `physical_name not in ["a", "b"]`)
+
+* Namespace records can now be removed with archive.update_properties() by
+  passing: `Struct({'mynamespace': None})`
 
 5.0 2020-07-30
 ~~~~~~~~~~~~~~
@@ -57,6 +60,9 @@
 
 * Improved querying on NULL properties. For example, for 'property != b',
   we now also return products for which b is NULL.
+
+* Added support for `is_defined(mynamespace)` to check whether a namespace
+  record exists.
 
 * Added property_names argument to Archive.retrieve_properties().
 
