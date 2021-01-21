@@ -25,9 +25,9 @@ def prepare(args):
 def main():
     parser = create_parser(description="Prepare a muninn archive for first use.")
     parser.add_argument("-c", "--catalogue-only", action="store_true", help="only prepare the catalogue database, "
-                        "without creating (or removing anything from) the archive root path on disk")
+                        "without creating (or removing anything from) the archive storage")
     parser.add_argument("-f", "--force", action="store_true",
-                        help="force preparation of an existing archive, completely removing its contents")
+                        help="force preparation of an existing archive, completely removing all content")
     parser.add_argument("--dry-run", action="store_true", help="dump the SQL statements without executing them")
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
     return parse_args_and_run(parser, prepare)
