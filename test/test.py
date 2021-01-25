@@ -679,6 +679,56 @@ class TestArchive:
                 )
                 assert not archive._checker.exists(oldpath)
 
+    def test_rebuild_properties_hash(self, archive):
+        plugin = archive._product_type_plugins['MY_TYPE']
+
+        try:
+            # ingest product: hash_type is set to 'md5'
+            product = self._ingest_file(archive)
+            assert product.core.hash.startswith('md5:')
+
+            # plugin.hash_type changed, so hash should change on rebuild_properties
+            archive._product_type_plugins['MY_TYPE'].hash_type = 'sha1'
+            archive.rebuild_properties(product.core.uuid)
+            product = archive.retrieve_properties(product.core.uuid)
+            assert product.core.hash.startswith('sha1:')
+
+            # remove stored hash, so rebuild_properties should rebuild it
+            product.core.hash = None
+            archive.update_properties(product)
+            archive.rebuild_properties(product.core.uuid)
+            product = archive.retrieve_properties(product.core.uuid)
+            assert product.core.hash.startswith('sha1:')
+
+            # upgrade case: stored hash without prefix, so add it
+            product.core.hash = product.core.hash[len('sha1:'):]
+            archive.update_properties(product)
+            archive.rebuild_properties(product.core.uuid)
+            product = archive.retrieve_properties(product.core.uuid)
+            assert product.core.hash.startswith('sha1:')
+
+            # hashing was disabled, so remove hash
+            archive._product_type_plugins['MY_TYPE'].hash_type = None
+            archive.rebuild_properties(product.core.uuid)
+            product = archive.retrieve_properties(product.core.uuid)
+            assert 'hash' not in product.core
+
+        finally:
+            plugin.hash_type = 'md5'
+
+    def test_verify_hash(self, archive):
+        product = self._ingest_file(archive)
+
+        # normal case: hash contains prefix
+        failed = archive.verify_hash()
+        assert len(failed) == 0
+
+        # upgrade case: no hash prefix, so fail on md5 vs sha1
+        product.core.hash = product.core.hash[len('md5:'):]
+        archive.update_properties(product)
+        failed = archive.verify_hash()
+        assert len(failed) == 1
+
     def test_rebuild_pull_properties(self, archive):
         properties = self._pull(archive)
         archive.rebuild_pull_properties(properties.core.uuid, verify_hash=True)

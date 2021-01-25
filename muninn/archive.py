@@ -172,20 +172,20 @@ class Archive(object):
         self.close()
 
     def _plugin_hash_type(self, plugin):
-        if hasattr(plugin, 'use_hash'):
-            if plugin.use_hash:
-                return 'sha1'
-            else:
-                return None
-
-        elif hasattr(plugin, 'hash_type'):
+        if hasattr(plugin, 'hash_type'):
             if not plugin.hash_type:
                 return None
             else:
                 return plugin.hash_type
 
+        elif hasattr(plugin, 'use_hash'):
+            if plugin.use_hash:
+                return 'sha1'
+            else:
+                return None
+
         else:
-            return 'md5'
+            return 'md5' # default after use_hash deprecation
 
     def _extract_hash_type(self, hash_value):
         prefix, middle, _ = hash_value.partition(':')
@@ -883,30 +883,30 @@ class Archive(object):
         # update size
         properties.core.size = self._storage.size(product_path)
 
-        # if product type has disabled hashing, remove existing hash values
-        plugin_hash_type = self._plugin_hash_type(plugin)
-        stored_hash = product.core.hash
-
-        if plugin_hash_type is None:
-            if stored_hash is not None:
-                product.core.hash = None
-
-        # if product type hash different hash algorithm, update hash values
-        else:
-            if stored_hash is None:
-                properties.core.hash = self._calculate_hash(product, plugin_hash_type)
-            else:
-                hash_type = self._extract_hash_type(stored_hash)
-                if hash_type is None:
-                    properties.core.hash = + plugin_hash_type + ':' + properties.core.hash
-                elif hash_type != plugin_hash_type:
-                    properties.core.hash = self._calculate_hash(product, plugin_hash_type)
-
         # Make sure product is stored in the correct location
         if not use_current_path:
             new_archive_path = self._relocate(product, properties)
             if new_archive_path:
                 properties.core.archive_path = new_archive_path
+
+        # if product type has disabled hashing, remove existing hash values
+        stored_hash = getattr(product.core, 'hash', None)
+        plugin_hash_type = self._plugin_hash_type(plugin)
+
+        if plugin_hash_type is None:
+            if stored_hash is not None:
+                properties.core.hash = None
+
+        # if product type has different hash algorithm, update hash values
+        else:
+            if stored_hash is None:
+                properties.core.hash = self._calculate_hash(product, plugin_hash_type)
+            else:
+                hash_type = self._extract_hash_type(stored_hash)
+                if hash_type is None and plugin_hash_type == 'sha1':
+                    properties.core.hash = plugin_hash_type + ':' + stored_hash
+                elif hash_type != plugin_hash_type:
+                    properties.core.hash = self._calculate_hash(product, plugin_hash_type)
 
         # Update product properties.
         self.update_properties(properties, uuid=product.core.uuid, create_namespaces=True)
@@ -1375,9 +1375,8 @@ class Archive(object):
                 hash_type = self._extract_hash_type(stored_hash)
 
                 if hash_type is None:
-                    plugin = self.product_type_plugin(product.core.product_type)
-                    hash_type = self._plugin_hash_type(plugin)
-                    stored_hash = hash_type + ':' + stored_hash
+                    hash_type = 'sha1' # default before use_hash deprecation
+                    stored_hash = 'sha1:' + stored_hash
 
                 current_hash = self._calculate_hash(product, hash_type)
 
