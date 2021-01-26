@@ -997,7 +997,7 @@ class Archive(object):
             if not hasattr(plugin, attr):
                 raise Error("missing '%s' attribute in plugin for product type \"%s\"" % (attr, product_type))
 
-        if hasattr(plugin, 'use_hash'):
+        if hasattr(plugin, 'use_hash') and not hasattr(plugin, 'hash_type'):
             warnings.warn("'use_hash' option is deprecated (use 'hash_type')")
 
         methods = ['identify', 'analyze', 'archive_path']
