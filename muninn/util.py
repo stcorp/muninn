@@ -9,11 +9,8 @@ import hashlib
 import os
 import shutil
 import tempfile
-import json
-import ftplib
 
 from muninn._compat import string_types as basestring
-from muninn._compat import urlparse
 from muninn._compat import path_utf8, encode, decode
 
 
@@ -268,60 +265,6 @@ def product_size(roots, resolve_root=True, resolve_links=False):
         roots = [roots]
 
     return sum([_product_size_rec(root, resolve_root, resolve_links) for root in roots])
-
-
-class DownloadError(Exception):
-    pass
-
-
-class Downloader(object):
-    def __init__(self, remote_url, auth_file=None):
-        self.remote_url = remote_url
-        self.auth_file = auth_file
-        self.url = urlparse(self.remote_url)
-        self.timeout = 60  # we use a timeout of 60 seconds for requests
-
-    def save(self, local_file):
-        if self.remote_url.lower().startswith('ftp'):
-            self._download_ftp(local_file)
-        else:
-            self._download_http(local_file)
-
-    def _get_credentials(self):
-        try:
-            credentials = json.loads(open(self.auth_file).read())
-            if self.url.hostname in credentials:
-                return credentials[self.url.hostname]['username'], \
-                    credentials[self.url.hostname]['password']
-            else:
-                return '', ''
-        except:
-            return '', ''
-
-    def _download_http(self, local_file):
-        import requests
-        try:
-            username, password = self._get_credentials()
-            r = requests.get(self.remote_url, timeout=self.timeout, auth=(username, password))
-            r.raise_for_status()
-            with open(local_file, 'wb') as output:
-                output.write(r.content)
-        except Exception as e:
-            raise DownloadError('Error downloading %s (Reason: %s)' % (self.remote_url, e))
-
-    def _download_ftp(self, local_file):
-        try:
-            username, password = self._get_credentials()
-            if username == '':
-                username = 'anonymous'
-                password = 'guest'
-            ftp = ftplib.FTP(self.url.hostname, username, password, timeout=self.timeout)
-            ftp.cwd(os.path.dirname(self.url.path))
-            ftp.set_pasv(True)
-            ftp.retrbinary('RETR %s' % os.path.basename(self.url.path), open(local_file, 'wb').write)
-            ftp.quit()
-        except Exception as e:
-            raise DownloadError('Error downloading %s (Reason: %s)' % (self.remote_url, e))
 
 
 def quoted_list(lst, quote_text='"', join_text=", "):
