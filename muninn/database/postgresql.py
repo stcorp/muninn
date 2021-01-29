@@ -286,12 +286,14 @@ class PostgresqlBackend(object):
         schema = self._namespace_schema("core")
         for name in schema:
             if schema.has_index(name):
-                result.append("CREATE INDEX idx_%s_%s ON %s (%s)" %
-                              (self._core_table_name, name, self._core_table_name, name))
+                if schema[name] == Geometry:
+                    # For the geospatial footprint we need to use a special GIST index
+                    result.append("CREATE INDEX idx_%s_%s ON %s USING GIST (%s)" %
+                                  (self._core_table_name, name, self._core_table_name, name))
+                else:
+                    result.append("CREATE INDEX idx_%s_%s ON %s (%s)" %
+                                  (self._core_table_name, name, self._core_table_name, name))
 
-        # For the geospatial footprint we need to use a special GIST index
-        result.append("CREATE INDEX idx_%s_footprint ON %s USING GIST (footprint)" %
-                      (self._core_table_name, self._core_table_name))
 
         # Create the tables for all non-core namespaces.
         for namespace in self._namespace_schemas:
@@ -308,8 +310,12 @@ class PostgresqlBackend(object):
             schema = self._namespace_schema(namespace)
             for name in schema:
                 if schema.has_index(name):
-                    result.append("CREATE INDEX idx_%s_%s ON %s (%s)" %
-                                  (self._table_name(namespace), name, self._table_name(namespace), name))
+                    if schema[name] == Geometry:
+                        result.append("CREATE INDEX idx_%s_%s ON %s USING GIST (%s)" %
+                                      (self._table_name(namespace), name, self._table_name(namespace), name))
+                    else:
+                        result.append("CREATE INDEX idx_%s_%s ON %s (%s)" %
+                                      (self._table_name(namespace), name, self._table_name(namespace), name))
 
         # We use explicit 'id' primary keys for the links and tags tables so the entries can be managed using
         # other front-ends that may not support tuples as primary keys.

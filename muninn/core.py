@@ -52,5 +52,5 @@ class Core(Mapping):
     validity_start = Timestamp(optional=True, index=True)
     validity_stop = Timestamp(optional=True, index=True)
     creation_date = Timestamp(optional=True, index=True)
-    footprint = Geometry(optional=True)
+    footprint = Geometry(optional=True, index=True)
     remote_url = Remote(optional=True)
