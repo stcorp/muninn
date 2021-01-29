@@ -29,7 +29,7 @@ To be able to use muninn, you will need:
   - Python2 version 2.7 or Python3 version 3.6 or higher.
 
 For the postgresql database backend:
-  - psycopg2 version 2.2 or higher (alternatively, pg8000 version 1.13 or higher)
+  - psycopg2 version 2.2 or higher (or pg8000 version 1.13 or higher)
   - PostgreSQL version 8.4 or higher.
   - PostGIS version 2.0 or higher.
 
@@ -44,17 +44,19 @@ For the Swift storage backend:
   - swiftclient
 
 To be able to install muninn, you will need:
-  - setuptools version 0.6 or compatible.
+  - setuptools
 
 Optional dependencies:
   - requests: to perform a muninn-pull on http/https urls
+  - requests-oauthlib and oauthlib: to perform a muninn-pull using oauth2
+    authentication
   - tabulate: provides more output format options for muninn-search
   - tqdm: to show a progress bar for muninn-update
   - pytest: to run the tests
 
 
-Muninn is distributed as a source distribution created using setuptools version
-0.6. It can be installed in several ways, for example using pip or by invoking
+Muninn is distributed as a source distribution created using setuptools.
+It can be installed in several ways, for example using pip or by invoking
 setup.py manually. Installation using setup.py with the default prefix will
 often require super user privileges.
 
@@ -251,9 +253,9 @@ These tools are:
   - muninn-destroy
   - muninn-export
   - muninn-ingest
-  - muninn-pull
   - muninn-list-tags
   - muninn-prepare
+  - muninn-pull
   - muninn-remove
   - muninn-retrieve
   - muninn-search
@@ -277,8 +279,8 @@ The steps to create an archive are:
 
 When using the PostgreSQL database backend, you need to create a PostGIS
 enabled database that muninn can use to store product properties. Multiple
-archives can share the same database, as long as they use a different schema
-name.
+archives can share the same database, as long as they use a different table
+prefix.
 
 Depending on your PostgreSQL installation, creating a database could be as
 simple as: ::
@@ -290,8 +292,7 @@ For Sqlite, muninn will automatically create the database file when it is first
 accessed.
 
 Next, you need to create a configuration file for the archive. See the section
-"Archive configuration files"_ for details on the the configuration file
-format.
+"Archive configuration files"_ for details on the configuration file format.
 
 Make sure the configuration file is stored somewhere on the configuration
 search path (see section "Installation instructions"_). Move the file or update
@@ -318,9 +319,7 @@ products and product properties contained in the archive: ::
 
   $ muninn-destroy [archive id]
 
-Next, you can optionally remove the archive configuration file. Note that if
-you do not remove this file (and if can be found on the configuration search
-path), other users can still try to access the non-existing archive.
+Next, you can optionally remove the archive configuration file.
 
 If no other archives share the PostgreSQL database used by the archive you just
 removed, you can proceed to remove the database: ::
@@ -335,14 +334,14 @@ specific (types of) products, it is necessary to install one or more
 extensions.
 
 A muninn extension is a Python module or package that implements the muninn
-extension interface. Muninn defines two types of extensions: namespace
+extension interface. Muninn defines two main types of extensions: namespace
 extensions (that contain namespace definitions) and product type extensions
 (that contain product type plug-ins).
 
 A namespace is a named set of product properties (see section "Namespaces"_).
 Muninn defines a namespace called ``core`` that contains a small set of
 properties that muninn needs to archive a product. For example, it contains the
-name of the product, its SHA1 hash, UUID, and archive date.
+name of the product, its hash, UUID, and archive date.
 The core namespace also contains several optional common properties for
 spatiotemporal data such as time stamps and geolocation footprint.
 
@@ -355,15 +354,20 @@ contains properties such as artist, genre, duration, and so forth.
 
 A product type plug-in is an instance of a class that implements the muninn
 product type plug-in interface. The main responsibility of a product type plug-
-in is to extract product properties and tags from products of the type that it
-supports. At the minimum, this involves extracting all the required properties
-defined in the "core" namespace. Without this information, muninn cannot
-archive the product.
+in is to extract product properties and tags from products of its supported
+product type(s). At the minimum, this involves extracting all the required
+properties defined in the "core" namespace. Without this information, muninn
+cannot archive the product.
 
 Product type plug-ins can also be used to tailor certain aspects of muninn. For
 example, the plug-in controls what happens to a product (of the type it
 supports) when all of the products it is linked to (see section "Links"_) have
 been removed from the archive.
+
+A third type of extension is the remote backend extension. This type of
+extension is specifically for muninn-pull and can introduce support for
+retrieving data using protocols other than the built-in support that muninn
+already has for http/https/ftp/file.
 
 
 Archive configuration files
@@ -453,8 +457,8 @@ may contain the following settings:
   will be prefixed without separation characters, so any underscores, etc. need
   to be included in the option value.
 
-- ``mod_spatialite_path``: Path/name of the mod_spatialite library. Will be set to
-  'mod_spatialite' by default (which only works if library is on search path).
+- ``mod_spatialite_path``: Path/name of the mod_spatialite library. Will be set
+  to 'mod_spatialite' by default (which only works if library is on search path).
   Change this to e.g. /usr/local/lib/mod_spatialite to set an explicit path
   (no filename extension needed).
 
@@ -529,6 +533,19 @@ Example credentials file
           "server-two.com": {
              "username": "two",
              "password": "password_two"
+          },
+          "https://server-two.com/specific/url/endpoint": {
+             "username": "two",
+             "password": "password_two"
+          },
+          "https://server-two.com/oauth/service/endpoint": {
+             "auth_type": "oauth2",
+             "grand_type": "ResourceOwnerPasswordCredentialsGrant",
+             "username": "myuser",
+             "password": "somepassword",
+             "client_id": "thisclient",
+             "client_secret": "somesecret",
+             "token_url": "https://authentication-server.com/token/endpoint"
           }
        }
 
@@ -673,7 +690,7 @@ property ``uuid``, and the optional properties ``validity_start`` and
 
 Links
 =====
-Product stored in a muninn archive can be linked to other products in the same
+Products stored in a muninn archive can be linked to other products in the same
 archive (or even to products stored in a different archive).
 
 A link between a product A and a product B represents a relation between these

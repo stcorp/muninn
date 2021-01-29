@@ -1,3 +1,20 @@
+* Added support for oauth2 (Resource Owner Password Credentials Grant) for
+  muninn-pull and added oauth2 support to the auth_file credentials file.
+
+* url prefixes can now be used as keys in the auth_file credentials file
+  (instead of only hostnames).
+
+* muninn-pull will now auto-unzip a downloaded file if the downloaded filename
+  equals core.physical_name + '.zip' (or '.ZIP').
+
+* Improved memory efficiency of muninn-pull. Files are no longer read fully
+  in memory when downloading.
+
+* Added new plugin attribute 'hash_type', to specify hash algorithm
+  (matching hashlib module). The 'use_hash' attribute has been deprecated.
+  core.hash will now contain '<type>:<hash>' as content. Existing core.hash
+  values will still be treated as sha1 hashes for backward compatibility.
+
 * Archive.retrieve() and Archive.retrieve_by_name() now return a list of
   product paths. Archive.retrieve_by_uuid() now returns a single path.
 
@@ -26,9 +43,6 @@
 
 * Namespace records can now be removed with archive.update_properties() by
   passing: `Struct({'mynamespace': None})`
-
-* Added new plugin attribute 'hash_type', to specify hash algorithm
- (matching hashlib module). Deprecated 'use_hash' attribute.
 
 5.0 2020-07-30
 ~~~~~~~~~~~~~~
