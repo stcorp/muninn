@@ -1,3 +1,6 @@
+5.1 2021-01-31
+~~~~~~~~~~~~~~
+
 * Added support for oauth2 (Resource Owner Password Credentials Grant) for
   muninn-pull and added oauth2 support to the auth_file credentials file.
 
