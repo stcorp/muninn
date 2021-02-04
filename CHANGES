@@ -1,3 +1,5 @@
+* Allow filename in http result header for muninn-pull to be unquoted.
+
 5.1 2021-01-31
 ~~~~~~~~~~~~~~
 
