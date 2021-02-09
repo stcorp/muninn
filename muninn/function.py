@@ -56,8 +56,9 @@ class Prototype(object):
 
 
 class FunctionTable(MutableSet):
-    def __init__(self, prototypes=[]):
+    def __init__(self, prototypes=[], type_map=None):
         self._prototypes = {}
+        self._type_map = type_map
         for prototype in prototypes:
             self.add(prototype)
 
@@ -96,10 +97,14 @@ class FunctionTable(MutableSet):
                 continue
 
             equal, compatible = 0, 0
-            for candidate_type, type in izip(candidate.argument_types, prototype.argument_types):
-                if type is candidate_type:
+            for candidate_type, type_ in izip(candidate.argument_types, prototype.argument_types):
+                if type_ is candidate_type:
                     equal += 1
-                elif issubclass(type, candidate_type):
+                elif type_ in self._type_map and self._type_map[type_] is candidate_type:
+                    compatible += 1
+                elif type_ in self._type_map and issubclass(type_, self._type_map[type_]):
+                    compatible += 1
+                elif issubclass(type_, candidate_type):
                     compatible += 1
                 else:
                     break

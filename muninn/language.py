@@ -22,7 +22,10 @@ from muninn.visitor import Visitor
 #
 # Table of all supported operators and functions
 #
-function_table = FunctionTable()
+type_map = {
+    UUID: Boolean,
+}
+function_table = FunctionTable(type_map=type_map)
 #
 # Logical operators
 #

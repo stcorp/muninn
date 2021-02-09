@@ -344,7 +344,12 @@ class _WhereExpressionVisitor(Visitor):
 
         # non-sub-query
         else:
-            arguments = [super(_WhereExpressionVisitor, self).visit(argument) for argument in visitable.arguments]
+            arguments = []
+            for type_, argument in zip(visitable.prototype.argument_types, visitable.arguments):
+                where = super(_WhereExpressionVisitor, self).visit(argument)
+                if isinstance(argument, Literal) and argument.type is UUID and type_ is Boolean:
+                    where = ("(uuid = %s)" % where)
+                arguments.append(where)
             sql_expr = rewriter_func(*arguments)
 
             # SQL-improved NULL checking (e.g., field != "blah" also matches NULL)

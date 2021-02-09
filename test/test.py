@@ -478,6 +478,10 @@ class TestArchive:
         s = archive.search('%s' % uuid)
         assert len(s) == 1
 
+        # use uuid as boolean
+        s = archive.search('%s and product_name == "pi.txt"' % uuid)
+        assert len(s) == 1
+
     def test_tags(self, archive):
         properties = self._ingest_file(archive)
         uuid = properties.core.uuid
