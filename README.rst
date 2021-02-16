@@ -442,10 +442,12 @@ may contain the following settings:
   will be prefixed without separation characters, so any underscores, etc. need
   to be included in the option value.
 
+
 Section "sqlite"
 ----------------
-This section contains backend specific settings for the postgresql backend and
-may contain the following settings:
+
+This section contains backend specific settings for the sqlite backend and may
+contain the following settings:
 
 - ``connection_string``: Mandatory. A full path to the sqlite database file
   containing the product properties. This file will be automatically created by
@@ -461,6 +463,7 @@ may contain the following settings:
   to 'mod_spatialite' by default (which only works if library is on search path).
   Change this to e.g. /usr/local/lib/mod_spatialite to set an explicit path
   (no filename extension needed).
+
 
 Section "fs"
 ----------------
