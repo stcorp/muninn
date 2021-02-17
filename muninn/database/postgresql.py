@@ -54,12 +54,20 @@ def _get_db_type_id(connection, typename):
     return type_id
 
 
-def geometry_recv(data, offset, length):
+def geometry_recv(data, offset, length): # TODO binary send/recv needed for pg8000 <= 1.15
     return ewkb.decode_ewkb(data[offset:offset+length])
+
+
+def geometry_recv_hex(data):
+    return ewkb.decode_hexewkb(data)
 
 
 def geometry_send(geometry):
     return ewkb.encode_ewkb(geometry)
+
+
+def geometry_send_hex(geometry):
+    return ewkb.encode_hexewkb(geometry)
 
 
 def _connect_pg8000(connection_string):
@@ -67,7 +75,12 @@ def _connect_pg8000(connection_string):
     _connection = pg8000.connect(**kwargs)
 
     geography_oid = _get_db_type_id(_connection, "geography")
-    _connection.pg_types[geography_oid] = (pg8000.core.FC_BINARY, geometry_recv)
+
+    if hasattr(_connection, 'register_in_adapter'):
+        _connection.register_in_adapter(geography_oid, geometry_recv_hex)
+    else:
+        _connection.pg_types[geography_oid] = (pg8000.core.FC_BINARY, geometry_recv)
+
     for type_ in (
         geometry.Point,
         geometry.Polygon,
@@ -76,7 +89,10 @@ def _connect_pg8000(connection_string):
         geometry.MultiPolygon,
         geometry.MultiLineString,
     ):
-        _connection.py_types[type_] = (geography_oid, pg8000.core.FC_BINARY, geometry_send)
+        if hasattr(_connection, 'register_out_adapter'):
+            _connection.register_out_adapter(type_, geography_oid, geometry_send_hex)
+        else:
+            _connection.py_types[type_] = (geography_oid, pg8000.core.FC_BINARY, geometry_send)
 
     return _connection
 
