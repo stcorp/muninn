@@ -158,6 +158,9 @@ def use_enclosing_directory(request):
 
 @pytest.fixture
 def archive(database, storage, use_enclosing_directory, archive_path):
+    database, _, database_options = database.partition(':')
+
+    # create my_arch.cfg by combining my_arch.cfg.template and test.cfg
     template = open('my_arch.cfg.template', 'r').read()
     data = template.replace('{database}', database)
     data = data.replace('{storage}', storage)
@@ -167,6 +170,13 @@ def archive(database, storage, use_enclosing_directory, archive_path):
         for line in open('test.cfg'):
             if line.startswith('['):
                 section = line.strip()
+            elif '=' in line and section in ('[sqlite]', '[postgresql]') and database_options:
+                key, _, value = line.partition('=')
+                key, value = key.strip(), value.strip()
+                for option in database_options.split(','):
+                    opt_key, opt_value = option.split('=')
+                    if opt_key == key:
+                        line = '%s = %s\n' % (opt_key, opt_value)
             if section != '[DEFAULT]':
                 f.write(line)
 
