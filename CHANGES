@@ -1,3 +1,7 @@
+* UUID values can now be used everywhere as boolean in query expressions.
+
+* Add support for new type conversions of pg8000 >= 1.16.
+
 * Allow filename in http result header for muninn-pull to be unquoted.
 
 5.1 2021-01-31
