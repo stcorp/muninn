@@ -57,6 +57,7 @@ class _ArchiveConfig(Mapping):
     namespace_extensions = _ExtensionList(optional=True)
     product_type_extensions = _ExtensionList(optional=True)
     remote_backend_extensions = _ExtensionList(optional=True)
+    hook_extensions = _ExtensionList(optional=True)
     auth_file = Text(optional=True)
 
 
@@ -112,6 +113,7 @@ def create(configuration):
     namespace_extensions = options.pop("namespace_extensions", [])
     product_type_extensions = options.pop("product_type_extensions", [])
     remote_backend_extensions = options.pop("remote_backend_extensions", [])
+    hook_extensions = options.pop("hook_extensions", [])
     archive = Archive(backend=backend, storage=storage, **options)
 
     # Register core namespace.
@@ -144,6 +146,15 @@ def create(configuration):
         except AttributeError:
             raise Error("extension %r does not implement the remote backend extension API" % name)
 
+    # Register hook extensions.
+    for name in hook_extensions:
+        extension = _load_extension(name)
+        try:
+            for hook_extension in extension.hook_extensions():
+                archive.register_hook_extension(hook_extension, extension.hook_extension(hook_extension))
+        except AttributeError:
+            raise Error("extension %r does not implement the hook extension API" % name)
+
     return archive
 
 
@@ -158,6 +169,7 @@ class Archive(object):
         self._namespace_schemas = {}
         self._product_type_plugins = {}
         self._remote_backend_plugins = copy.copy(remote.REMOTE_BACKENDS)
+        self._hook_extensions = {}
         self._export_formats = set()
 
         self._database = backend
@@ -165,11 +177,124 @@ class Archive(object):
 
         self._storage = storage
 
-    def __enter__(self):
-        return self
+    def register_namespace(self, namespace, schema):
+        """Register a namespace.
 
-    def __exit__(self, type, value, traceback):
-        self.close()
+        Arguments:
+        namespace -- Name of the namespace.
+        schema    -- Schema definition of the namespace.
+
+        """
+        if not re.match(r"[a-z][_a-z]*(\.[a-z][_a-z]*)*", namespace):
+            raise ValueError("invalid namespace name %s" % namespace)
+        if namespace in self._namespace_schemas:
+            raise Error("redefinition of namespace: \"%s\"" % namespace)
+
+        self._namespace_schemas[namespace] = schema
+
+    def namespace_schema(self, namespace):
+        """Return the schema definition of a namespace."""
+        try:
+            return self._namespace_schemas[namespace]
+        except KeyError:
+            raise Error("undefined namespace: \"%s\"; defined namespaces: %s" %
+                        (namespace, util.quoted_list(self._namespace_schemas.keys())))
+
+    def namespaces(self):
+        """Return a list of supported namespaces."""
+        return list(self._namespace_schemas.keys())
+
+    def register_product_type(self, product_type, plugin):
+        """Register a product type.
+
+        Arguments:
+        product_type -- Product type.
+        plugin       -- Reference to an object that implements the product type plugin API and as such takes care of
+                        the details of extracting product properties from products of the specified product type.
+
+        """
+        if product_type in self._product_type_plugins:
+            raise Error("redefinition of product type: \"%s\"" % product_type)
+
+        # Quick verify of the plugin interface
+        for attr in ['use_enclosing_directory']:
+            if not hasattr(plugin, attr):
+                raise Error("missing '%s' attribute in plugin for product type \"%s\"" % (attr, product_type))
+
+        if hasattr(plugin, 'use_hash') and not hasattr(plugin, 'hash_type'):
+            warnings.warn("'use_hash' option is deprecated (use 'hash_type')")
+
+        methods = ['identify', 'analyze', 'archive_path']
+        if plugin.use_enclosing_directory:
+            methods += ['enclosing_directory']
+        for method in methods:
+            if not hasattr(plugin, method):
+                raise Error("missing '%s' method in plugin for product type \"%s\"" % (method, product_type))
+
+        self._product_type_plugins[product_type] = plugin
+        self._update_export_formats(plugin)
+
+    def product_type_plugin(self, product_type):
+        """Return a reference to the product type plugin for a product type."""
+        try:
+            return self._product_type_plugins[product_type]
+        except KeyError:
+            raise Error("undefined product type: \"%s\"; defined product types: %s" %
+                        (product_type, util.quoted_list(self._product_type_plugins.keys())))
+
+    def product_types(self):
+        """Return a list of supported product types."""
+        return list(self._product_type_plugins.keys())
+
+    def register_remote_backend(self, remote_backend, plugin):
+        """Register a remote backend.
+
+        Arguments:
+        remote_backend -- Remote backend.
+        plugin         -- Reference to an object that implements the remote backend plugin API and as such takes care of
+                          the details of extracting product properties from products of the specified remote backend.
+
+        """
+        if remote_backend in self._remote_backend_plugins:
+            raise Error("redefinition of remote backend: \"%s\"" % remote_backend)
+
+        self._remote_backend_plugins[remote_backend] = plugin
+
+    def remote_backend(self, remote_backend):
+        """Return the schema definition of a remote backend."""
+        try:
+            return self._remote_backend_plugins[remote_backend]
+        except KeyError:
+            raise Error("undefined remote backend: \"%s\"; defined remote backends: %s" %
+                        (remote_backend, util.quoted_list(self._remote_backend.keys())))
+
+    def remote_backends(self):
+        """Return a list of supported remote backends."""
+        return list(self._remote_backend_plugins.keys())
+
+    def register_hook_extension(self, hook_extension, plugin):
+        """Register a hook extension.
+
+        Arguments:
+        hook_extension -- Hook extension name
+        plugin         -- Reference to an object that implements the hook extension plugin API
+        """
+        if hook_extension in self._hook_extensions:
+            raise Error("redefinition of hook extension: \"%s\"" % hook_extension)
+
+        self._hook_extensions[hook_extension] = plugin
+
+    def hook_extension(self, hook_extension):
+        """Return the hook extension with the specified name."""
+        try:
+            return self._hook_extensions[hook_extension]
+        except KeyError:
+            raise Error("undefined hook extension: \"%s\"; defined hook extensions: %s" %
+                        (hook_extension, util.quoted_list(self._hook_extensions.keys())))
+
+    def hook_extensions(self):
+        """Return a list of supported hook extensions."""
+        return list(self._hook_extensions.keys())
 
     def _plugin_hash_type(self, plugin):
         if hasattr(plugin, 'hash_type'):
@@ -268,8 +393,7 @@ class Archive(object):
 
         # Run the post remove hook (if defined by the product type plug-in).
         plugin = self.product_type_plugin(product.core.product_type)
-        if hasattr(plugin, "post_remove_hook"):
-            plugin.post_remove_hook(self, product)
+        self._run_hooks('post_remove_hook', plugin, product)
 
     def _relocate(self, product, properties=None):
         """Relocate a product to the archive_path reported by the product type plugin.
@@ -684,13 +808,27 @@ class Archive(object):
         self._database.tag(properties.core.uuid, tags)
 
         # Run the post ingest hook (if defined by the product type plug-in).
-        #
-        # Note that hasattr() is used instead of a try + except block that swallows AttributeError to avoid hiding
-        # AttributeError instances raised by the plug-in.
-        if hasattr(plugin, "post_ingest_hook"):
-            plugin.post_ingest_hook(self, properties)
+        self._run_hooks('post_ingest_hook', plugin, properties)
 
         return properties
+
+    def _hook_exists(self, hook_name, plugin):
+        plugins = [plugin] + list(self._hook_extensions.values())
+        for plugin in plugins:
+            if hasattr(plugin, hook_name):
+                return True
+        return False
+
+    def _run_hooks(self, hook_name, plugin, properties):
+        # TODO maintain order for extensions
+        # TODO save modified properties
+
+        plugins = [plugin] + list(self._hook_extensions.values())
+
+        for plugin in plugins:
+            hook_method = getattr(plugin, hook_name, None)
+            if hook_method is not None:
+                hook_method(self, properties)
 
     def link(self, uuid_, source_uuids):
         """Link a product to one or more source products."""
@@ -698,18 +836,6 @@ class Archive(object):
             source_uuids = [source_uuids]
 
         self._database.link(uuid_, source_uuids)
-
-    def namespace_schema(self, namespace):
-        """Return the schema definition of a namespace."""
-        try:
-            return self._namespace_schemas[namespace]
-        except KeyError:
-            raise Error("undefined namespace: \"%s\"; defined namespaces: %s" %
-                        (namespace, util.quoted_list(self._namespace_schemas.keys())))
-
-    def namespaces(self):
-        """Return a list of supported namespaces."""
-        return list(self._namespace_schemas.keys())
 
     def prepare(self, force=False):
         """Prepare the archive for (first) use.
@@ -764,18 +890,6 @@ class Archive(object):
             product = products[0]
 
         return os.path.join(self._storage.global_prefix, self._product_path(product))
-
-    def product_type_plugin(self, product_type):
-        """Return a reference to the product type plugin for a product type."""
-        try:
-            return self._product_type_plugins[product_type]
-        except KeyError:
-            raise Error("undefined product type: \"%s\"; defined product types: %s" %
-                        (product_type, util.quoted_list(self._product_type_plugins.keys())))
-
-    def product_types(self):
-        """Return a list of supported product types."""
-        return list(self._product_type_plugins.keys())
 
     def pull(self, where="", parameters={}, verify_hash=False):
         """Pull one or more remote products into the archive.
@@ -832,8 +946,7 @@ class Archive(object):
                                 (product.core.product_name, product.core.uuid))
 
             # Run the post pull hook (if defined by the product type plug-in).
-            if hasattr(plugin, "post_pull_hook"):
-                plugin.post_pull_hook(self, product)
+            self._run_hooks('post_pull_hook', plugin, product)
 
         return len(queue)
 
@@ -918,11 +1031,11 @@ class Archive(object):
         #
         # Note that hasattr() is used instead of a try + except block that swallows AttributeError to avoid hiding
         # AttributeError instances raised by the plug-in.
-        if not disable_hooks and hasattr(plugin, "post_ingest_hook"):
+        if not disable_hooks and self._hook_exists('post_ingest_hook', plugin):
             product.update(properties)
             if 'hash' not in product.core:
                 product.core.hash = None
-            plugin.post_ingest_hook(self, product)
+            self._run_hooks('post_ingest_hook', plugin, product)
 
     def rebuild_pull_properties(self, uuid, verify_hash=False, disable_hooks=False, use_current_path=False):
         """Refresh products by re-running the pull, but using the existing products stored in the archive.
@@ -962,79 +1075,8 @@ class Archive(object):
                             (product.core.product_name, product.core.uuid))
 
         # Run the post pull hook (if defined by the product type plug-in).
-        if not disable_hooks and hasattr(plugin, "post_pull_hook"):
-            plugin.post_pull_hook(self, product)
-
-    def register_namespace(self, namespace, schema):
-        """Register a namespace.
-
-        Arguments:
-        namespace -- Name of the namespace.
-        schema    -- Schema definition of the namespace.
-
-        """
-        if not re.match(r"[a-z][_a-z]*(\.[a-z][_a-z]*)*", namespace):
-            raise ValueError("invalid namespace name %s" % namespace)
-        if namespace in self._namespace_schemas:
-            raise Error("redefinition of namespace: \"%s\"" % namespace)
-
-        self._namespace_schemas[namespace] = schema
-
-    def register_product_type(self, product_type, plugin):
-        """Register a product type.
-
-        Arguments:
-        product_type -- Product type.
-        plugin       -- Reference to an object that implements the product type plugin API and as such takes care of
-                        the details of extracting product properties from products of the specified product type.
-
-        """
-        if product_type in self._product_type_plugins:
-            raise Error("redefinition of product type: \"%s\"" % product_type)
-
-        # Quick verify of the plugin interface
-        for attr in ['use_enclosing_directory']:
-            if not hasattr(plugin, attr):
-                raise Error("missing '%s' attribute in plugin for product type \"%s\"" % (attr, product_type))
-
-        if hasattr(plugin, 'use_hash') and not hasattr(plugin, 'hash_type'):
-            warnings.warn("'use_hash' option is deprecated (use 'hash_type')")
-
-        methods = ['identify', 'analyze', 'archive_path']
-        if plugin.use_enclosing_directory:
-            methods += ['enclosing_directory']
-        for method in methods:
-            if not hasattr(plugin, method):
-                raise Error("missing '%s' method in plugin for product type \"%s\"" % (method, product_type))
-
-        self._product_type_plugins[product_type] = plugin
-        self._update_export_formats(plugin)
-
-    def register_remote_backend(self, remote_backend, plugin):
-        """Register a remote backend.
-
-        Arguments:
-        remote_backend -- Remote backend.
-        plugin         -- Reference to an object that implements the remote backend plugin API and as such takes care of
-                          the details of extracting product properties from products of the specified remote backend.
-
-        """
-        if remote_backend in self._remote_backend_plugins:
-            raise Error("redefinition of remote backend: \"%s\"" % remote_backend)
-
-        self._remote_backend_plugins[remote_backend] = plugin
-
-    def remote_backend(self, remote_backend):
-        """Return the schema definition of a remote_backend."""
-        try:
-            return self._remote_backend_plugins[remote_backend]
-        except KeyError:
-            raise Error("undefined remote backend: \"%s\"; defined remote backends: %s" %
-                        (remote_backend, util.quoted_list(self._remote_backend.keys())))
-
-    def remote_backends(self):
-        """Return a list of supported remote_backends."""
-        return list(self._remote_backend_plugins.keys())
+        if not disable_hooks:
+            self._run_hooks('post_pull_hook', plugin, product)
 
     def remove(self, where="", parameters={}, force=False):
         """Remove one or more products from the archive, both from disk as well as from the product catalogue. Return
@@ -1384,3 +1426,9 @@ class Archive(object):
                     failed_products.append(product.core.uuid)
 
         return failed_products
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()

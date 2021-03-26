@@ -180,14 +180,17 @@ def archive(database, storage, use_enclosing_directory, archive_path):
             if section != '[DEFAULT]':
                 f.write(line)
 
+    # create product type extension from template
     template = open('product_type.py.template', 'r').read()
     data = template.replace('{archive_path}', archive_path)
     data = data.replace('{use_enclosing_directory}', str(use_enclosing_directory))  # TODO jinja?
     open('product_type.py', 'w').write(data)
 
-    # refresh product type
+    # refresh product type, hook extension
     if 'product_type' in sys.modules:
         del sys.modules['product_type']
+    if 'hook_extension' in sys.modules:
+        del sys.modules['hook_extension']
     os.system('rm *.pyc -f')
 
     # create clean archive
