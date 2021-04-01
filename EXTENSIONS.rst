@@ -80,6 +80,13 @@ separate Struct instance for each namespace. For example: ::
   properties.xml_pi.startTime = datetime.datetime.utcnow()
   ... more of the same ...
 
+A hook extension is an instance of a class that defines methods to be
+executed at certain times, such as product ingestion or removal. When multiple
+extensions or product type plug-ins define the same hooks, they are run for any
+plug-in first, then in the order of the extensions as they are listed in the
+configuration file. For the post_remove_hook hook, they are run in reverse
+order.
+
 A remote backend plug-in adds the ability of an archive to pull products
 from remote sources using a protocol beyond the basic file/ftp/http/https
 protocols.
@@ -336,6 +343,37 @@ Methods
 
     These methods are optional.
 
+
+Hook extension API
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+A hook extension is an instance of a class that implements the interface
+defined in this section.
+
+Exceptions
+----------
+Hook extensions are only allowed to raise ``muninn.Error`` or instances
+of exception classes derived from ``muninn.Error``. If an extension raises an
+exception that does not derive from ``muninn.Error``, or allows exceptions from
+underlying modules to propagate outside of the extension, this should be
+considered a bug.
+
+Methods
+-------
+All methods described here are optional. When a method changes a product
+property, it is not automatically saved.
+
+``post_create_hook(self, archive, product)``
+    Executed after a product is created in the database (prior to ingestion).
+
+``post_ingest_hook(self, archive, product)``
+    Executed after a product is ingested (after database creation). It is also
+    executed for a catalogue-only archive.
+
+``post_pull_hook(self, archive, product)``
+    Executed after a pull.
+
+``post_remove_hook(self, archive, product)``
+    Executed after a product removal.
 
 Remote backend plug-in API
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

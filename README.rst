@@ -334,9 +334,10 @@ specific (types of) products, it is necessary to install one or more
 extensions.
 
 A muninn extension is a Python module or package that implements the muninn
-extension interface. Muninn defines two main types of extensions: namespace
-extensions (that contain namespace definitions) and product type extensions
-(that contain product type plug-ins).
+extension interface. Muninn defines three main types of extensions: namespace
+extensions (that contain namespace definitions), product type extensions
+(that contain product type plug-ins) and finally hook extensions (allowing
+functions to be executed at certain times, e.g. product creation/removal).
 
 A namespace is a named set of product properties (see section "Namespaces"_).
 Muninn defines a namespace called ``core`` that contains a small set of
@@ -364,10 +365,13 @@ example, the plug-in controls what happens to a product (of the type it
 supports) when all of the products it is linked to (see section "Links"_) have
 been removed from the archive.
 
-A third type of extension is the remote backend extension. This type of
+A fourth type of extension is the remote backend extension. This type of
 extension is specifically for muninn-pull and can introduce support for
 retrieving data using protocols other than the built-in support that muninn
 already has for http/https/ftp/file.
+
+Details concerning the actual implementation of extensions can be found in a
+separate EXTENSIONS document.
 
 
 Archive configuration files
@@ -402,6 +406,10 @@ settings:
 
 - ``product_type_extensions``: White space separated list of names of Python
   modules or packages that contain product type plug-ins (see section
+  "Extensions"_). The default is the empty list.
+
+- ``hook_extensions``: White space separated list of names of Python
+  modules or packages that contain hook extensions (see section
   "Extensions"_). The default is the empty list.
 
 - ``remote_backend_extensions``: White space separated list of names of Python

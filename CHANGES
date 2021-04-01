@@ -1,3 +1,5 @@
+* Added generic hooking mechanism (not coupled to a product type)
+
 * UUID values can now be used everywhere as boolean in query expressions.
 
 * Add support for new type conversions of pg8000 >= 1.16.
