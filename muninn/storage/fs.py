@@ -81,21 +81,19 @@ class FilesystemStorageBackend(StorageBackend):
         for path in paths:
             if not util.is_sub_path(os.path.realpath(path), self._root, allow_equal=True):
                 raise Error("cannot ingest a file in-place if it is not inside the muninn archive root")
+
+        abs_archive_path = os.path.dirname(os.path.realpath(paths[0]))
+
         if len(paths) > 1:
             # check whether all files have the right enclosing directory
             for path in paths:
                 enclosing_directory = os.path.basename(os.path.dirname(os.path.realpath(path)))
                 if enclosing_directory != properties.core.physical_name:
                     raise Error("multi-part product has invalid enclosing directory for in-place ingestion")
-            # strip the archive root
-            return os.path.relpath(
-                os.path.dirname(os.path.dirname(os.path.realpath(paths[0]))),
-                start=os.path.realpath(self._root))
-        else:
-            # strip the archive root
-            return os.path.relpath(
-                os.path.dirname(os.path.realpath(paths[0])),
-                start=os.path.realpath(self._root))
+            abs_archive_path = os.path.dirname(abs_archive_path)
+
+        # strip archive root
+        return os.path.relpath(abs_archive_path, start=os.path.realpath(self._root))
 
     def put(self, paths, properties, use_enclosing_directory, use_symlinks=None, retrieve_files=None):
         if use_symlinks is None:
