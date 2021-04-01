@@ -5,6 +5,7 @@
 from __future__ import absolute_import, division, print_function
 from muninn._compat import string_types as basestring
 
+import collections
 import copy
 import datetime
 import errno
@@ -169,7 +170,7 @@ class Archive(object):
         self._namespace_schemas = {}
         self._product_type_plugins = {}
         self._remote_backend_plugins = copy.copy(remote.REMOTE_BACKENDS)
-        self._hook_extensions = {}
+        self._hook_extensions = collections.OrderedDict()
         self._export_formats = set()
 
         self._database = backend
@@ -391,9 +392,9 @@ class Archive(object):
         # Remove any data in storage associated with the product.
         self._remove(product)
 
-        # Run the post remove hook (if defined by the product type plug-in).
+        # Run the post remove hook (if defined by the product type plug-in or hook extensions).
         plugin = self.product_type_plugin(product.core.product_type)
-        self._run_hooks('post_remove_hook', plugin, product)
+        self._run_hooks('post_remove_hook', plugin, product, reverse=True)
 
     def _relocate(self, product, properties=None):
         """Relocate a product to the archive_path reported by the product type plugin.
@@ -768,6 +769,9 @@ class Archive(object):
 
         self.create_properties(properties)
 
+        # Run the post create hook (if defined by the product type plug-in or hook extensions).
+        self._run_hooks('post_create_hook', plugin, properties)
+
         # Try to determine the product hash and ingest the product into the archive.
         try:
             # Determine product hash. Since it is an expensive operation, the hash is computed after inserting the
@@ -807,7 +811,7 @@ class Archive(object):
         # Set product tags.
         self._database.tag(properties.core.uuid, tags)
 
-        # Run the post ingest hook (if defined by the product type plug-in).
+        # Run the post ingest hook (if defined by the product type plug-in or hook extensions).
         self._run_hooks('post_ingest_hook', plugin, properties)
 
         return properties
@@ -819,11 +823,10 @@ class Archive(object):
                 return True
         return False
 
-    def _run_hooks(self, hook_name, plugin, properties):
-        # TODO maintain order for extensions
-        # TODO save modified properties
-
+    def _run_hooks(self, hook_name, plugin, properties, reverse=False):
         plugins = [plugin] + list(self._hook_extensions.values())
+        if reverse:
+            plugins = reversed(plugins)
 
         for plugin in plugins:
             hook_method = getattr(plugin, hook_name, None)
@@ -945,7 +948,7 @@ class Archive(object):
                     raise Error("pulled product '%s' (%s) has incorrect hash" %
                                 (product.core.product_name, product.core.uuid))
 
-            # Run the post pull hook (if defined by the product type plug-in).
+            # Run the post pull hook (if defined by the product type plug-in or hook extensions).
             self._run_hooks('post_pull_hook', plugin, product)
 
         return len(queue)
@@ -1027,10 +1030,7 @@ class Archive(object):
         # Update tags.
         self.tag(product.core.uuid, tags)
 
-        # Run the post ingest hook (if defined by the product type plug-in).
-        #
-        # Note that hasattr() is used instead of a try + except block that swallows AttributeError to avoid hiding
-        # AttributeError instances raised by the plug-in.
+        # Run the post ingest hook (if defined by the product type plug-in or hook extensions).
         if not disable_hooks and self._hook_exists('post_ingest_hook', plugin):
             product.update(properties)
             if 'hash' not in product.core:
@@ -1074,7 +1074,7 @@ class Archive(object):
                 raise Error("pulled product '%s' (%s) has incorrect hash" %
                             (product.core.product_name, product.core.uuid))
 
-        # Run the post pull hook (if defined by the product type plug-in).
+        # Run the post pull hook (if defined by the product type plug-in or hook extensions).
         if not disable_hooks:
             self._run_hooks('post_pull_hook', plugin, product)
 
