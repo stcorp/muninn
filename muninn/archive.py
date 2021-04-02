@@ -763,9 +763,24 @@ class Archive(object):
 
         # Remove existing product with the same product type and name before ingesting
         if force:
-            self.remove(where="core.product_type == @product_type and core.product_name == @product_name",
-                        parameters={'product_type': properties.core.product_type,
-                                    'product_name': properties.core.product_name}, force=True)
+            existing = self.search(where="core.product_type == @product_type and core.product_name == @product_name",
+                                   parameters={'product_type': properties.core.product_type,
+                                               'product_name': properties.core.product_name})
+            if existing:
+                existing = existing[0]
+                ingest_path = os.path.dirname(paths[0])
+                if len(paths) > 1:
+                    ingest_path = os.path.dirname(ingest_path)
+                current_path = self.root()
+                if existing.core.archive_path:
+                    current_path = os.path.join(current_path, existing.core.archive_path)
+                if existing.core.archive_path != properties.core.archive_path:
+                    raise Error('cannot force ingest because of archive_path mismatch')
+                if ingest_path == current_path:
+                    # do not remove the product being ingested (only remove from catalogue)
+                    self.delete_properties_by_uuid(existing.core.uuid)
+                else:
+                    self.remove_by_uuid(existing.core.uuid, force=True)
 
         self.create_properties(properties)
 

@@ -400,6 +400,26 @@ class TestArchive:
         if archive._params['storage'] == 'fs':
             self._ingest_file(archive, use_symlinks=True, intra=True)
 
+    def test_reingest(self, archive):
+        if archive._params['storage'] == 'fs':
+            # ingest once
+            properties = archive.ingest(['data/pi.txt'])
+
+            # force reingest
+            product_path = archive.product_path(properties)
+            properties = archive.ingest(['data/pi.txt'], force=True)
+            assert os.path.exists(product_path)
+
+            # reingest without force, should raise unique constraint error
+            with pytest.raises(muninn.exceptions.Error) as excinfo:
+                properties = archive.ingest(['data/pi.txt'])
+            assert 'unique constraint' in str(excinfo).lower()
+
+            # force reingest _from archive_ (should not remove product!)
+            product_path = archive.product_path(properties)
+            properties = archive.ingest(product_path, force=True)
+            assert os.path.exists(product_path)
+
     def test_remove_file(self, archive):
         self._ingest_file(archive)
         archive.remove()

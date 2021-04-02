@@ -8,7 +8,8 @@ Steps to run the Muninn tests:
   - pytest
   - boto3
   - swiftclient
-  - psycopg2 or pg8000 (latter is used if former not available)
+  - psycopg2
+  - pg8000
 - Configure the following:
   - A Postgresql server
   - an S3 server (e.g., Minio)
@@ -32,7 +33,7 @@ $ docker run -d -p 12345:8080 morrisjobke/docker-swift-onlyone
 Create a conda environment for muninn and dependencies (requires mininconda/anaconda to be installed):
 $ conda create -n muninntest
 $ conda activate muninntest
-$ conda install -c conda-forge request tabulate tqdm pytest psycopg2 libspatialite boto3 python-swiftclient
+$ conda install -c conda-forge request tabulate tqdm pytest psycopg2 libspatialite boto3 python-swiftclient pg8000
 Update the path to mod_spatialite in the test.cfg file to point to the version in the conda environment
 $ python -m pytest test.py
 
