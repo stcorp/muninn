@@ -16,7 +16,7 @@ def pull(args):
         verify_hash = True if args.verify_hash else False
 
         # find all remote products that satisfy filter
-        expression = "is_defined(remote_url) and not is_defined(archive_path)"
+        expression = "active and is_defined(remote_url) and not is_defined(archive_path)"
         if args.expression:
             expression = "%s and (%s)" % (expression, args.expression)
 
