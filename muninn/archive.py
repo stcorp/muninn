@@ -418,7 +418,7 @@ class Archive(object):
             # If the product does not exist, do not consider this an error.
             return
 
-        # Remove the data associated with the product from disk.
+        # Remove the data associated with the product from storage.
         self._storage.delete(product_path, product)
 
     def _retrieve(self, product, target_path, use_symlinks=False):
@@ -1094,8 +1094,8 @@ class Archive(object):
             self._run_hooks('post_pull_hook', plugin, product)
 
     def remove(self, where="", parameters={}, force=False):
-        """Remove one or more products from the archive, both from disk as well as from the product catalogue. Return
-        the number of products removed.
+        """Remove one or more products from the archive, both from storage as well as from the product catalogue.
+        Return the number of products removed.
 
         NB. Depending on product type specific cascade rules, removing a product can result in one or more derived
         products being removed (or stripped) along with it. Such products are _not_ included in the returned count.
@@ -1262,7 +1262,7 @@ class Archive(object):
         return self._database.source_products(uuid)
 
     def strip(self, where="", parameters={}, force=False):
-        """Remove one or more products from disk only (not from the product catalogue). Return the number of products
+        """Remove one or more products from storage only (not from the product catalogue). Return the number of products
         stripped.
 
         NB. Depending on product type specific cascade rules, stripping a product can result in one or more derived
@@ -1293,7 +1293,7 @@ class Archive(object):
         return len(products)
 
     def strip_by_name(self, product_name):
-        """Remove one or more products from disk only (not from the product catalogue).
+        """Remove one or more products from storage only (not from the product catalogue).
 
         This is a convenience function that is equivalent to:
 
@@ -1311,7 +1311,7 @@ class Archive(object):
         return count
 
     def strip_by_uuid(self, uuid):
-        """Remove a product from disk only (not from the product catalogue).
+        """Remove a product from storage only (not from the product catalogue).
 
         This is a convenience function that is equivalent to:
 
