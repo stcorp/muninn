@@ -232,7 +232,7 @@ def main():
         description="Summary of the products matching the search expression.",
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("-f", "--output-format", choices=OUTPUT_FORMATS, default=DEFAULT_FORMAT,
-                        help="output format")
+                        metavar="FORMAT", help="output format; choices (depending on installation of python-tabulate): {%(choices)s}; default: %(default)s")
     parser.add_argument("-o", "--order-by", action="append", dest="order_by", help="white space "
                         "separated list of sort order specifiers; a \"+\" prefix denotes ascending order; no prefix "
                         "denotes descending order")
