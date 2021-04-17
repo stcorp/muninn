@@ -542,8 +542,18 @@ class PostgresqlBackend(object):
             return "TO_CHAR(%s, 'MM')" % column_name
         if subscript == 'yearmonth':
             return "TO_CHAR(%s, 'YYYY-MM')" % column_name
+        if subscript == 'day':
+            return "TO_CHAR(%s, 'DD')" % column_name
         if subscript == 'date':
             return "TO_CHAR(%s, 'YYYY-MM-DD')" % column_name
+        if subscript == 'hour':
+            return "TO_CHAR(%s, 'HH24')" % column_name
+        if subscript == 'minute':
+            return "TO_CHAR(%s, 'MI')" % column_name
+        if subscript == 'second':
+            return "TO_CHAR(%s, 'SS')" % column_name
+        if subscript == 'time':
+            return "TO_CHAR(%s, 'HH24:MI:SS')" % column_name
         # text
         if subscript == 'length':
             return "CHAR_LENGTH(%s)" % column_name

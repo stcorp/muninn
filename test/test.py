@@ -9,6 +9,7 @@ import logging
 import os
 import sys
 import tarfile
+import time
 import unittest
 
 PY3 = sys.version_info[0] == 3
@@ -769,6 +770,46 @@ class TestArchive:
     def test_rebuild_pull_properties(self, archive):
         properties = self._pull(archive)
         archive.rebuild_pull_properties(properties.core.uuid, verify_hash=True)
+
+    def test_summary(self, archive):
+        product1 = archive.ingest(['data/a.txt'])
+        year = product1.core.archive_date.year
+        time.sleep(1) # different dates
+        product2 = archive.ingest(['data/b.txt'])
+
+        # default summary (count all)
+        data, headers = archive.summary()
+        assert headers == ['count']
+        assert data == [(2,)] or data == [[2]] # TODO pg8000 gives list per row??
+
+        # aggregate size.sum
+        data, headers = archive.summary(aggregates=['core.size.sum']) # TODO doesn't work without core prefix
+        assert headers == ['count', 'core.size.sum']
+        assert data == [(2, 2030)] or data == [[2, 2030]]
+
+        # group by archive date plus subscript
+        for subscript in [
+            'year',
+            'month',
+            'yearmonth',
+            'date',
+            'day',
+            'hour',
+            'minute',
+            'second',
+            'time',
+        ]:
+            data, headers = archive.summary(group_by=['core.archive_date.' + subscript])
+
+            if subscript == 'year':
+                assert headers == ['core.archive_date.year', 'count']
+                assert data == [(str(year), 2)] or data == [[str(year), 2]]
+
+            elif subscript == 'second':
+                assert headers == ['core.archive_date.second', 'count']
+                assert len(data) == 2
+                assert data[0][0] != data[1][0]
+                assert data[0][1] == data[1][1] == 1
 
 
 class TestQuery:

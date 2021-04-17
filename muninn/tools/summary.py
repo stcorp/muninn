@@ -240,7 +240,7 @@ def main():
                         help="list of property names whose values are used for grouping the aggregation results; "
                         "there will be a separate result row for each combination of group_by property values; "
                         "properties need to be of type long, integer, boolean, text or timestamp; "
-                        "timestamps require a binning subscript which can be 'year', 'month', 'yearmonth', or 'date' "
+                        "timestamps require a binning subscript which can be 'year', 'month', 'yearmonth', 'day', 'date', 'hour', 'minute', 'second' or 'time' "
                         "(e.g. `validity_start.yearmonth`)")
     parser.add_argument("-t", "--group-by-tag", action="store_true", help="group result by tag value; "
                         "note that products will be counted multiple times if they have multiple tags")
@@ -256,3 +256,5 @@ def main():
     parser.add_argument("expression", metavar="EXPRESSION", nargs='?', help="expression used to search for products")
 
     return parse_args_and_run(parser, run)
+
+main()

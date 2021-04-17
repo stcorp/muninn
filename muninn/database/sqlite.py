@@ -482,8 +482,18 @@ class SQLiteBackend(object):
             return "STRFTIME('%%m', %s)" % column_name
         if subscript == 'yearmonth':
             return "STRFTIME('%%Y-%%m', %s)" % column_name
+        if subscript == 'day':
+            return "STRFTIME('%%d', %s)" % column_name
         if subscript == 'date':
             return "STRFTIME('%%Y-%%m-%%d', %s)" % column_name
+        if subscript == 'hour':
+            return "STRFTIME('%%H', %s)" % column_name
+        if subscript == 'minute':
+            return "STRFTIME('%%M', %s)" % column_name
+        if subscript == 'second':
+            return "STRFTIME('%%S', %s)" % column_name
+        if subscript == 'time':
+            return "STRFTIME('%%H:%%M:%%S', %s)" % column_name
         # text
         if subscript == 'length':
             return "LENGTH(%s)" % column_name
