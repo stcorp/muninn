@@ -256,5 +256,3 @@ def main():
     parser.add_argument("expression", metavar="EXPRESSION", nargs='?', help="expression used to search for products")
 
     return parse_args_and_run(parser, run)
-
-main()
