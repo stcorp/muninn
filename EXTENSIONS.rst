@@ -362,12 +362,13 @@ Methods
 All methods described here are optional. When a method changes a product
 property, it is not automatically saved.
 
-``post_create_hook(self, archive, product)``
-    Executed after a product is created in the database (prior to ingestion).
-
 ``post_ingest_hook(self, archive, product)``
-    Executed after a product is ingested (after database creation). It is also
-    executed for a catalogue-only archive.
+    Executed after a product is ingested via archive.ingest, but not
+    catalogue-only (ingest_product == True).
+
+``post_create_hook(self, archive, product)``
+    Executed after a product is ingested catalogue-only via archive.ingest
+    (ingest_product == False), or after a call to archive.create_properties.
 
 ``post_pull_hook(self, archive, product)``
     Executed after a pull.

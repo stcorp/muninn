@@ -489,7 +489,7 @@ class Archive(object):
         """
         return self._database.count(where, parameters)
 
-    def create_properties(self, properties):
+    def create_properties(self, properties, disable_hooks=False):
         """ Create record for product in the product catalogue.
             An important side effect of this operation is that it
             will fail if:
@@ -500,6 +500,12 @@ class Archive(object):
         """
         self._update_metadata_date(properties)
         self._database.insert_product_properties(properties)
+
+        # Run the post create hook (if defined by the product type plug-in or hook extensions).
+        if not disable_hooks:
+            plugin = self.product_type_plugin(properties.core.product_type)
+            self._run_hooks('post_create_hook', plugin, properties)
+
 
     def delete_properties(self, where="", parameters={}):
         """Remove properties for one or more products from the catalogue. Return the number of products removed.
@@ -782,10 +788,7 @@ class Archive(object):
                 else:
                     self.remove_by_uuid(existing.core.uuid, force=True)
 
-        self.create_properties(properties)
-
-        # Run the post create hook (if defined by the product type plug-in or hook extensions).
-        self._run_hooks('post_create_hook', plugin, properties)
+        self.create_properties(properties, disable_hooks=True)
 
         # Try to determine the product hash and ingest the product into the archive.
         try:
@@ -826,8 +829,11 @@ class Archive(object):
         # Set product tags.
         self._database.tag(properties.core.uuid, tags)
 
-        # Run the post ingest hook (if defined by the product type plug-in or hook extensions).
-        self._run_hooks('post_ingest_hook', plugin, properties)
+        # Run post create/ingest hooks (if defined by the product type plug-in or hook extensions).
+        if not ingest_product:
+            self._run_hooks('post_create_hook', plugin, properties)
+        else:
+            self._run_hooks('post_ingest_hook', plugin, properties)
 
         return properties
 
