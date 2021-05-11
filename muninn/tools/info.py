@@ -21,7 +21,7 @@ def run(args):
                 if field.__module__ != 'muninn.schema':
                     field_name = '%s.%s' % (field.__module__, field.name())
                 optional = namespace_schema.is_optional(name)
-                print("    %s: %s %s" % (name, field_name, "(optional)" if optional else "", ))
+                print("    %s: %s%s" % (name, field_name, " (optional)" if optional else "", ))
 
         print("\nPRODUCT TYPES")
         for product_type in sorted(archive.product_types()):
