@@ -2,6 +2,9 @@
 
 * Added 'muninn-update retype' to allow correction of product_type values.
 
+* Added 'day', 'hour', 'minute', 'second', and 'time' subscripts for
+  grouping by timestamps in muninn-summary.
+
 * UUID values can now be used everywhere as boolean in query expressions.
 
 * Add support for new type conversions of pg8000 >= 1.16.
