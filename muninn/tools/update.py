@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, print_function
 
 import logging
 import multiprocessing
+import sys
 
 try:
     from tqdm import tqdm as bar
@@ -14,6 +15,7 @@ except ImportError:
         return range
 
 import muninn
+from muninn.struct import Struct
 
 from .utils import Processor, create_parser, parse_args_and_run
 
@@ -24,6 +26,7 @@ ACTIONS = [
     'post_ingest',
     'pull',
     'post_pull',
+    'retype',
 ]
 
 
@@ -32,6 +35,7 @@ class UpdateProcessor(Processor):
     def __init__(self, args):
         super(UpdateProcessor, self).__init__(args.archive)
         self.action = args.action
+        self.argument = args.argument
         self.disable_hooks = args.disable_hooks
         self.use_current_path = args.keep
         self.verify_hash = args.verify_hash
@@ -59,6 +63,13 @@ class UpdateProcessor(Processor):
             if hasattr(plugin, "post_pull_hook"):
                 logger.debug('running update:post_pull on %s ' % product.core.product_name)
                 plugin.post_pull_hook(archive, product)
+
+        elif self.action == 'retype':
+            if self.argument is not None:
+                archive.update_properties(Struct({'core': {'product_type': self.argument}}), product.core.uuid)
+            else:
+                print('missing argument for retype action')
+                sys.exit(1)
 
 
 def update(args):
@@ -111,4 +122,5 @@ def main():
     parser.add_argument("action", metavar="ACTION", choices=ACTIONS, help="action name (%s)" % ', '.join(ACTIONS))
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
     parser.add_argument("expression", metavar="EXPRESSION", default="", help="expression to select products")
+    parser.add_argument("argument", metavar="ARGUMENT", nargs='?', help="product type for retype action")
     return parse_args_and_run(parser, update)
