@@ -17,7 +17,7 @@ if sys.version_info[0] == 2 and sys.version_info[1] == 6:
 
 setup(
     name="muninn",
-    version="5.1",
+    version="5.2",
     description="Data product catalogue and archive system",
     url="https://github.com/stcorp/muninn",
     author="S[&]T",
@@ -49,6 +49,7 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
         "Topic :: Scientific/Engineering",

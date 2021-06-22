@@ -62,12 +62,12 @@ often require super user privileges.
 
 Using pip: ::
 
-  $ pip install muninn-5.1.tar.gz
+  $ pip install muninn-5.2.tar.gz
 
 Using setup.py: ::
 
-  $ tar xvfz muninn-5.1.tar.gz
-  $ cd muninn-5.1
+  $ tar xvfz muninn-5.2.tar.gz
+  $ cd muninn-5.2
   $ python setup.py install
 
 The muninn distribution contains a generic archiving framework that cannot be

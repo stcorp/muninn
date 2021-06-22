@@ -1,3 +1,6 @@
+5.2 2021-06-22
+~~~~~~~~~~~~~~
+
 * Added generic hooking mechanism (not coupled to a product type)
 
 * Added 'muninn-update retype' to allow correction of product_type values.
