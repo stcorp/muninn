@@ -311,7 +311,7 @@ class Archive(object):
                 return None
 
         else:
-            return 'md5' # default after use_hash deprecation
+            return 'md5'  # default after use_hash deprecation
 
     def _extract_hash_type(self, hash_value):
         prefix, middle, _ = hash_value.partition(':')
@@ -505,7 +505,6 @@ class Archive(object):
         if not disable_hooks:
             plugin = self.product_type_plugin(properties.core.product_type)
             self._run_hooks('post_create_hook', plugin, properties)
-
 
     def delete_properties(self, where="", parameters={}):
         """Remove properties for one or more products from the catalogue. Return the number of products removed.
@@ -774,19 +773,22 @@ class Archive(object):
                                                'product_name': properties.core.product_name})
             if existing:
                 existing = existing[0]
-                ingest_path = os.path.dirname(paths[0])
-                if len(paths) > 1:
-                    ingest_path = os.path.dirname(ingest_path)
-                current_path = self.root()
-                if existing.core.archive_path:
-                    current_path = os.path.join(current_path, existing.core.archive_path)
-                if existing.core.archive_path != properties.core.archive_path:
-                    raise Error('cannot force ingest because of archive_path mismatch')
-                if ingest_path == current_path:
-                    # do not remove the product being ingested (only remove from catalogue)
-                    self.delete_properties_by_uuid(existing.core.uuid)
+                if 'archive_path' in existing.core and existing.core.archive_path is not None:
+                    ingest_path = os.path.dirname(paths[0])
+                    if plugin.use_enclosing_directory:
+                        ingest_path = os.path.dirname(ingest_path)
+                    current_path = self.root()
+                    if existing.core.archive_path:
+                        current_path = os.path.join(current_path, existing.core.archive_path)
+                    if existing.core.archive_path != properties.core.archive_path:
+                        raise Error('cannot force ingest because of archive_path mismatch')
+                    if ingest_path == current_path:
+                        # do not remove the product being ingested (only remove from catalogue)
+                        self.delete_properties_by_uuid(existing.core.uuid)
+                    else:
+                        self.remove_by_uuid(existing.core.uuid, force=True)
                 else:
-                    self.remove_by_uuid(existing.core.uuid, force=True)
+                    self.delete_properties_by_uuid(existing.core.uuid)
 
         self.create_properties(properties, disable_hooks=True)
 
@@ -1438,7 +1440,7 @@ class Archive(object):
                 hash_type = self._extract_hash_type(stored_hash)
 
                 if hash_type is None:
-                    hash_type = 'sha1' # default before use_hash deprecation
+                    hash_type = 'sha1'  # default before use_hash deprecation
                     stored_hash = 'sha1:' + stored_hash
 
                 current_hash = self._calculate_hash(product, hash_type)
