@@ -1,3 +1,8 @@
+5.2.1 2021-06-25
+~~~~~~~~~~~~~~~~
+
+* Fixed issue where a force ingest on a catalogue-only archive would fail.
+
 5.2 2021-06-22
 ~~~~~~~~~~~~~~
 

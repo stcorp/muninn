@@ -24,7 +24,6 @@ For the muninn package:
 - Update version number in ``setup.py``
 - Update version number in ``README.rst`` (3x)
 - Check the list of dependencies in the ``README.rst``
-- Check version numbers mentioned elsewhere in the ``README.rst``
 - Check the upgrade instructions in ``README.rst``
 - Add change history entry in ``CHANGES``
 - Check that the content of ``EXTENSIONS.rst`` is up to date
