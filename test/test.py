@@ -418,6 +418,9 @@ class TestArchive:
 
             # force reingest _from archive_ (should not remove product!)
             product_path = archive.product_path(properties)
+            if archive._params['use_enclosing_directory']:
+                product_path = os.path.join(product_path, 'pi.txt')
+
             properties = archive.ingest(product_path, force=True)
             assert os.path.exists(product_path)
 
