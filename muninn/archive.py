@@ -369,7 +369,12 @@ class Archive(object):
                     for product in products:
                         self._purge(product)
 
-    def _get_product(self, uuid):
+    def _get_product(self, uuid_or_properties):
+        if isinstance(uuid_or_properties, Struct):
+            return uuid_or_properties
+        else:
+            uuid = uuid_or_properties
+
         products = self.search('uuid == @uuid', parameters={'uuid': uuid}, namespaces=self.namespaces())
         if len(products) == 0:
             raise Error('No product found with UUID: %s' % uuid)
@@ -1237,6 +1242,13 @@ class Archive(object):
             raise Error("product with uuid '%s' not found" % uuid)
 
         return products[0]
+
+    def download_url(self, uuid_or_properties):
+        """Return presigned URL where the given product can be temporarily
+        downloaded, if supported by the used (web-facing) storage backend.
+        """
+        product = self._get_product(uuid_or_properties)
+        return self._storage.download_url(product)
 
     def root(self):
         """Return the archive root path."""
