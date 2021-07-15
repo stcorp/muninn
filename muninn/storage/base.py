@@ -55,10 +55,6 @@ class StorageBackend(object):
         # Retrieve product file(s) from storage
         raise NotImplementedError()
 
-    def download_url(self, product):
-        # Return presigned download URL
-        raise NotImplementedError()
-
     def size(self, product_path):
         # Return product storage size
         raise NotImplementedError()

@@ -168,13 +168,6 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             self._resource.Object(self.bucket, obj.key).download_file(target, ExtraArgs=self._download_args,
                                                                       Config=self._transfer_config)
 
-    def download_url(self, product):  # TODO support multi-file products
-        client = self._resource.meta.client
-        product_path = self._prefix + self.product_path(product)
-        url = client.generate_presigned_url("get_object", Params={"Bucket": self.bucket, "Key": product_path}, ExpiresIn=120)
-        print(url)
-        return url
-
     def delete(self, product_path, properties):
         prefix = self._prefix + product_path
         for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=prefix):
