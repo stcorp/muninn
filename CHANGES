@@ -1,5 +1,8 @@
 * Use Bi/Ki/Gi/... as unit for human readable sizes instead of K/G/...
 
+* muninn-pull for http(s) now retrieves data in blocks instead of reading
+  the whole file in memory.
+
 5.2.1 2021-06-25
 ~~~~~~~~~~~~~~~~
 

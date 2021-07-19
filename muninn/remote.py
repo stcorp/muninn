@@ -46,7 +46,7 @@ def download_http_oath2(url, target_dir, credentials, timeout=60):
                                 password=credentials['password'], client_id=credentials['client_id'],
                                 client_secret=credentials['client_secret'])
     try:
-        r = session.get(url, timeout=timeout)
+        r = session.get(url, timeout=timeout, stream=True)
         r.raise_for_status()
         local_file = os.path.join(target_dir, os.path.basename(urlparse(r.url).path))
         if "Content-Disposition" in r.headers.keys():
@@ -67,7 +67,7 @@ def download_http(url, target_dir, credentials=None, timeout=60):
     if credentials is not None:
         auth = (credentials['username'], credentials['password'])
     try:
-        r = requests.get(url, timeout=timeout, auth=auth)
+        r = requests.get(url, timeout=timeout, stream=True, auth=auth)
         r.raise_for_status()
         local_file = os.path.join(target_dir, os.path.basename(urlparse(r.url).path))
         if "Content-Disposition" in r.headers.keys():
