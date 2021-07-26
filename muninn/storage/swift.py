@@ -105,6 +105,7 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
                             with open(filepath, 'rb') as f:
                                 self._conn.put_object(self.container, filekey, contents=f.read())
                 else:
+                    assert(len(paths) == 1 and os.path.basename(path) == physical_name)
                     with open(path, 'rb') as f:
                         self._conn.put_object(self.container, key, contents=f.read())
 

@@ -149,6 +149,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
                                                                                     ExtraArgs=self._upload_args,
                                                                                     Config=self._transfer_config)
                 else:
+                    assert(len(paths) == 1 and os.path.basename(path) == physical_name)
                     self._resource.Object(self.bucket, key).upload_file(path, ExtraArgs=self._upload_args,
                                                                         Config=self._transfer_config)
 
