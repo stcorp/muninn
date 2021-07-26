@@ -318,18 +318,6 @@ class Archive(object):
         if middle == ':' and prefix in HASH_ALGORITHMS:
             return prefix
 
-    def _calculate_hash(self, product, hash_type):
-        """ calculate the hash on a product in the archive """
-        product_path = self._product_path(product)
-        if product_path is None:
-            raise Error("no data available for product '%s' (%s)" % (product.core.product_name, product.core.uuid))
-
-        plugin = self.product_type_plugin(product.core.product_type)
-
-        product_hash = functools.partial(util.product_hash, hash_type=hash_type)
-
-        return self._storage.run_for_product(product, product_hash, plugin.use_enclosing_directory)
-
     def _establish_invariants(self):
         repeat = True
         cycle = 0
@@ -1000,65 +988,66 @@ class Archive(object):
         if product_path is None:
             raise Error("no data available for product '%s' (%s)" % (product.core.product_name, product.core.uuid))
 
-        # Extract product metadata.
         plugin = self.product_type_plugin(product.core.product_type)
         use_enclosing_directory = plugin.use_enclosing_directory
 
-        metadata = self._storage.run_for_product(product, plugin.analyze, use_enclosing_directory)
+        with self._storage.get_tmp(product, use_enclosing_directory) as paths:
+            # Extract product metadata.
+            metadata = plugin.analyze(paths)
 
-        if isinstance(metadata, (tuple, list)):
-            properties, tags = metadata
-        else:
-            properties, tags = metadata, []
-
-        # Remove properties that should not be changed.
-        assert "core" in properties
-        for name in restricted_properties:
-            try:
-                delattr(properties.core, name)
-            except AttributeError:
-                pass
-
-        # update size
-        properties.core.size = self._storage.size(product_path)
-
-        # Make sure product is stored in the correct location
-        if not use_current_path:
-            new_archive_path = self._relocate(product, properties)
-            if new_archive_path:
-                properties.core.archive_path = new_archive_path
-
-        # if product type has disabled hashing, remove existing hash values
-        stored_hash = getattr(product.core, 'hash', None)
-        plugin_hash_type = self._plugin_hash_type(plugin)
-
-        if plugin_hash_type is None:
-            if stored_hash is not None:
-                properties.core.hash = None
-
-        # if product type has different hash algorithm, update hash values
-        else:
-            if stored_hash is None:
-                properties.core.hash = self._calculate_hash(product, plugin_hash_type)
+            if isinstance(metadata, (tuple, list)):
+                properties, tags = metadata
             else:
-                hash_type = self._extract_hash_type(stored_hash)
-                if hash_type is None and plugin_hash_type == 'sha1':
-                    properties.core.hash = plugin_hash_type + ':' + stored_hash
-                elif hash_type != plugin_hash_type:
-                    properties.core.hash = self._calculate_hash(product, plugin_hash_type)
+                properties, tags = metadata, []
 
-        # Update product properties.
-        self.update_properties(properties, uuid=product.core.uuid, create_namespaces=True)
+            # Remove properties that should not be changed.
+            assert "core" in properties
+            for name in restricted_properties:
+                try:
+                    delattr(properties.core, name)
+                except AttributeError:
+                    pass
 
-        # Update tags.
-        self.tag(product.core.uuid, tags)
+            # update size
+            properties.core.size = self._storage.size(product_path)
 
-        # Run the post ingest hook (if defined by the product type plug-in or hook extensions).
-        if not disable_hooks and self._hook_exists('post_ingest_hook', plugin):
-            product.update(properties)
-            if 'hash' not in product.core:
-                product.core.hash = None
-            self._run_hooks('post_ingest_hook', plugin, product)
+            # Make sure product is stored in the correct location
+            if not use_current_path:
+                new_archive_path = self._relocate(product, properties)
+                if new_archive_path:
+                    properties.core.archive_path = new_archive_path
+
+            # if product type has disabled hashing, remove existing hash values
+            stored_hash = getattr(product.core, 'hash', None)
+            plugin_hash_type = self._plugin_hash_type(plugin)
+
+            if plugin_hash_type is None:
+                if stored_hash is not None:
+                    properties.core.hash = None
+
+            # if product type has different hash algorithm, update hash values
+            else:
+                if stored_hash is None:
+                    properties.core.hash = util.product_hash(paths, hash_type=plugin_hash_type)
+                else:
+                    hash_type = self._extract_hash_type(stored_hash)
+                    if hash_type is None and plugin_hash_type == 'sha1':
+                        properties.core.hash = plugin_hash_type + ':' + stored_hash
+                    elif hash_type != plugin_hash_type:
+                        properties.core.hash = util.product_hash(paths, hash_type=plugin_hash_type)
+
+            # Update product properties.
+            self.update_properties(properties, uuid=product.core.uuid, create_namespaces=True)
+
+            # Update tags.
+            self.tag(product.core.uuid, tags)
+
+            # Run the post ingest hook (if defined by the product type plug-in or hook extensions).
+            if not disable_hooks and self._hook_exists('post_ingest_hook', plugin):
+                product.update(properties)
+                if 'hash' not in product.core:
+                    product.core.hash = None
+                self._run_hooks('post_ingest_hook', plugin, product)
 
     def rebuild_pull_properties(self, uuid, verify_hash=False, disable_hooks=False, use_current_path=False):
         """Refresh products by re-running the pull, but using the existing products stored in the archive.
@@ -1443,7 +1432,11 @@ class Archive(object):
                     hash_type = 'sha1'  # default before use_hash deprecation
                     stored_hash = 'sha1:' + stored_hash
 
-                current_hash = self._calculate_hash(product, hash_type)
+                plugin = self.product_type_plugin(product.core.product_type)
+                use_enclosing_directory = plugin.use_enclosing_directory
+
+                with self._storage.get_tmp(product, use_enclosing_directory) as paths:
+                    current_hash = util.product_hash(paths, hash_type=hash_type)
 
                 if current_hash != stored_hash:
                     failed_products.append(product.core.uuid)

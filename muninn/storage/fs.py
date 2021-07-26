@@ -1,6 +1,6 @@
 import os
 
-from .base import StorageBackend
+from .base import StorageBackend, TemporaryCopy
 
 from muninn.schema import Mapping, Text, Boolean
 import muninn.util as util
@@ -55,14 +55,6 @@ class FilesystemStorageBackend(StorageBackend):
         tmp_root = os.path.join(self._root, product.core.archive_path)
         util.make_path(tmp_root)
         return tmp_root
-
-    def run_for_product(self, product, fn, use_enclosing_directory):
-        product_path = self.product_path(product)
-        if use_enclosing_directory:
-            paths = [os.path.join(product_path, basename) for basename in os.listdir(product_path)]
-        else:
-            paths = [product_path]
-        return fn(paths)
 
     def exists(self):
         return os.path.isdir(self._root)
@@ -193,6 +185,14 @@ class FilesystemStorageBackend(StorageBackend):
         except EnvironmentError as _error:
             raise Error("unable to retrieve product '%s' (%s) [%s]" % (product.core.product_name, product.core.uuid,
                                                                        _error))
+
+    def get_tmp(self, product, use_enclosing_directory):
+        product_path = self.product_path(product)
+        if use_enclosing_directory:
+            paths = [os.path.join(product_path, basename) for basename in os.listdir(product_path)]
+        else:
+            paths = [product_path]
+        return TemporaryCopy(None, paths)
 
     def size(self, product_path):
         return util.product_size(product_path)
