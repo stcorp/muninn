@@ -23,9 +23,8 @@ class TemporaryDirectory(object):
         self._path = tempfile.mkdtemp(*self._args, **self._kwargs)
         return self._path
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, *args):
         shutil.rmtree(self._path)
-        return False
 
 
 def split_path(path):

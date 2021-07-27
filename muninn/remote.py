@@ -3,17 +3,22 @@
 #
 from __future__ import absolute_import, division, print_function
 
+import ftplib
+import json
 import logging
 import os
 import re
-import json
-import ftplib
+import shutil
+import tempfile
 import zipfile
 
 import muninn.util as util
 
 from muninn._compat import urlparse
 from muninn.exceptions import Error
+
+from muninn.storage.base import TemporaryCopy
+from muninn.storage.fs import FilesystemStorageBackend
 
 
 class DownloadError(Error):
@@ -114,7 +119,7 @@ class RemoteBackend(object):
         if self.prefix:
             result = url.startswith(self.prefix)
         return result
-    
+
     def auto_extract(self, file_path, product):
         filename = os.path.basename(file_path)
         if filename == product.core.physical_name + ".zip" or filename == product.core.physical_name + ".ZIP":
@@ -172,7 +177,30 @@ def pull(archive, product, use_enclosing_directory):
     if backend is None:
         raise Error("The protocol of '%s' is not supported" % url)
 
-    def retrieve_files(target_dir):
-        return backend.pull(archive, product, target_dir)
+    # create temp dir
+    product_path = archive.product_path(product)
+    storage = archive._storage
+    tmp_root = storage.get_tmp_root(product)  # TODO storage.tempdir()
+    tmp_path = tempfile.mkdtemp(dir=tmp_root, prefix=".muninn-pull-", suffix="-%s" % product.core.uuid.hex)
+    orig_path = tmp_path
 
-    archive._storage.put(None, product, use_enclosing_directory, use_symlinks=False, retrieve_files=retrieve_files)
+    try:
+        if use_enclosing_directory:
+            physical_name = product.core.physical_name
+            tmp_path = os.path.join(tmp_path, physical_name)
+            util.make_path(tmp_path)
+
+        # pull product into it
+        paths = backend.pull(archive, product, tmp_path)
+
+        # store in archive
+        archive._storage.put(paths, product, use_enclosing_directory, use_symlinks=False, tmp_path=tmp_path)
+
+        if isinstance(storage, FilesystemStorageBackend):  # TODO hide specific class
+            return storage.get_tmp(product, use_enclosing_directory)
+        else:
+            return TemporaryCopy(tmp_path, paths)
+
+    except:
+        shutil.rmtree(orig_path)
+        raise

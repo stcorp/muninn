@@ -13,9 +13,20 @@ class TemporaryCopy(object):
     def __enter__(self):
         return self.paths
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, *args):
         if self.tmp_path is not None:
             shutil.rmtree(self.tmp_path)
+
+
+class NullContextManager(object):
+    def __init__(self, resource):
+        self.resource = resource
+
+    def __enter__(self):
+        return self.resource
+
+    def __exit__(self, *args):
+        pass
 
 
 class StorageBackend(object):
@@ -51,7 +62,7 @@ class StorageBackend(object):
 
     # TODO lower-granularity put/get/delete
 
-    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None):
+    def put(self, paths, properties, use_enclosing_directory, use_symlinks=False, move_files=False, tmp_path=None):
         # Place product file(s) into storage
         raise NotImplementedError()
 

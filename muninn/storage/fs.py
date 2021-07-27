@@ -1,6 +1,6 @@
 import os
 
-from .base import StorageBackend, TemporaryCopy
+from .base import StorageBackend, TemporaryCopy, NullContextManager
 
 from muninn.schema import Mapping, Text, Boolean
 import muninn.util as util
@@ -87,13 +87,15 @@ class FilesystemStorageBackend(StorageBackend):
         # strip archive root
         return os.path.relpath(abs_archive_path, start=os.path.realpath(self._root))
 
-    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None, retrieve_files=None):
+    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None, retrieve_files=None, tmp_path=None):
         if use_symlinks is None:
             use_symlinks = self._use_symlinks
 
         physical_name = properties.core.physical_name
         archive_path = properties.core.archive_path
         uuid = properties.core.uuid
+
+        create_tempdir = (tmp_path is None)
 
         abs_archive_path = os.path.realpath(os.path.join(self._root, archive_path))
         abs_product_path = os.path.join(abs_archive_path, physical_name)
@@ -114,15 +116,19 @@ class FilesystemStorageBackend(StorageBackend):
             except EnvironmentError as _error:
                 raise Error("cannot create parent destination path '%s' [%s]" % (abs_archive_path, _error))
 
+
             # Create a temporary directory and transfer the product there, then move the product to its
             # destination within the archive.
             try:
-                tmp_root = self.get_tmp_root(properties)
-                with util.TemporaryDirectory(prefix=".put-", suffix="-%s" % uuid.hex,
-                                             dir=tmp_root) as tmp_path:
+                if create_tempdir:
+                    tmp_root = self.get_tmp_root(properties)
+                    tmp_manager = util.TemporaryDirectory(prefix=".put-", suffix="-%s" % uuid.hex, dir=tmp_root)
+                else:
+                    tmp_manager = NullContextManager(tmp_path)
 
+                with tmp_manager as tmp_path:
                     # Create enclosing directory if required.
-                    if use_enclosing_directory:
+                    if create_tempdir and use_enclosing_directory:
                         tmp_path = os.path.join(tmp_path, physical_name)
                         util.make_path(tmp_path)
 
@@ -145,9 +151,7 @@ class FilesystemStorageBackend(StorageBackend):
                                 os.symlink(path, os.path.join(tmp_path, os.path.basename(path)))
                     else:
                         # Copy/retrieve product (parts).
-                        if retrieve_files:
-                            paths = retrieve_files(tmp_path)
-                        else:
+                        if create_tempdir:
                             for path in paths:
                                 util.copy_path(path, tmp_path, resolve_root=True)
 

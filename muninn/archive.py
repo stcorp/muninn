@@ -940,27 +940,29 @@ class Archive(object):
 
             # pull product
             try:
-                remote.pull(self, product, use_enclosing_directory)
+                tmp_manager = remote.pull(self, product, use_enclosing_directory)
             except:
                 # reset active/archive_path values
                 metadata = {'active': True, 'archive_path': None}
                 self.update_properties(Struct({'core': metadata}), product.core.uuid)
                 raise
 
-            # reactivate and update size
-            product_path = self._product_path(product)
-            size = self._storage.size(product_path)
-            metadata = {'active': True, 'archive_date': self._database.server_time_utc(), 'size': size}
-            self.update_properties(Struct({'core': metadata}), product.core.uuid)
+            with tmp_manager as paths:
 
-            # verify product hash.
-            if verify_hash and 'hash' in product.core:
-                if self.verify_hash("uuid == @uuid", {"uuid": product.core.uuid}):
-                    raise Error("pulled product '%s' (%s) has incorrect hash" %
-                                (product.core.product_name, product.core.uuid))
+                # reactivate and update size
+                product_path = self._product_path(product)
+                size = self._storage.size(product_path)
+                metadata = {'active': True, 'archive_date': self._database.server_time_utc(), 'size': size}
+                self.update_properties(Struct({'core': metadata}), product.core.uuid)
 
-            # Run the post pull hook (if defined by the product type plug-in or hook extensions).
-            self._run_hooks('post_pull_hook', plugin, product)
+                # verify product hash.
+                if verify_hash and 'hash' in product.core:
+                    if self.verify_hash("uuid == @uuid", {"uuid": product.core.uuid}):
+                        raise Error("pulled product '%s' (%s) has incorrect hash" %
+                                    (product.core.product_name, product.core.uuid))
+
+                # Run the post pull hook (if defined by the product type plug-in or hook extensions).
+                self._run_hooks('post_pull_hook', plugin, product)
 
         return len(queue)
 
