@@ -10,6 +10,7 @@ import copy
 import datetime
 import errno
 import functools
+import inspect
 import hashlib
 import os
 import re
@@ -823,7 +824,7 @@ class Archive(object):
         if not ingest_product:
             self._run_hooks('post_create_hook', plugin, properties)
         else:
-            self._run_hooks('post_ingest_hook', plugin, properties)
+            self._run_hooks('post_ingest_hook', plugin, properties, paths=paths)
 
         return properties
 
@@ -834,7 +835,7 @@ class Archive(object):
                 return True
         return False
 
-    def _run_hooks(self, hook_name, plugin, properties, reverse=False):
+    def _run_hooks(self, hook_name, plugin, properties, reverse=False, paths=None):
         plugins = [plugin] + list(self._hook_extensions.values())
         if reverse:
             plugins = reversed(plugins)
@@ -842,7 +843,15 @@ class Archive(object):
         for plugin in plugins:
             hook_method = getattr(plugin, hook_name, None)
             if hook_method is not None:
-                hook_method(self, properties)
+                try:
+                    getargspec = inspect.getfullargspec
+                except AttributeError:
+                    getargspec = inspect.getargspec
+
+                if len(getargspec(hook_method).args) == 4:
+                    hook_method(self, properties, paths)
+                else:
+                    hook_method(self, properties)
 
     def link(self, uuid_, source_uuids):
         """Link a product to one or more source products."""
@@ -962,7 +971,7 @@ class Archive(object):
                                     (product.core.product_name, product.core.uuid))
 
                 # Run the post pull hook (if defined by the product type plug-in or hook extensions).
-                self._run_hooks('post_pull_hook', plugin, product)
+                self._run_hooks('post_pull_hook', plugin, product, paths=paths)
 
         return len(queue)
 
@@ -1049,7 +1058,7 @@ class Archive(object):
                 product.update(properties)
                 if 'hash' not in product.core:
                     product.core.hash = None
-                self._run_hooks('post_ingest_hook', plugin, product)
+                self._run_hooks('post_ingest_hook', plugin, product, paths=paths)
 
     def rebuild_pull_properties(self, uuid, verify_hash=False, disable_hooks=False, use_current_path=False):
         """Refresh products by re-running the pull, but using the existing products stored in the archive.
