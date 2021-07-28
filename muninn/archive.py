@@ -1078,6 +1078,7 @@ class Archive(object):
             raise Error("cannot pull products that have no remote_url")
 
         plugin = self.product_type_plugin(product.core.product_type)
+        use_enclosing_directory = plugin.use_enclosing_directory
 
         # make sure product is stored in the correct location
         if not use_current_path:
@@ -1091,15 +1092,16 @@ class Archive(object):
         product_path = self._product_path(product)
         product.core.size = self._storage.size(product_path)
 
-        # verify product hash.
-        if verify_hash and 'hash' in product.core:
-            if self.verify_hash("uuid == @uuid", {"uuid": product.core.uuid}):
-                raise Error("pulled product '%s' (%s) has incorrect hash" %
-                            (product.core.product_name, product.core.uuid))
+        with self._storage.get_tmp(product, use_enclosing_directory) as paths:
+            # verify product hash.
+            if verify_hash and 'hash' in product.core:
+                if not self._verify_hash(product, paths):
+                    raise Error("pulled product '%s' (%s) has incorrect hash" %
+                                (product.core.product_name, product.core.uuid))
 
-        # Run the post pull hook (if defined by the product type plug-in or hook extensions).
-        if not disable_hooks:
-            self._run_hooks('post_pull_hook', plugin, product)
+            # Run the post pull hook (if defined by the product type plug-in or hook extensions).
+            if not disable_hooks:
+                self._run_hooks('post_pull_hook', plugin, product, paths=paths)
 
     def remove(self, where="", parameters={}, force=False):
         """Remove one or more products from the archive, both from storage as well as from the product catalogue.
@@ -1413,6 +1415,33 @@ class Archive(object):
         self._update_metadata_date(properties)
         self._database.update_product_properties(properties, uuid=uuid, new_namespaces=new_namespaces)
 
+    def _verify_hash(self, product, paths=None):
+        if 'archive_path' in product.core:
+            if 'hash' not in product.core:
+                raise Error("no hash available for product '%s' (%s)" %
+                            (product.core.product_name, product.core.uuid))
+
+            stored_hash = product.core.hash
+            hash_type = self._extract_hash_type(stored_hash)
+
+            if hash_type is None:
+                hash_type = 'sha1'  # default before use_hash deprecation
+                stored_hash = 'sha1:' + stored_hash
+
+            plugin = self.product_type_plugin(product.core.product_type)
+            use_enclosing_directory = plugin.use_enclosing_directory
+
+            if paths:
+                current_hash = util.product_hash(paths, hash_type=hash_type)
+            else:
+                with self._storage.get_tmp(product, use_enclosing_directory) as paths:
+                    current_hash = util.product_hash(paths, hash_type=hash_type)
+
+            if current_hash != stored_hash:
+                return False
+
+        return True
+
     def verify_hash(self, where="", parameters={}):
         """Verify the hash for one or more products in the archive.
         Returns a list of UUIDs of products for which the verification failed.
@@ -1431,26 +1460,8 @@ class Archive(object):
                                property_names=['uuid', 'active', 'product_name', 'archive_path', 'physical_name',
                                                'hash', 'product_type'])
         for product in products:
-            if 'archive_path' in product.core:
-                if 'hash' not in product.core:
-                    raise Error("no hash available for product '%s' (%s)" %
-                                (product.core.product_name, product.core.uuid))
-
-                stored_hash = product.core.hash
-                hash_type = self._extract_hash_type(stored_hash)
-
-                if hash_type is None:
-                    hash_type = 'sha1'  # default before use_hash deprecation
-                    stored_hash = 'sha1:' + stored_hash
-
-                plugin = self.product_type_plugin(product.core.product_type)
-                use_enclosing_directory = plugin.use_enclosing_directory
-
-                with self._storage.get_tmp(product, use_enclosing_directory) as paths:
-                    current_hash = util.product_hash(paths, hash_type=hash_type)
-
-                if current_hash != stored_hash:
-                    failed_products.append(product.core.uuid)
+            if not self._verify_hash(product):
+                failed_products.append(product.core.uuid)
 
         return failed_products
 
