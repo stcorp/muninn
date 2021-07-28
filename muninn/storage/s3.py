@@ -126,6 +126,9 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
         archive_path = properties.core.archive_path
         physical_name = properties.core.physical_name
 
+        if not use_enclosing_directory:
+            assert len(paths) == 1 and os.path.basename(paths[0]) == physical_name
+
         # Upload file(s)
         for path in paths:
             key = self._prefix + os.path.join(archive_path, physical_name)
@@ -144,7 +147,6 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
                                                                                 ExtraArgs=self._upload_args,
                                                                                 Config=self._transfer_config)
             else:
-                assert(len(paths) == 1 and os.path.basename(path) == physical_name)
                 self._resource.Object(self.bucket, key).upload_file(path, ExtraArgs=self._upload_args,
                                                                     Config=self._transfer_config)
 

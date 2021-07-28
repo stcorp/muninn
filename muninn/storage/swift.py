@@ -83,6 +83,9 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
         archive_path = properties.core.archive_path
         physical_name = properties.core.physical_name
 
+        if not use_enclosing_directory:
+            assert len(paths) == 1 and os.path.basename(paths[0]) == physical_name
+
         # Upload file(s)
         for path in paths:
             key = os.path.join(archive_path, physical_name)
@@ -100,7 +103,6 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
                         with open(filepath, 'rb') as f:
                             self._conn.put_object(self.container, filekey, contents=f.read())
             else:
-                assert(len(paths) == 1 and os.path.basename(path) == physical_name)
                 with open(path, 'rb') as f:
                     self._conn.put_object(self.container, key, contents=f.read())
 
