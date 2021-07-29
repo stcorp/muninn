@@ -929,6 +929,7 @@ class Archive(object):
 
         """
         queue = self.search(where=where, parameters=parameters, namespaces=self.namespaces())
+
         for product in queue:
             if not product.core.active:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
@@ -947,16 +948,21 @@ class Archive(object):
             metadata = {'active': False, 'archive_path': product.core.archive_path}
             self.update_properties(Struct({'core': metadata}), product.core.uuid)
 
-            # pull product
-            try:
-                tmp_manager = remote.pull(self, product, use_enclosing_directory)
-            except:
-                # reset active/archive_path values
-                metadata = {'active': True, 'archive_path': None}
-                self.update_properties(Struct({'core': metadata}), product.core.uuid)
-                raise
+            # create temp dir
+            product_path = self.product_path(product)
+            storage = self._storage
+            tmp_root = storage.get_tmp_root(product)  # TODO storage.tempdir()
+            with util.TemporaryDirectory(prefix=".pull-", suffix="-%s" % product.core.uuid.hex, dir=tmp_root) as tmp_path:
 
-            with tmp_manager as paths:
+                # pull product here
+                try:
+                    paths = remote.pull(self, product, use_enclosing_directory, tmp_path)
+                    storage.put(paths, product, use_enclosing_directory, use_symlinks=False, tmp_path=tmp_path)
+                except:
+                    # reset active/archive_path values
+                    metadata = {'active': True, 'archive_path': None}
+                    self.update_properties(Struct({'core': metadata}), product.core.uuid)
+                    raise
 
                 # reactivate and update size
                 product_path = self._product_path(product)

@@ -128,9 +128,10 @@ class FilesystemStorageBackend(StorageBackend):
 
                 with tmp_manager as tmp_path:
                     # Create enclosing directory if required.
-                    if create_tempdir and use_enclosing_directory:
+                    if use_enclosing_directory:
                         tmp_path = os.path.join(tmp_path, physical_name)
-                        util.make_path(tmp_path)
+                        if create_tempdir:
+                            util.make_path(tmp_path)
 
                     # Transfer the product (parts).
                     if use_symlinks:
