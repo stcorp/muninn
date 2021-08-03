@@ -119,36 +119,39 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
     def current_archive_path(self, paths):
         raise Error("S3 storage backend does not support ingesting already archived products")
 
-    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None, move_files=False, tmp_path=None):
+    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None, move_files=False, retrieve_files=None):
         if use_symlinks:
             raise Error("S3 storage backend does not support symlinks")
 
         archive_path = properties.core.archive_path
         physical_name = properties.core.physical_name
 
-        if not use_enclosing_directory:
-            assert len(paths) == 1 and os.path.basename(paths[0]) == physical_name
+        tmp_root = self.get_tmp_root(properties)
+        with util.TemporaryDirectory(dir=tmp_root, prefix=".put-", suffix="-%s" % properties.core.uuid.hex) as tmp_path:
+            if retrieve_files:
+                paths = retrieve_files(tmp_path)
 
-        # Upload file(s)
-        for path in paths:
-            key = self._prefix + os.path.join(archive_path, physical_name)
+            # Upload file(s)
+            for path in paths:
+                key = self._prefix + os.path.join(archive_path, physical_name)
 
-            # Add enclosing dir
-            if use_enclosing_directory:
-                key = os.path.join(key, os.path.basename(path))
+                # Add enclosing dir
+                if use_enclosing_directory:
+                    key = os.path.join(key, os.path.basename(path))
 
-            if os.path.isdir(path):
-                for root, subdirs, files in os.walk(path):
-                    rel_root = os.path.relpath(root, path)
-                    for filename in files:
-                        filekey = os.path.normpath(os.path.join(key, rel_root, filename))
-                        filepath = os.path.join(root, filename)
-                        self._resource.Object(self.bucket, filekey).upload_file(filepath,
-                                                                                ExtraArgs=self._upload_args,
-                                                                                Config=self._transfer_config)
-            else:
-                self._resource.Object(self.bucket, key).upload_file(path, ExtraArgs=self._upload_args,
-                                                                    Config=self._transfer_config)
+                if os.path.isdir(path):
+                    for root, subdirs, files in os.walk(path):
+                        rel_root = os.path.relpath(root, path)
+                        for filename in files:
+                            filekey = os.path.normpath(os.path.join(key, rel_root, filename))
+                            filepath = os.path.join(root, filename)
+                            self._resource.Object(self.bucket, filekey).upload_file(filepath,
+                                                                                    ExtraArgs=self._upload_args,
+                                                                                    Config=self._transfer_config)
+                else:
+                    assert(len(paths) == 1 and os.path.basename(path) == physical_name)
+                    self._resource.Object(self.bucket, key).upload_file(path, ExtraArgs=self._upload_args,
+                                                                        Config=self._transfer_config)
 
     def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=None):
         if use_symlinks:

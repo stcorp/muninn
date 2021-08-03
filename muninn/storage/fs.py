@@ -1,6 +1,6 @@
 import os
 
-from .base import StorageBackend, TemporaryCopy, NullContextManager
+from .base import StorageBackend
 
 from muninn.schema import Mapping, Text, Boolean
 import muninn.util as util
@@ -56,6 +56,14 @@ class FilesystemStorageBackend(StorageBackend):
         util.make_path(tmp_root)
         return tmp_root
 
+    def run_for_product(self, product, fn, use_enclosing_directory):
+        product_path = self.product_path(product)
+        if use_enclosing_directory:
+            paths = [os.path.join(product_path, basename) for basename in os.listdir(product_path)]
+        else:
+            paths = [product_path]
+        return fn(paths)
+
     def exists(self):
         return os.path.isdir(self._root)
 
@@ -87,15 +95,13 @@ class FilesystemStorageBackend(StorageBackend):
         # strip archive root
         return os.path.relpath(abs_archive_path, start=os.path.realpath(self._root))
 
-    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None, retrieve_files=None, tmp_path=None):
+    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None, retrieve_files=None):
         if use_symlinks is None:
             use_symlinks = self._use_symlinks
 
         physical_name = properties.core.physical_name
         archive_path = properties.core.archive_path
         uuid = properties.core.uuid
-
-        create_tempdir = (tmp_path is None)
 
         abs_archive_path = os.path.realpath(os.path.join(self._root, archive_path))
         abs_product_path = os.path.join(abs_archive_path, physical_name)
@@ -116,22 +122,17 @@ class FilesystemStorageBackend(StorageBackend):
             except EnvironmentError as _error:
                 raise Error("cannot create parent destination path '%s' [%s]" % (abs_archive_path, _error))
 
-
             # Create a temporary directory and transfer the product there, then move the product to its
             # destination within the archive.
             try:
-                if create_tempdir:
-                    tmp_root = self.get_tmp_root(properties)
-                    tmp_manager = util.TemporaryDirectory(prefix=".put-", suffix="-%s" % uuid.hex, dir=tmp_root)
-                else:
-                    tmp_manager = NullContextManager(tmp_path)
+                tmp_root = self.get_tmp_root(properties)
+                with util.TemporaryDirectory(prefix=".put-", suffix="-%s" % uuid.hex,
+                                             dir=tmp_root) as tmp_path:
 
-                with tmp_manager as tmp_path:
                     # Create enclosing directory if required.
                     if use_enclosing_directory:
                         tmp_path = os.path.join(tmp_path, physical_name)
-                        if create_tempdir:
-                            util.make_path(tmp_path)
+                        util.make_path(tmp_path)
 
                     # Transfer the product (parts).
                     if use_symlinks:
@@ -152,7 +153,9 @@ class FilesystemStorageBackend(StorageBackend):
                                 os.symlink(path, os.path.join(tmp_path, os.path.basename(path)))
                     else:
                         # Copy/retrieve product (parts).
-                        if create_tempdir:
+                        if retrieve_files:
+                            paths = retrieve_files(tmp_path)
+                        else:
                             for path in paths:
                                 util.copy_path(path, tmp_path, resolve_root=True)
 
@@ -190,14 +193,6 @@ class FilesystemStorageBackend(StorageBackend):
         except EnvironmentError as _error:
             raise Error("unable to retrieve product '%s' (%s) [%s]" % (product.core.product_name, product.core.uuid,
                                                                        _error))
-
-    def get_tmp(self, product, use_enclosing_directory):
-        product_path = self.product_path(product)
-        if use_enclosing_directory:
-            paths = [os.path.join(product_path, basename) for basename in os.listdir(product_path)]
-        else:
-            paths = [product_path]
-        return TemporaryCopy(None, paths)
 
     def size(self, product_path):
         return util.product_size(product_path)

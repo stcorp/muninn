@@ -76,35 +76,38 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
     def current_archive_path(self, paths):
         raise Error("Swift storage backend does not support ingesting already archived products")
 
-    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None, move_files=False, tmp_path=None):
+    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None, move_files=False, retrieve_files=None):
         if use_symlinks:
             raise Error("Swift storage backend does not support symlinks")
 
         archive_path = properties.core.archive_path
         physical_name = properties.core.physical_name
 
-        if not use_enclosing_directory:
-            assert len(paths) == 1 and os.path.basename(paths[0]) == physical_name
+        tmp_root = self.get_tmp_root(properties)
+        with util.TemporaryDirectory(dir=tmp_root, prefix=".put-", suffix="-%s" % properties.core.uuid.hex) as tmp_path:
+            if retrieve_files:
+                paths = retrieve_files(tmp_path)
 
-        # Upload file(s)
-        for path in paths:
-            key = os.path.join(archive_path, physical_name)
+            # Upload file(s)
+            for path in paths:
+                key = os.path.join(archive_path, physical_name)
 
-            # Add enclosing dir
-            if use_enclosing_directory:
-                key = os.path.join(key, os.path.basename(path))
+                # Add enclosing dir
+                if use_enclosing_directory:
+                    key = os.path.join(key, os.path.basename(path))
 
-            if os.path.isdir(path):
-                for root, subdirs, files in os.walk(path):
-                    rel_root = os.path.relpath(root, path)
-                    for filename in files:
-                        filekey = os.path.normpath(os.path.join(key, rel_root, filename))
-                        filepath = os.path.join(root, filename)
-                        with open(filepath, 'rb') as f:
-                            self._conn.put_object(self.container, filekey, contents=f.read())
-            else:
-                with open(path, 'rb') as f:
-                    self._conn.put_object(self.container, key, contents=f.read())
+                if os.path.isdir(path):
+                    for root, subdirs, files in os.walk(path):
+                        rel_root = os.path.relpath(root, path)
+                        for filename in files:
+                            filekey = os.path.normpath(os.path.join(key, rel_root, filename))
+                            filepath = os.path.join(root, filename)
+                            with open(filepath, 'rb') as f:
+                                self._conn.put_object(self.container, filekey, contents=f.read())
+                else:
+                    assert(len(paths) == 1 and os.path.basename(path) == physical_name)
+                    with open(path, 'rb') as f:
+                        self._conn.put_object(self.container, key, contents=f.read())
 
     def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=None):
         if use_symlinks:

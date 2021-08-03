@@ -3,13 +3,11 @@
 #
 from __future__ import absolute_import, division, print_function
 
-import ftplib
-import json
 import logging
 import os
 import re
-import shutil
-import tempfile
+import json
+import ftplib
 import zipfile
 
 import muninn.util as util
@@ -116,7 +114,7 @@ class RemoteBackend(object):
         if self.prefix:
             result = url.startswith(self.prefix)
         return result
-
+    
     def auto_extract(self, file_path, product):
         filename = os.path.basename(file_path)
         if filename == product.core.physical_name + ".zip" or filename == product.core.physical_name + ".ZIP":
@@ -160,7 +158,7 @@ REMOTE_BACKENDS = {
 }
 
 
-def pull(archive, product, use_enclosing_directory, tmp_path):  # TODO move to archive.py?
+def pull(archive, product, use_enclosing_directory):
     if getattr(product.core, "archive_path", None) is None:
         raise Error("cannot pull files that do not have archive_path set")
 
@@ -174,12 +172,7 @@ def pull(archive, product, use_enclosing_directory, tmp_path):  # TODO move to a
     if backend is None:
         raise Error("The protocol of '%s' is not supported" % url)
 
-    # add enclosing directory if needed
-    if use_enclosing_directory:
-        physical_name = product.core.physical_name
-        tmp_path = os.path.join(tmp_path, physical_name)
-        util.make_path(tmp_path)
+    def retrieve_files(target_dir):
+        return backend.pull(archive, product, target_dir)
 
-    # download product files
-    paths = backend.pull(archive, product, tmp_path)
-    return paths
+    archive._storage.put(None, product, use_enclosing_directory, use_symlinks=False, retrieve_files=retrieve_files)

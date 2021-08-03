@@ -90,7 +90,7 @@ class MyTypePlugin(object):
 
         return target_filepath
 
-    def post_ingest_hook(self, archive, product, paths):
+    def post_ingest_hook(self, archive, product):
         assert product.mynamespace2.counter == 28
 
     def post_pull_hook(self, archive, product):
