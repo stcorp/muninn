@@ -95,7 +95,9 @@ class FilesystemStorageBackend(StorageBackend):
         # strip archive root
         return os.path.relpath(abs_archive_path, start=os.path.realpath(self._root))
 
-    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None, retrieve_files=None):
+    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None,
+            retrieve_files=None, run_for_product=None):
+
         if use_symlinks is None:
             use_symlinks = self._use_symlinks
 
@@ -166,6 +168,10 @@ class FilesystemStorageBackend(StorageBackend):
                         assert(len(paths) == 1 and os.path.basename(paths[0]) == physical_name)
                         tmp_product_path = os.path.join(tmp_path, physical_name)
                         os.rename(tmp_product_path, abs_product_path)
+
+                    # Run optional function on result
+                    if run_for_product is not None:
+                        self.run_for_product(properties, run_for_product, use_enclosing_directory)
 
             except EnvironmentError as _error:
                 raise Error("unable to transfer product to destination path '%s' [%s]" %

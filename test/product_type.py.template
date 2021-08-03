@@ -90,10 +90,14 @@ class MyTypePlugin(object):
 
         return target_filepath
 
-    def post_ingest_hook(self, archive, product):
+    def post_ingest_hook(self, archive, product, paths):
+        for path in paths:
+            assert os.path.exists(path)
         assert product.mynamespace2.counter == 28
 
-    def post_pull_hook(self, archive, product):
+    def post_pull_hook(self, archive, product, paths):
+        for path in paths:
+            assert os.path.exists(path)
         assert product.mynamespace2.counter == 28
 
     def post_remove_hook(self, archive, product):

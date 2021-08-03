@@ -158,7 +158,7 @@ REMOTE_BACKENDS = {
 }
 
 
-def pull(archive, product, use_enclosing_directory):
+def retrieve_function(archive, product):
     if getattr(product.core, "archive_path", None) is None:
         raise Error("cannot pull files that do not have archive_path set")
 
@@ -175,4 +175,4 @@ def pull(archive, product, use_enclosing_directory):
     def retrieve_files(target_dir):
         return backend.pull(archive, product, target_dir)
 
-    archive._storage.put(None, product, use_enclosing_directory, use_symlinks=False, retrieve_files=retrieve_files)
+    return retrieve_files

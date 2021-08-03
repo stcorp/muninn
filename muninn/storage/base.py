@@ -20,8 +20,6 @@ class StorageBackend(object):
         with util.TemporaryDirectory(dir=tmp_root, prefix=".run_for_product-",
                                      suffix="-%s" % product.core.uuid.hex) as tmp_path:
             self.get(product, product_path, tmp_path, use_enclosing_directory)
-
-            # Determine product hash
             paths = [os.path.join(tmp_path, basename) for basename in os.listdir(tmp_path)]
             return fn(paths)
 
@@ -47,7 +45,8 @@ class StorageBackend(object):
 
     # TODO lower-granularity put/get/delete
 
-    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None):
+    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None,
+            retrieve_files=None, run_for_product=None):
         # Place product file(s) into storage
         raise NotImplementedError()
 

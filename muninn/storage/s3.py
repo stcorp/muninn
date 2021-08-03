@@ -119,7 +119,9 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
     def current_archive_path(self, paths):
         raise Error("S3 storage backend does not support ingesting already archived products")
 
-    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None, move_files=False, retrieve_files=None):
+    def put(self, paths, properties, use_enclosing_directory, use_symlinks=None,
+            retrieve_files=None, run_for_product=None):
+
         if use_symlinks:
             raise Error("S3 storage backend does not support symlinks")
 
@@ -154,6 +156,9 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
                 else:
                     self._resource.Object(self.bucket, key).upload_file(path, ExtraArgs=self._upload_args,
                                                                         Config=self._transfer_config)
+
+            if run_for_product is not None:
+                run_for_product(paths)
 
     def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=None):
         if use_symlinks:
