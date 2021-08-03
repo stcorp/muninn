@@ -126,6 +126,9 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
         archive_path = properties.core.archive_path
         physical_name = properties.core.physical_name
 
+        if not use_enclosing_directory and retrieve_files is None:
+            assert(len(paths) == 1 and os.path.basename(paths[0]) == physical_name)
+
         tmp_root = self.get_tmp_root(properties)
         with util.TemporaryDirectory(dir=tmp_root, prefix=".put-", suffix="-%s" % properties.core.uuid.hex) as tmp_path:
             if retrieve_files:
@@ -149,7 +152,6 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
                                                                                     ExtraArgs=self._upload_args,
                                                                                     Config=self._transfer_config)
                 else:
-                    assert(len(paths) == 1 and os.path.basename(path) == physical_name)
                     self._resource.Object(self.bucket, key).upload_file(path, ExtraArgs=self._upload_args,
                                                                         Config=self._transfer_config)
 

@@ -83,6 +83,9 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
         archive_path = properties.core.archive_path
         physical_name = properties.core.physical_name
 
+        if not use_enclosing_directory and retrieve_files is None:
+            assert(len(paths) == 1 and os.path.basename(paths[0]) == physical_name)
+
         tmp_root = self.get_tmp_root(properties)
         with util.TemporaryDirectory(dir=tmp_root, prefix=".put-", suffix="-%s" % properties.core.uuid.hex) as tmp_path:
             if retrieve_files:
@@ -105,7 +108,6 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
                             with open(filepath, 'rb') as f:
                                 self._conn.put_object(self.container, filekey, contents=f.read())
                 else:
-                    assert(len(paths) == 1 and os.path.basename(path) == physical_name)
                     with open(path, 'rb') as f:
                         self._conn.put_object(self.container, key, contents=f.read())
 
