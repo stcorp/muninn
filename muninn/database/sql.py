@@ -534,6 +534,8 @@ class SQLBuilder(object):
         select_list.append('COUNT(*) AS count')  # always aggregate row count
         for item in aggregates:
             item = Identifier(item, self._namespace_schemas)
+            join_set.add(item.namespace)
+
             if not AGGREGATE_FUNCTIONS.get(item.muninn_type):
                 raise Error("property %r of type %r cannot be part of the summary field specification" %
                             (item.property_name, item.muninn_type.name()))

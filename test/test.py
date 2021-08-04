@@ -788,7 +788,12 @@ class TestArchive:
         # aggregate size.sum
         data, headers = archive.summary(aggregates=['core.size.sum']) # TODO doesn't work without core prefix
         assert headers == ['count', 'core.size.sum']
-        assert data == [(2, 2030)] or data == [[2, 2030]]
+        assert data == [(2, 2030)] or data == [[2, 2030]] # TODO pg8000
+
+        # non-core namespace
+        data, headers = archive.summary(aggregates=['mynamespace2.counter.avg'])
+        assert headers == ['count', 'mynamespace2.counter.avg']
+        assert data == [(2, 28,)] or data == [[2, 28]]  # TODO pg8000
 
         # group by archive date plus subscript
         for subscript in [
