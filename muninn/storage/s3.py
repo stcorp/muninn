@@ -188,10 +188,10 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             total += obj.size
         return total
 
-    def move(self, product, archive_path):
+    def move(self, product, archive_path, paths=None):
         # Ignore if product already there
         if product.core.archive_path == archive_path:
-            return
+            return paths
 
         product_path = self._prefix + self.product_path(product)
         new_product_path = self._prefix + os.path.join(archive_path, product.core.physical_name)
@@ -201,3 +201,5 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             self._resource.Object(self.bucket, new_key).copy(CopySource={'Bucket': self.bucket, 'Key': obj.key},
                                                              ExtraArgs=self._copy_args, Config=self._transfer_config)
             self._resource.Object(self.bucket, obj.key).delete()
+
+        return paths

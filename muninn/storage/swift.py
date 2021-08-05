@@ -142,10 +142,10 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
             total += data['bytes']
         return total
 
-    def move(self, product, archive_path):
+    def move(self, product, archive_path, paths=None):
         # Ignore if product already there
         if product.core.archive_path == archive_path:
-            return
+            return paths
 
         product_path = self.product_path(product)
         new_product_path = os.path.join(archive_path, product.core.physical_name)
@@ -154,3 +154,5 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
             new_key = os.path.normpath(os.path.join(new_product_path, os.path.relpath(key, product_path)))
             self._conn.copy_object(self.container, key, os.path.join(self.container, new_key))
             self._conn.delete_object(self.container, key)
+
+        return paths

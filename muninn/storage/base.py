@@ -62,6 +62,6 @@ class StorageBackend(object):
         # Delete product file(s) from storage
         raise NotImplementedError()
 
-    def move(self, product, archive_path):
+    def move(self, product, archive_path, paths=None):
         # Move product
         raise NotImplementedError()

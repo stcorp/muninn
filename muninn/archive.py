@@ -26,7 +26,6 @@ from muninn.exceptions import *
 from muninn.extension import CascadeRule
 from muninn.schema import *
 from muninn.struct import Struct
-from muninn.storage.fs import FilesystemStorageBackend
 from muninn import remote
 
 HASH_ALGORITHMS = set(hashlib.algorithms_guaranteed)
@@ -386,10 +385,11 @@ class Archive(object):
         plugin = self.product_type_plugin(product.core.product_type)
         self._run_hooks('post_remove_hook', plugin, product, reverse=True)
 
-    def _relocate(self, product, properties=None):
+    def _relocate(self, product, properties=None, paths=None):
         """Relocate a product to the archive_path reported by the product type plugin.
-        Returns the new archive_path if the product was moved."""
-        result = None
+        Returns the new archive_path if the product was moved and optionally updated
+        (local) product paths.
+        """
         product_archive_path = product.core.archive_path
         if properties:
             product = copy.deepcopy(product)
@@ -398,8 +398,10 @@ class Archive(object):
         plugin_archive_path = plugin.archive_path(product)
 
         if product_archive_path != plugin_archive_path:
-            self._storage.move(product, plugin_archive_path)
-            return plugin_archive_path
+            paths = self._storage.move(product, plugin_archive_path, paths)
+            return plugin_archive_path, paths
+        else:
+            return None, paths
 
     def _remove(self, product):
         # If the product has no data in storage associated with it, return.
@@ -1026,14 +1028,9 @@ class Archive(object):
 
             # Make sure product is stored in the correct location
             if not use_current_path:
-                old_archive_path = product.core.archive_path
-                new_archive_path = self._relocate(product, properties)
-                if new_archive_path:
+                new_archive_path, paths = self._relocate(product, properties, paths)
+                if new_archive_path is not None:
                     properties.core.archive_path = new_archive_path
-                    if isinstance(self._storage, FilesystemStorageBackend):  # TODO
-                        root = self._storage._root
-                        paths = [os.path.join(root, new_archive_path, os.path.relpath(path, os.path.join(root, old_archive_path)))
-                                    for path in paths]
 
             # if product type has disabled hashing, remove existing hash values
             stored_hash = getattr(product.core, 'hash', None)
@@ -1091,8 +1088,8 @@ class Archive(object):
 
         # make sure product is stored in the correct location
         if not use_current_path:
-            new_archive_path = self._relocate(product)
-            if new_archive_path:
+            new_archive_path, _ = self._relocate(product)
+            if new_archive_path is not None:
                 metadata = {'archive_path': new_archive_path}
                 self.update_properties(Struct({'core': metadata}), product.core.uuid)
                 product.core.archive_path = new_archive_path

@@ -222,10 +222,10 @@ class FilesystemStorageBackend(StorageBackend):
             raise Error("unable to remove product '%s' (%s) [%s]" % (properties.core.product_name, properties.core.uuid,
                                                                      _error))
 
-    def move(self, product, archive_path):
+    def move(self, product, archive_path, paths=None):
         # Ignore if product already there
         if product.core.archive_path == archive_path:
-            return
+            return paths
 
         # Make target archive path
         abs_archive_path = os.path.realpath(os.path.join(self._root, archive_path))
@@ -234,3 +234,9 @@ class FilesystemStorageBackend(StorageBackend):
         # Move files there
         product_path = self.product_path(product)
         os.rename(product_path, os.path.join(abs_archive_path, product.core.physical_name))
+
+        # Optionally rewrite (local) paths
+        if paths is not None:
+            paths = [os.path.join(self._root, archive_path, os.path.relpath(path, os.path.join(self._root, product.core.archive_path)))
+                        for path in paths]
+        return paths
