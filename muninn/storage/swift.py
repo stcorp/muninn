@@ -122,7 +122,11 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
 
         archive_path = product.core.archive_path
 
-        for key in self._object_keys(product_path):
+        keys = self._object_keys(product_path)
+        if not keys:
+            raise Error("no data for product '%s' (%s)" % (product.core.product_name, product.core.uuid))
+
+        for key in keys:
             rel_path = os.path.relpath(key, archive_path)
             if use_enclosing_directory:
                 rel_path = '/'.join(rel_path.split('/')[1:])
@@ -150,7 +154,11 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
         product_path = self.product_path(product)
         new_product_path = os.path.join(archive_path, product.core.physical_name)
 
-        for key in self._object_keys(product_path):
+        keys = self._object_keys(product_path)
+        if not keys:
+            raise Error("no data for product '%s' (%s)" % (product.core.product_name, product.core.uuid))
+
+        for key in keys:
             new_key = os.path.normpath(os.path.join(new_product_path, os.path.relpath(key, product_path)))
             self._conn.copy_object(self.container, key, os.path.join(self.container, new_key))
             self._conn.delete_object(self.container, key)

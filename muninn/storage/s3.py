@@ -167,7 +167,11 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
         archive_path = product.core.archive_path
         prefix = self._prefix + product_path
 
-        for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=prefix):
+        objs = list(self._resource.Bucket(self.bucket).objects.filter(Prefix=prefix))
+        if not objs:
+            raise Error("no data for product '%s' (%s)" % (product.core.product_name, product.core.uuid))
+
+        for obj in objs:
             rel_path = os.path.relpath(obj.key, self._prefix + archive_path)
             if use_enclosing_directory:
                 rel_path = '/'.join(rel_path.split('/')[1:])
@@ -196,7 +200,11 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
         product_path = self._prefix + self.product_path(product)
         new_product_path = self._prefix + os.path.join(archive_path, product.core.physical_name)
 
-        for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=product_path):
+        objs = list(self._resource.Bucket(self.bucket).objects.filter(Prefix=product_path))
+        if not objs:
+            raise Error("no data for product '%s' (%s)" % (product.core.product_name, product.core.uuid))
+
+        for obj in objs:
             new_key = os.path.normpath(os.path.join(new_product_path, os.path.relpath(obj.key, product_path)))
             self._resource.Object(self.bucket, new_key).copy(CopySource={'Bucket': self.bucket, 'Key': obj.key},
                                                              ExtraArgs=self._copy_args, Config=self._transfer_config)
