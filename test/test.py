@@ -288,7 +288,10 @@ class TestArchive:
             if not os.path.isdir(dirpath):
                 os.makedirs(dirpath)
             for path in paths:
-                shutil.copy(path, dirpath)
+                if os.path.isdir(path):
+                    shutil.copytree(path, os.path.join(dirpath, os.path.basename(path)))
+                else:
+                    shutil.copy(path, dirpath)
 
             paths = [os.path.join(dirpath, os.path.basename(path)) for path in paths]
 
@@ -309,7 +312,7 @@ class TestArchive:
                     'multi',
                     os.path.basename(path)
                 )
-                assert os.path.isfile(os.path.realpath(source_path))
+                assert os.path.exists(os.path.realpath(source_path))
 
                 if intra:
                     # TODO remove this, as os.path.realpath already resolves
@@ -437,7 +440,6 @@ class TestArchive:
     def test_ingest_multi_file(self, archive):
         # copy
         self._ingest_multi_file(archive)
-
         archive.remove()
 
         # symlink

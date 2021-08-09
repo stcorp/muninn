@@ -1,6 +1,6 @@
+import json
 import logging
 import os
-import json
 
 from .base import StorageBackend
 
@@ -119,6 +119,14 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
     def current_archive_path(self, paths):
         raise Error("S3 storage backend does not support ingesting already archived products")
 
+    def _upload_file(self, key, path):
+        obj = self._resource.Object(self.bucket, key)
+        obj.upload_file(path, ExtraArgs=self._upload_args, Config=self._transfer_config)
+
+    def _create_dir(self, key):
+        # using put, as upload_file/upload_fileobj do not like the trailish slash
+        self._resource.Object(self.bucket, key+'/').put()
+
     def put(self, paths, properties, use_enclosing_directory, use_symlinks=None,
             retrieve_files=None, run_for_product=None):
 
@@ -145,17 +153,22 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
                     key = os.path.join(key, os.path.basename(path))
 
                 if os.path.isdir(path):
+                    self._create_dir(key+'/')
+
                     for root, subdirs, files in os.walk(path):
                         rel_root = os.path.relpath(root, path)
+
+                        for subdir in subdirs:
+                            dirkey = os.path.normpath(os.path.join(key, rel_root, subdir))+'/'
+                            self._create_dir(dirkey)
+
                         for filename in files:
                             filekey = os.path.normpath(os.path.join(key, rel_root, filename))
                             filepath = os.path.join(root, filename)
-                            self._resource.Object(self.bucket, filekey).upload_file(filepath,
-                                                                                    ExtraArgs=self._upload_args,
-                                                                                    Config=self._transfer_config)
+                            self._upload_file(filekey, filepath)
+
                 else:
-                    self._resource.Object(self.bucket, key).upload_file(path, ExtraArgs=self._upload_args,
-                                                                        Config=self._transfer_config)
+                    self._upload_file(key, path)
 
             if run_for_product is not None:
                 run_for_product(paths)
@@ -176,8 +189,12 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             if use_enclosing_directory:
                 rel_path = '/'.join(rel_path.split('/')[1:])
             target = os.path.normpath(os.path.join(target_path, rel_path))
-            util.make_path(os.path.dirname(target))
-            self._resource.Object(self.bucket, obj.key).download_file(target, ExtraArgs=self._download_args,
+
+            if obj.key.endswith('/'):
+                util.make_path(target)
+            else:
+                util.make_path(os.path.dirname(target))
+                self._resource.Object(self.bucket, obj.key).download_file(target, ExtraArgs=self._download_args,
                                                                       Config=self._transfer_config)
 
     def delete(self, product_path, properties):

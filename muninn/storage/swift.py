@@ -102,8 +102,15 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
                     key = os.path.join(key, os.path.basename(path))
 
                 if os.path.isdir(path):
+                    self._conn.put_object(self.container, key+'/', contents=b'')
+
                     for root, subdirs, files in os.walk(path):
                         rel_root = os.path.relpath(root, path)
+
+                        for subdir in subdirs:
+                            dirkey = os.path.normpath(os.path.join(key, rel_root, subdir))+'/'
+                            self._conn.put_object(self.container, dirkey, contents=b'')
+
                         for filename in files:
                             filekey = os.path.normpath(os.path.join(key, rel_root, filename))
                             filepath = os.path.join(root, filename)
@@ -131,10 +138,13 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
             if use_enclosing_directory:
                 rel_path = '/'.join(rel_path.split('/')[1:])
             target = os.path.normpath(os.path.join(target_path, rel_path))
-            util.make_path(os.path.dirname(target))
-            binary = self._conn.get_object(self.container, key)[1]
-            with open(target, 'wb') as f:
-                f.write(binary)
+            if key.endswith('/'):
+                util.make_path(target)
+            else:
+                util.make_path(os.path.dirname(target))
+                binary = self._conn.get_object(self.container, key)[1]
+                with open(target, 'wb') as f:
+                    f.write(binary)
 
     def delete(self, product_path, properties):
         for key in self._object_keys(product_path):
