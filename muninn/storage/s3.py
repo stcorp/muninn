@@ -121,7 +121,10 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
 
     def _upload_file(self, key, path):
         obj = self._resource.Object(self.bucket, key)
-        obj.upload_file(path, ExtraArgs=self._upload_args, Config=self._transfer_config)
+        if os.path.getsize(path) == 0: # TODO otherwise upload_file hangs sometimes!?
+            self._resource.Object(self.bucket, key).put()
+        else:
+            obj.upload_file(path, ExtraArgs=self._upload_args, Config=self._transfer_config)
 
     def _create_dir(self, key):
         # using put, as upload_file/upload_fileobj do not like the trailish slash
@@ -153,13 +156,13 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
                     key = os.path.join(key, os.path.basename(path))
 
                 if os.path.isdir(path):
-                    self._create_dir(key+'/')
+                    self._create_dir(key)
 
                     for root, subdirs, files in os.walk(path):
                         rel_root = os.path.relpath(root, path)
 
                         for subdir in subdirs:
-                            dirkey = os.path.normpath(os.path.join(key, rel_root, subdir))+'/'
+                            dirkey = os.path.normpath(os.path.join(key, rel_root, subdir))
                             self._create_dir(dirkey)
 
                         for filename in files:
