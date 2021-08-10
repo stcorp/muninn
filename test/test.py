@@ -194,6 +194,10 @@ def archive(database, storage, use_enclosing_directory, archive_path):
         del sys.modules['hook_extension']
     os.system('rm *.pyc -f')
 
+    # create empty dirs (can't commit in git)
+    os.makedirs('data/multi/emptydir', exist_ok=True)
+    os.makedirs('data/multi/dir/emptydir', exist_ok=True)
+
     # create clean archive
     with muninn.open('my_arch') as archive:
         archive.register_namespace('mynamespace', MyNamespace)
@@ -225,8 +229,7 @@ class TestArchive:
                 'one/two'
             )
 
-            if not os.path.isdir(dirpath):
-                os.makedirs(dirpath)
+            os.makedirs(dirpath, exist_ok=True)
             shutil.copy(path, dirpath)
             path = os.path.join(dirpath, name)
 
@@ -285,8 +288,7 @@ class TestArchive:
                 'three/multi'
             )
 
-            if not os.path.isdir(dirpath):
-                os.makedirs(dirpath)
+            os.makedirs(dirpath, exist_ok=True)
             for path in paths:
                 if os.path.isdir(path):
                     shutil.copytree(path, os.path.join(dirpath, os.path.basename(path)))
