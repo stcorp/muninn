@@ -158,7 +158,7 @@ REMOTE_BACKENDS = {
 }
 
 
-def retrieve_function(archive, product):
+def retrieve_function(archive, product, verify_hash_download):
     if getattr(product.core, "archive_path", None) is None:
         raise Error("cannot pull files that do not have archive_path set")
 
@@ -173,6 +173,19 @@ def retrieve_function(archive, product):
         raise Error("The protocol of '%s' is not supported" % url)
 
     def retrieve_files(target_dir):
-        return backend.pull(archive, product, target_dir)
+        paths = backend.pull(archive, product, target_dir)
+
+        # check that download matches stored hash
+        stored_hash = getattr(product.core, 'hash', None)
+        if verify_hash_download and stored_hash is not None:
+            hash_type = archive._extract_hash_type(stored_hash)
+            if hash_type is None:
+                stored_hash = 'sha1:' + stored_hash
+                hash_type = 'sha1'
+            calc_hash = util.product_hash(paths, hash_type=hash_type)
+            if calc_hash != stored_hash:
+                raise DownloadError("hash mismatch when pulling product '%s' (%s)" % (product.core.product_name, product.core.uuid))
+
+        return paths
 
     return retrieve_files

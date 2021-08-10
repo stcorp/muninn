@@ -917,7 +917,7 @@ class Archive(object):
 
         return os.path.join(self._storage.global_prefix, self._product_path(product))
 
-    def pull(self, where="", parameters={}, verify_hash=False):
+    def pull(self, where="", parameters={}, verify_hash=False, verify_hash_download=False):
         """Pull one or more remote products into the archive.
         Return the number of products pulled.
 
@@ -929,6 +929,8 @@ class Archive(object):
         parameters    --  Parameters referenced in the search expression (if any).
         verify_hash   --  If set to True then, after the pull, the product in the archive will be matched against
                           the hash from the metadata (only if the metadata contained a hash).
+        verify_hash_download  --  If set to True then, before the product is stored in the archive, the pulled
+                          product will be matched against the metadata hash (if it exists).
 
         """
         queue = self.search(where=where, parameters=parameters, namespaces=self.namespaces())
@@ -968,7 +970,7 @@ class Archive(object):
 
             # pull product
             try:
-                retrieve_files = remote.retrieve_function(self, product)
+                retrieve_files = remote.retrieve_function(self, product, verify_hash_download)
                 self._storage.put(None, product, use_enclosing_directory, use_symlinks=False,
                                   retrieve_files=retrieve_files, run_for_product=_pull)
             except:

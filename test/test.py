@@ -376,7 +376,7 @@ class TestArchive:
 
         archive.update_properties(muninn.Struct({'core': metadata}), props.core.uuid)
 
-        archive.pull("", verify_hash=True)
+        archive.pull("", verify_hash=True, verify_hash_download=True)
 
         path = os.path.join(archive._params['archive_path'], 'README')
         if archive._params['use_enclosing_directory']:
