@@ -237,6 +237,7 @@ class FilesystemStorageBackend(StorageBackend):
 
         # Optionally rewrite (local) paths
         if paths is not None:
-            paths = [os.path.join(self._root, archive_path, os.path.relpath(path, os.path.join(self._root, product.core.archive_path)))
-                        for path in paths]
+            paths = [os.path.join(self._root, archive_path,
+                                  os.path.relpath(path, os.path.join(self._root, product.core.archive_path)))
+                     for path in paths]
         return paths

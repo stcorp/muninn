@@ -232,7 +232,8 @@ def main():
         description="Summary of the products matching the search expression.",
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("-f", "--output-format", choices=OUTPUT_FORMATS, default=DEFAULT_FORMAT,
-                        metavar="FORMAT", help="output format; choices (depending on installation of python-tabulate): {%(choices)s}; default: %(default)s")
+                        metavar="FORMAT", help="output format; choices (depending on installation of "
+                        "python-tabulate): {%(choices)s}; default: %(default)s")
     parser.add_argument("-o", "--order-by", action="append", dest="order_by", help="white space "
                         "separated list of sort order specifiers; a \"+\" prefix denotes ascending order; no prefix "
                         "denotes descending order")
@@ -240,8 +241,8 @@ def main():
                         help="list of property names whose values are used for grouping the aggregation results; "
                         "there will be a separate result row for each combination of group_by property values; "
                         "properties need to be of type long, integer, boolean, text or timestamp; "
-                        "timestamps require a binning subscript which can be 'year', 'month', 'yearmonth', 'day', 'date', 'hour', 'minute', 'second' or 'time' "
-                        "(e.g. `validity_start.yearmonth`)")
+                        "timestamps require a binning subscript which can be 'year', 'month', 'yearmonth', 'day', "
+                        "'date', 'hour', 'minute', 'second' or 'time' (e.g. `validity_start.yearmonth`)")
     parser.add_argument("-t", "--group-by-tag", action="store_true", help="group result by tag value; "
                         "note that products will be counted multiple times if they have multiple tags")
     parser.add_argument("-s", "--stats", action="append", dest="stats", help="list of property aggregates defined as "

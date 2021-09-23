@@ -262,7 +262,6 @@ class SQLiteBackend(object):
                     result.append("CREATE INDEX idx_%s_%s ON %s (%s)" %
                                   (self._core_table_name, name, self._core_table_name, name))
 
-
         # Create the tables for all non-core namespaces.
         for namespace in self._namespace_schemas:
             if namespace == "core":

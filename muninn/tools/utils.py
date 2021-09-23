@@ -85,7 +85,7 @@ def parse_args_and_run(parser, func):
     except muninn.Error as error:
         logging.error(error)
         sys.exit(1)
-    except:
+    except Exception:
         log_internal_error()
         sys.exit(1)
     finally:

@@ -386,6 +386,7 @@ class Name(AbstractSyntaxTreeNode):
     def __str__(self):
         return "(%s %s)" % (type(self).__name__, self.value)
 
+
 class List(AbstractSyntaxTreeNode):
     def __init__(self, values):
         self.values = values
@@ -653,7 +654,7 @@ class SemanticAnalysis(Visitor):
             visitable.value = "%s.%s" % (namespace, name)
             visitable.type = type_
 
-    def visit_List(self, visitable): # TODO check same literal type
+    def visit_List(self, visitable):  # TODO check same literal type
         values = []
         for value in visitable.values:
             if not isinstance(value, Literal):

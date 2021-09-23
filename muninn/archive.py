@@ -807,7 +807,7 @@ class Archive(object):
                         raise Error("ingested product has incorrect hash")
 
                 properties.core.archive_date = self._database.server_time_utc()
-        except:
+        except Exception:
             # Try to remove the entry for this product from the product catalogue.
             self._database.delete_product_properties(properties.core.uuid)
             raise
@@ -973,7 +973,7 @@ class Archive(object):
                 retrieve_files = remote.retrieve_function(self, product, verify_hash_download)
                 self._storage.put(None, product, use_enclosing_directory, use_symlinks=False,
                                   retrieve_files=retrieve_files, run_for_product=_pull)
-            except:
+            except Exception:
                 # reset active/archive_path values
                 metadata = {'active': True, 'archive_path': None}
                 self.update_properties(Struct({'core': metadata}), product.core.uuid)

@@ -121,7 +121,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
 
     def _upload_file(self, key, path):
         obj = self._resource.Object(self.bucket, key)
-        if os.path.getsize(path) == 0: # TODO otherwise upload_file hangs sometimes!?
+        if os.path.getsize(path) == 0:  # TODO otherwise upload_file hangs sometimes!?
             self._resource.Object(self.bucket, key).put()
         else:
             obj.upload_file(path, ExtraArgs=self._upload_args, Config=self._transfer_config)
@@ -198,7 +198,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             else:
                 util.make_path(os.path.dirname(target))
                 self._resource.Object(self.bucket, obj.key).download_file(target, ExtraArgs=self._download_args,
-                                                                      Config=self._transfer_config)
+                                                                          Config=self._transfer_config)
 
     def delete(self, product_path, properties):
         prefix = self._prefix + product_path

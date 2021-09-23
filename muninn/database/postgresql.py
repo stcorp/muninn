@@ -45,7 +45,7 @@ def _get_db_type_id(connection, typename):
             type_id = cursor.description[0][1]
         finally:
             cursor.close()
-    except:
+    except Exception:
         connection.rollback()
         raise
     else:
@@ -54,7 +54,7 @@ def _get_db_type_id(connection, typename):
     return type_id
 
 
-def geometry_recv(data, offset, length): # TODO binary send/recv needed for pg8000 <= 1.15
+def geometry_recv(data, offset, length):  # TODO binary send/recv needed for pg8000 <= 1.15
     return ewkb.decode_ewkb(data[offset:offset+length])
 
 
@@ -309,7 +309,6 @@ class PostgresqlBackend(object):
                 else:
                     result.append("CREATE INDEX idx_%s_%s ON %s (%s)" %
                                   (self._core_table_name, name, self._core_table_name, name))
-
 
         # Create the tables for all non-core namespaces.
         for namespace in self._namespace_schemas:

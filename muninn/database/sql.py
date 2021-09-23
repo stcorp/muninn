@@ -80,11 +80,14 @@ def unary_operator_rewriter(operator):
 def binary_operator_rewriter(operator):
     return lambda arg0, arg1: "(%s) %s (%s)" % (arg0, operator, arg1)
 
+
 def unary_function_rewriter(name):
     return lambda arg0: "%s(%s)" % (name, arg0)
 
+
 def membership_operator_rewriter(operator):
     return lambda arg0, arg1: "(%s) %s %s" % (arg0, operator, arg1)
+
 
 def binary_function_rewriter(name):
     return lambda arg0, arg1: "%s(%s, %s)" % (name, arg0, arg1)
@@ -313,7 +316,7 @@ class _WhereExpressionVisitor(Visitor):
         self._namespaces.add(namespace)
         return name
 
-    def visit_List(self, visitable): # TODO parameters?
+    def visit_List(self, visitable):  # TODO parameters?
         return '(' + ','.join(repr(v) for v in visitable.value) + ')'
 
     def visit_ParameterReference(self, visitable):
