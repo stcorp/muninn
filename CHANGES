@@ -1,7 +1,23 @@
+5.3 2021-12-06
+~~~~~~~~~~~~~~
+
+* Added verify-hash-download option to muninn-pull.
+
 * Use Bi/Ki/Gi/... as unit for human readable sizes instead of K/G/...
 
-* muninn-pull for http(s) now retrieves data in blocks instead of reading
-  the whole file in memory.
+* When using the S3/Swift backend, a post ingest/pull hook will now use a
+  locally kept temporary version of the product (instead of retrieving it
+  again from the bucket). The path(s) to the ingested/pulled product files
+  is passed on using a new 'paths' argument. Old hook functions without this
+  argument will still work, but will not be able to access the files.
+
+* muninn-pull for http(s) now retrieves data in blocks instead of reading the
+  whole file in memory.
+
+* Fixed issue when trying to ingest empty files or directories into S3/Swift
+  storage.
+
+* Fix compatibility issue with pg8000 >= 1.22.
 
 5.2.1 2021-06-25
 ~~~~~~~~~~~~~~~~
@@ -11,7 +27,7 @@
 5.2 2021-06-22
 ~~~~~~~~~~~~~~
 
-* Added generic hooking mechanism (not coupled to a product type)
+* Added generic hooking mechanism (not coupled to a product type).
 
 * Added 'muninn-update retype' to allow correction of product_type values.
 
