@@ -8,6 +8,7 @@ from muninn._compat import dictkeys, dictvalues, is_python2_unicode
 
 import re
 import functools
+import inspect
 
 try:
     import psycopg2
@@ -90,7 +91,15 @@ def _connect_pg8000(connection_string):
         geometry.MultiLineString,
     ):
         if hasattr(_connection, 'register_out_adapter'):
-            _connection.register_out_adapter(type_, geography_oid, geometry_send_hex)
+            try:
+                getargspec = inspect.getfullargspec
+            except AttributeError:
+                getargspec = inspect.getargspec
+            # pg8000 removed the oid argument in v1.22
+            if len(getargspec(_connection.register_out_adapter).args) == 3:
+                _connection.register_out_adapter(type_, geometry_send_hex)
+            else:
+                _connection.register_out_adapter(type_, geography_oid, geometry_send_hex)
         else:
             _connection.py_types[type_] = (geography_oid, pg8000.core.FC_BINARY, geometry_send)
 
