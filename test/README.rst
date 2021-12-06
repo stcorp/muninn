@@ -26,9 +26,9 @@ Quick setup
 These steps provide a quick setup to run the test for all cases.
 
 Use docker to run postgres/minio/swift servers:
-$ docker run -d -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust postgis/postgis
-$ docker run -d -p 9000:9000 minio/minio server /data
-$ docker run -d -p 12345:8080 morrisjobke/docker-swift-onlyone
+$ docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgis/postgis
+$ docker run -d -p 9000:9000 -e MINIO_ACCESS_KEY=minio -e MINIO_SECRET_KEY=minio1300 minio/minio server /data
+$ docker run -d -p 12345:8080 -e SWIFT_USERNAME=test:tester -e SWIFT_KEY=testing fnndsc/docker-swift-onlyone
 
 Create a conda environment for muninn and dependencies (requires mininconda/anaconda to be installed):
 $ conda create -n muninntest
