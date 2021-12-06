@@ -315,11 +315,11 @@ Methods
     products cannot be said to cover a time range, as is the case for some
     auxiliary products.
 
-``post_ingest_hook(self, archive, properties)``
+``post_ingest_hook(self, archive, properties, paths)``
     This function is optional. If it exists, it will be called after a
     successful ingest of the product.
 
-``post_pull_hook(self, archive, properties)``
+``post_pull_hook(self, archive, properties, paths)``
     This function is optional. If it exists, it will be called after a
     successful pull of the product.
 
@@ -362,7 +362,7 @@ Methods
 All methods described here are optional. When a method changes a product
 property, it is not automatically saved.
 
-``post_ingest_hook(self, archive, product)``
+``post_ingest_hook(self, archive, product, paths)``
     Executed after a product is ingested via archive.ingest, but not
     catalogue-only (ingest_product == True).
 
@@ -370,7 +370,7 @@ property, it is not automatically saved.
     Executed after a product is ingested catalogue-only via archive.ingest
     (ingest_product == False), or after a call to archive.create_properties.
 
-``post_pull_hook(self, archive, product)``
+``post_pull_hook(self, archive, product, paths)``
     Executed after a pull.
 
 ``post_remove_hook(self, archive, product)``
