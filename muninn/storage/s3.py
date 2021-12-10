@@ -24,6 +24,7 @@ class _S3Config(Mapping):
     bucket = Text()
     access_key = Text()
     secret_access_key = Text()
+    region = Text(optional=True)
     prefix = Text(optional=True)
     tmp_root = Text(optional=True)
     download_args = Text(optional=True)  # JSON representation of boto3 download_file ExtraArgs parameter
@@ -39,8 +40,8 @@ def create(configuration):
 
 
 class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate directory, 'dir/' with contents?
-    def __init__(self, bucket, host, port, access_key, secret_access_key, prefix='', tmp_root=None, download_args=None,
-                 upload_args=None, copy_args=None, transfer_config=None):
+    def __init__(self, bucket, host, port, access_key, secret_access_key, region=None, prefix='', tmp_root=None,
+                 download_args=None, upload_args=None, copy_args=None, transfer_config=None):
         super(S3StorageBackend, self).__init__()
 
         self.bucket = bucket
@@ -62,6 +63,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
 
         self._resource = boto3.resource(
             service_name='s3',
+            region_name=region,
             aws_access_key_id=access_key,
             aws_secret_access_key=secret_access_key,
             endpoint_url='http://%s:%s' % (host, port),
