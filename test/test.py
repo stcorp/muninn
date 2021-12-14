@@ -667,6 +667,23 @@ class TestArchive:
                 assert tf.getmember('multi/1.txt').size == 209
                 assert tf.getmember('multi/2.txt').size == 229
 
+    def test_export_default(self, archive):
+        if archive._params['use_enclosing_directory']:
+            self._ingest_file(archive)
+
+            with muninn.util.TemporaryDirectory() as tmp_path:
+                archive.export(target_path=tmp_path) # no format passed, and plugin has no 'export' method: use default (retrieve)!
+
+                os.system('tree '+tmp_path)
+
+                path = os.path.join(
+                           tmp_path,
+                           'pi.txt' # TODO does not add archive path?
+                       )
+
+                assert os.path.exists(path)
+                assert os.path.getsize(path) == 1015
+
     def test_rebuild_properties_file(self, archive):
         properties = self._ingest_file(archive)
 

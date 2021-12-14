@@ -569,7 +569,7 @@ class Archive(object):
         if format is not None:
             if re.match("[a-zA-Z]\\w*$", format) is None:
                 raise Error("invalid export format '%s'" % format)
-            export_method_name = export_method_name + "_" + format
+            export_method_name += "_" + format
 
         result = []
         products = self.search(where=where, parameters=parameters, namespaces=self.namespaces())
