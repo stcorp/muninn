@@ -134,6 +134,9 @@ STORAGE_CHECKERS = {
     'swift': SwiftChecker,
 }
 
+def _makedirs(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
 
 # TODO merge fixtures into one with multiple parameters?
 
@@ -195,8 +198,8 @@ def archive(database, storage, use_enclosing_directory, archive_path):
     os.system('rm *.pyc -f')
 
     # create empty dirs (can't commit in git)
-    os.makedirs('data/multi/emptydir', exist_ok=True)
-    os.makedirs('data/multi/dir/emptydir', exist_ok=True)
+    _makedirs('data/multi/emptydir')
+    _makedirs('data/multi/dir/emptydir')
 
     # create clean archive
     with muninn.open('my_arch') as archive:
@@ -229,7 +232,7 @@ class TestArchive:
                 'one/two'
             )
 
-            os.makedirs(dirpath, exist_ok=True)
+            _makedirs(dirpath)
             shutil.copy(path, dirpath)
             path = os.path.join(dirpath, name)
 
@@ -288,7 +291,7 @@ class TestArchive:
                 'three/multi'
             )
 
-            os.makedirs(dirpath, exist_ok=True)
+            _makedirs(dirpath)
             for path in paths:
                 if os.path.isdir(path):
                     shutil.copytree(path, os.path.join(dirpath, os.path.basename(path)))
