@@ -327,7 +327,7 @@ Methods
     This function is optional. If it exists, it will be called after a
     successful remove of the product.
 
-``export_<format name>(self, archive, product, target_path)``
+``export_<format name>(self, archive, product, target_path, paths)``
     Methods starting with ``export_`` can be used to implement product type
     specific export functionality. For example, a method ``export_tgz`` could
     be implemented that exports a product as a gzipped tarball. The return

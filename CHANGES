@@ -1,5 +1,7 @@
 * Allow explicit setting of region for S3 backend.
 
+* Added (optional) 'paths' argument to plugin export methods.
+
 5.3 2021-12-06
 ~~~~~~~~~~~~~~
 

@@ -94,6 +94,15 @@ def _load_extension(name):
     return sys.modules[name]
 
 
+def _inspect_nargs(func):
+    try:
+        getargspec = inspect.getfullargspec
+    except AttributeError:
+        getargspec = inspect.getargspec
+
+    return len(getargspec(func).args)
+
+
 def create(configuration):
     options = config.parse(configuration.get("archive", {}), _ArchiveConfig)
     _ArchiveConfig.validate(options)
@@ -584,17 +593,27 @@ class Archive(object):
             #
             # Note the use of getattr() / hasattr() instead of a try + except AttributeError block, to avoid hiding
             # AttributeError instances raised by the plug-in.
-            plugin = self.product_type_plugin(product.core.product_type)
 
+            plugin = self.product_type_plugin(product.core.product_type)
             export_method = getattr(plugin, export_method_name, None)
+
             if export_method is not None:
-                exported_path = export_method(self, product, target_path)
+                if _inspect_nargs(export_method) == 5:
+                    def _export(paths):
+                        exported_path = export_method(self, product, target_path, paths)
+                        result.append(exported_path)
+                    self._storage.run_for_product(product, _export, plugin.use_enclosing_directory)
+                else:
+                    exported_path = export_method(self, product, target_path)
+                    result.append(exported_path)
+
             elif format is not None:
                 raise Error("export format '%s' not supported for product '%s' (%s)" %
                             (format, product.core.product_name, product.core.uuid))
+
             else:
                 exported_path = self._retrieve(product, target_path, False)
-            result.append(exported_path)
+                result.append(exported_path)
 
         return result
 
@@ -846,12 +865,7 @@ class Archive(object):
         for plugin in plugins:
             hook_method = getattr(plugin, hook_name, None)
             if hook_method is not None:
-                try:
-                    getargspec = inspect.getfullargspec
-                except AttributeError:
-                    getargspec = inspect.getargspec
-
-                if len(getargspec(hook_method).args) == 4:
+                if _inspect_nargs(hook_method) == 4:
                     hook_method(self, properties, paths)
                 else:
                     hook_method(self, properties)
