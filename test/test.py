@@ -221,8 +221,8 @@ def archive(database, storage, use_enclosing_directory, archive_path):
 
 
 class TestArchive:
-    def _ingest_file(self, archive, use_symlinks=False, intra=False):
-        name = 'pi.txt'
+    def _ingest_file(self, archive, use_symlinks=False, intra=False, name=None):
+        name = name or 'pi.txt'
         path = 'data/%s' % name
         size = os.path.getsize(path)
 
@@ -241,10 +241,10 @@ class TestArchive:
             verify_hash=True,
             use_symlinks=use_symlinks
         )
-        path = os.path.join(archive._params['archive_path'], 'pi.txt')
+        path = os.path.join(archive._params['archive_path'], name)
 
         if archive._params['use_enclosing_directory']:
-            path = os.path.join(path, 'pi.txt')
+            path = os.path.join(path, name)
 
         assert archive._checker.exists(path, size)
 
@@ -255,7 +255,7 @@ class TestArchive:
 
             if intra:
                 # TODO remove this, as os.path.realpath already resolves
-                target_path = 'one/two/pi.txt'
+                target_path = 'one/two/' + name
                 dotdots = 0 # don't use relpath on purpose for comparison
                 if archive._params['use_enclosing_directory']:
                     dotdots += 1
@@ -265,7 +265,7 @@ class TestArchive:
                     target_path = os.path.join('..', target_path)
                 assert os.readlink(source_path) == target_path
             else:
-                target_path = os.path.join(os.getcwd(), 'data/pi.txt')
+                target_path = os.path.join(os.getcwd(), 'data/' + name)
                 assert os.readlink(source_path) == target_path
 
         return properties
@@ -392,7 +392,6 @@ class TestArchive:
     def test_ingest_file(self, archive):
         # copy
         self._ingest_file(archive)
-
         archive.remove()
 
         # symlink
@@ -402,12 +401,22 @@ class TestArchive:
             with pytest.raises(muninn.exceptions.Error) as excinfo:
                 self._ingest_file(archive, use_symlinks=True)
             assert 'storage backend does not support symlinks' in str(excinfo)
-
         archive.remove()
 
         # intra-archive symlink
         if archive._params['storage'] == 'fs':
             self._ingest_file(archive, use_symlinks=True, intra=True)
+        archive.remove()
+
+        # post hook/hash verification failure: check that active=False
+        try:
+            self._ingest_file(archive, name='pi2.txt')
+        except ZeroDivisionError: # hook raises exception for pi2.txt
+            pass
+        s = archive.search()
+        assert len(s) == 1
+        assert s[0].core.product_name == 'pi2.txt'
+        assert s[0].core.active == False
 
     def test_reingest(self, archive):
         if archive._params['storage'] == 'fs':

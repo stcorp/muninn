@@ -820,21 +820,15 @@ class Archive(object):
                 use_enclosing_directory = plugin.use_enclosing_directory
                 self._storage.put(paths, properties, use_enclosing_directory, use_symlinks)
 
-                # Verify product hash after copy
-                if verify_hash:
-                    if self.verify_hash("uuid == @uuid", {"uuid": properties.core.uuid}):
-                        raise Error("ingested product has incorrect hash")
-
                 properties.core.archive_date = self._database.server_time_utc()
+
         except Exception:
             # Try to remove the entry for this product from the product catalogue.
             self._database.delete_product_properties(properties.core.uuid)
             raise
 
-        # Activate product.
-        properties.core.active = True
+        # Update archive date.
         metadata = {
-            'active': properties.core.active,
             'archive_date': properties.core.archive_date,
         }
         self.update_properties(Struct({'core': metadata}), properties.core.uuid)
@@ -842,11 +836,23 @@ class Archive(object):
         # Set product tags.
         self._database.tag(properties.core.uuid, tags)
 
+        # Verify product hash after copy
+        if ingest_product and verify_hash:
+            if self.verify_hash("uuid == @uuid", {"uuid": properties.core.uuid}):
+                raise Error("ingested product has incorrect hash")
+
         # Run post create/ingest hooks (if defined by the product type plug-in or hook extensions).
         if not ingest_product:
             self._run_hooks('post_create_hook', plugin, properties)
         else:
             self._run_hooks('post_ingest_hook', plugin, properties, paths=paths)
+
+        # Activate product.
+        properties.core.active = True
+        metadata = {
+            'active': properties.core.active,
+        }
+        self.update_properties(Struct({'core': metadata}), properties.core.uuid)
 
         return properties
 

@@ -93,6 +93,8 @@ class MyTypePlugin(object):
     def post_ingest_hook(self, archive, product, paths):
         for path in paths:
             assert os.path.exists(path)
+            if path.endswith('pi2.txt'):
+                1 / 0
         assert product.mynamespace2.counter == 28
 
     def post_pull_hook(self, archive, product, paths):
