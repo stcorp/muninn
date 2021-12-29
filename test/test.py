@@ -409,10 +409,8 @@ class TestArchive:
         archive.remove()
 
         # post hook/hash verification failure: check that active=False
-        try:
+        with pytest.raises(ZeroDivisionError):  # hook raises exception for pi2.txt
             self._ingest_file(archive, name='pi2.txt')
-        except ZeroDivisionError: # hook raises exception for pi2.txt
-            pass
         s = archive.search()
         assert len(s) == 1
         assert s[0].core.product_name == 'pi2.txt'
@@ -501,13 +499,24 @@ class TestArchive:
             assert not archive._checker.exists(path)
 
     def test_pull(self, archive):
-        self._pull(archive)
+        properties = self._pull(archive)
 
         path = os.path.join(archive._params['archive_path'], 'README')
         if archive._params['use_enclosing_directory']:
             path = os.path.join(path, 'README')
 
         assert archive._checker.exists(path)
+
+        # failing hook should result in inactive product
+        archive.strip("")
+        archive.update_properties(muninn.Struct({'mynamespace2': {'counter': 27}}), properties.core.uuid)
+
+        with pytest.raises(ZeroDivisionError):  # hook raises exception for counte==27
+            archive.pull("", verify_hash=True, verify_hash_download=True)
+        s = archive.search()
+        assert len(s) == 1
+        assert s[0].core.product_name == 'README'
+        assert s[0].core.active == False
 
     def test_search(self, archive):  # TODO move to TestQuery?
         properties = self._ingest_file(archive)

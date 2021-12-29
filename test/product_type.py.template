@@ -43,7 +43,7 @@ class MyTypePlugin(object):
 
     def archive_path(self, product):
         assert isinstance(product, Struct)
-        assert product.mynamespace2.counter == 28
+        assert product.mynamespace2.counter in (27, 28)
 
         return ARCHIVE_PATH
 
@@ -98,6 +98,8 @@ class MyTypePlugin(object):
         assert product.mynamespace2.counter == 28
 
     def post_pull_hook(self, archive, product, paths):
+        if product.mynamespace2.counter == 27:
+            1 / 0
         for path in paths:
             assert os.path.exists(path)
         assert product.mynamespace2.counter == 28

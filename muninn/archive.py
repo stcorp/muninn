@@ -972,11 +972,15 @@ class Archive(object):
             metadata = {'active': False, 'archive_path': product.core.archive_path}
             self.update_properties(Struct({'core': metadata}), product.core.uuid)
 
+            stored = []
+
             def _pull(paths):
-                # reactivate and update size
+                stored.append(True)
+
+                # update archive_date, size
                 product_path = self._product_path(product)
                 size = self._storage.size(product_path)
-                metadata = {'active': True, 'archive_date': self._database.server_time_utc(), 'size': size}
+                metadata = {'archive_date': self._database.server_time_utc(), 'size': size}
                 self.update_properties(Struct({'core': metadata}), product.core.uuid)
 
                 # verify product hash.
@@ -994,10 +998,15 @@ class Archive(object):
                 self._storage.put(None, product, use_enclosing_directory, use_symlinks=False,
                                   retrieve_files=retrieve_files, run_for_product=_pull)
             except Exception:
-                # reset active/archive_path values
-                metadata = {'active': True, 'archive_path': None}
-                self.update_properties(Struct({'core': metadata}), product.core.uuid)
+                if not stored:
+                    # reset archive_path
+                    metadata = {'archive_path': None}
+                    self.update_properties(Struct({'core': metadata}), product.core.uuid)
                 raise
+
+            # activate product
+            metadata = {'active': True}
+            self.update_properties(Struct({'core': metadata}), product.core.uuid)
 
         return len(queue)
 
