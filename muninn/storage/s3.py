@@ -7,7 +7,7 @@ from .base import StorageBackend
 from muninn.schema import Mapping, Text, Integer
 import muninn.config as config
 import muninn.util as util
-from muninn.exceptions import Error
+from muninn.exceptions import Error, StorageError
 
 import boto3
 import boto3.s3
@@ -138,45 +138,56 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
         if use_symlinks:
             raise Error("S3 storage backend does not support symlinks")
 
-        archive_path = properties.core.archive_path
-        physical_name = properties.core.physical_name
+        anything_stored = False
 
-        if not use_enclosing_directory and retrieve_files is None:
-            assert(len(paths) == 1 and os.path.basename(paths[0]) == physical_name)
+        try:
+            archive_path = properties.core.archive_path
+            physical_name = properties.core.physical_name
 
-        tmp_root = self.get_tmp_root(properties)
-        with util.TemporaryDirectory(dir=tmp_root, prefix=".put-", suffix="-%s" % properties.core.uuid.hex) as tmp_path:
-            if retrieve_files:
-                paths = retrieve_files(tmp_path)
+            if not use_enclosing_directory and retrieve_files is None:
+                assert(len(paths) == 1 and os.path.basename(paths[0]) == physical_name)
 
-            # Upload file(s)
-            for path in paths:
-                key = self._prefix + os.path.join(archive_path, physical_name)
+            tmp_root = self.get_tmp_root(properties)
+            with util.TemporaryDirectory(dir=tmp_root, prefix=".put-", suffix="-%s" % properties.core.uuid.hex) as tmp_path:
+                if retrieve_files:
+                    paths = retrieve_files(tmp_path)
 
-                # Add enclosing dir
-                if use_enclosing_directory:
-                    key = os.path.join(key, os.path.basename(path))
 
-                if os.path.isdir(path):
-                    self._create_dir(key)
+                # Upload file(s)
+                for path in paths:
+                    key = self._prefix + os.path.join(archive_path, physical_name)
 
-                    for root, subdirs, files in os.walk(path):
-                        rel_root = os.path.relpath(root, path)
+                    # Add enclosing dir
+                    if use_enclosing_directory:
+                        key = os.path.join(key, os.path.basename(path))
 
-                        for subdir in subdirs:
-                            dirkey = os.path.normpath(os.path.join(key, rel_root, subdir))
-                            self._create_dir(dirkey)
+                    if os.path.isdir(path):
+                        self._create_dir(key)
+                        anything_stored = True
 
-                        for filename in files:
-                            filekey = os.path.normpath(os.path.join(key, rel_root, filename))
-                            filepath = os.path.join(root, filename)
-                            self._upload_file(filekey, filepath)
+                        for root, subdirs, files in os.walk(path):
+                            rel_root = os.path.relpath(root, path)
 
-                else:
-                    self._upload_file(key, path)
+                            for subdir in subdirs:
+                                dirkey = os.path.normpath(os.path.join(key, rel_root, subdir))
+                                self._create_dir(dirkey)
+                                anything_stored = True
 
-            if run_for_product is not None:
-                run_for_product(paths)
+                            for filename in files:
+                                filekey = os.path.normpath(os.path.join(key, rel_root, filename))
+                                filepath = os.path.join(root, filename)
+                                self._upload_file(filekey, filepath)
+                                anything_stored = True
+
+                    else:
+                        self._upload_file(key, path)
+                        anything_stored = True
+
+                if run_for_product is not None:
+                    run_for_product(paths)
+
+        except Exception as e:
+            raise StorageError(e, anything_stored)
 
     def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=None):
         if use_symlinks:

@@ -819,13 +819,17 @@ class Archive(object):
             if ingest_product:
                 use_enclosing_directory = plugin.use_enclosing_directory
                 self._storage.put(paths, properties, use_enclosing_directory, use_symlinks)
-
                 properties.core.archive_date = self._database.server_time_utc()
 
-        except Exception:
-            # Try to remove the entry for this product from the product catalogue.
-            self._database.delete_product_properties(properties.core.uuid)
-            raise
+        except Exception as e:
+            if not (isinstance(e, StorageError) and e.anything_stored):
+                # Try to remove the entry for this product from the product catalogue.
+                self._database.delete_product_properties(properties.core.uuid)
+
+            if isinstance(e, StorageError):
+                raise e.orig
+            else:
+                raise
 
         # Update archive date.
         metadata = {
@@ -972,11 +976,7 @@ class Archive(object):
             metadata = {'active': False, 'archive_path': product.core.archive_path}
             self.update_properties(Struct({'core': metadata}), product.core.uuid)
 
-            stored = []
-
             def _pull(paths):
-                stored.append(True)
-
                 # update archive_date, size
                 product_path = self._product_path(product)
                 size = self._storage.size(product_path)
@@ -997,12 +997,16 @@ class Archive(object):
                 retrieve_files = remote.retrieve_function(self, product, verify_hash_download)
                 self._storage.put(None, product, use_enclosing_directory, use_symlinks=False,
                                   retrieve_files=retrieve_files, run_for_product=_pull)
-            except Exception:
-                if not stored:
+            except Exception as e:
+                if not (isinstance(e, StorageError) and e.anything_stored):
                     # reset archive_path
                     metadata = {'archive_path': None}
                     self.update_properties(Struct({'core': metadata}), product.core.uuid)
-                raise
+
+                if isinstance(e, StorageError):
+                    raise e.orig
+                else:
+                    raise
 
             # activate product
             metadata = {'active': True}
