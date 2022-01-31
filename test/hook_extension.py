@@ -16,6 +16,7 @@ _hook_extensions = {
     'myhooks': MyHookExtension()
 }
 
+
 def hook_extensions():
     return _hook_extensions.keys()
 

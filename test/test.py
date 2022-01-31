@@ -42,11 +42,12 @@ CFG.read(u'test.cfg')
 STORAGE_BACKENDS = [s.strip() for s in CFG.get('DEFAULT', 'storage').split(',')]
 DATABASE_BACKENDS = [s.strip() for s in CFG.get('DEFAULT', 'database').split(',')]
 ARCHIVE_PATHS = [s.strip() for s in CFG.get('DEFAULT', 'archive_path').split(',')]
-USE_ENCLOSING_DIR = [s.strip()=='true' for s in CFG.get('DEFAULT', 'use_enclosing_dir').split(',')]
+USE_ENCLOSING_DIR = [s.strip() == 'true' for s in CFG.get('DEFAULT', 'use_enclosing_dir').split(',')]
 
 
 class MyNamespace(Mapping):
     hello = optional(Text)
+
 
 class MyNamespace2(Mapping):
     counter = optional(Integer)
@@ -134,9 +135,11 @@ STORAGE_CHECKERS = {
     'swift': SwiftChecker,
 }
 
+
 def _makedirs(path):
     if not os.path.exists(path):
         os.makedirs(path)
+
 
 # TODO merge fixtures into one with multiple parameters?
 
@@ -226,7 +229,7 @@ class TestArchive:
         path = 'data/%s' % name
         size = os.path.getsize(path)
 
-        if intra: # relative symlink within archive
+        if intra:  # relative symlink within archive
             dirpath = os.path.join(
                 archive._checker.root,
                 'one/two'
@@ -256,7 +259,7 @@ class TestArchive:
             if intra:
                 # TODO remove this, as os.path.realpath already resolves
                 target_path = 'one/two/' + name
-                dotdots = 0 # don't use relpath on purpose for comparison
+                dotdots = 0  # don't use relpath on purpose for comparison
                 if archive._params['use_enclosing_directory']:
                     dotdots += 1
                 if archive._params['archive_path']:
@@ -285,7 +288,7 @@ class TestArchive:
             assert 'cannot determine physical name for multi-part product' in str(excinfo)
             return
 
-        if intra: # relative symlinks within archive
+        if intra:  # relative symlinks within archive
             dirpath = os.path.join(
                 archive._checker.root,
                 'three/multi'
@@ -322,7 +325,7 @@ class TestArchive:
                 if intra:
                     # TODO remove this, as os.path.realpath already resolves
                     target_path = os.path.join('three/multi', os.path.basename(path))
-                    dotdots = 1 # enclosing
+                    dotdots = 1  # enclosing
                     if archive._params['archive_path']:
                         dotdots += 2
                     for i in range(dotdots):
@@ -414,7 +417,7 @@ class TestArchive:
         s = archive.search()
         assert len(s) == 1
         assert s[0].core.product_name == 'pi2.txt'
-        assert s[0].core.active == False
+        assert s[0].core.active is False
 
     def test_reingest(self, archive):
         if archive._params['storage'] == 'fs':
@@ -516,7 +519,7 @@ class TestArchive:
         s = archive.search()
         assert len(s) == 1
         assert s[0].core.product_name == 'README'
-        assert s[0].core.active == False
+        assert s[0].core.active is False
 
     def test_search(self, archive):  # TODO move to TestQuery?
         properties = self._ingest_file(archive)
@@ -605,7 +608,7 @@ class TestArchive:
             assert 'storage backend does not support symlinks' in str(excinfo)
 
     def test_retrieve_multi_file(self, archive):
-        if archive._params['use_enclosing_directory'] == True:
+        if archive._params['use_enclosing_directory'] is True:
             self._ingest_multi_file(archive)
 
             # copy
@@ -693,13 +696,14 @@ class TestArchive:
             self._ingest_file(archive)
 
             with muninn.util.TemporaryDirectory() as tmp_path:
-                archive.export(target_path=tmp_path) # no format passed, and plugin has no 'export' method: use default (retrieve)!
+                # no format passed, and plugin has no 'export' method: use default (retrieve)!
+                archive.export(target_path=tmp_path)
 
                 os.system('tree '+tmp_path)
 
                 path = os.path.join(
                            tmp_path,
-                           'pi.txt' # TODO does not add archive path?
+                           'pi.txt'  # TODO does not add archive path?
                        )
 
                 assert os.path.exists(path)
@@ -819,18 +823,18 @@ class TestArchive:
     def test_summary(self, archive):
         product1 = archive.ingest(['data/a.txt'])
         year = product1.core.archive_date.year
-        time.sleep(1) # different dates
+        time.sleep(1)  # different dates
         product2 = archive.ingest(['data/b.txt'])
 
         # default summary (count all)
         data, headers = archive.summary()
         assert headers == ['count']
-        assert data == [(2,)] or data == [[2]] # TODO pg8000 gives list per row??
+        assert data == [(2,)] or data == [[2]]  # TODO pg8000 gives list per row??
 
         # aggregate size.sum
-        data, headers = archive.summary(aggregates=['core.size.sum']) # TODO doesn't work without core prefix
+        data, headers = archive.summary(aggregates=['core.size.sum'])  # TODO doesn't work without core prefix
         assert headers == ['count', 'core.size.sum']
-        assert data == [(2, 2030)] or data == [[2, 2030]] # TODO pg8000
+        assert data == [(2, 2030)] or data == [[2, 2030]]  # TODO pg8000
 
         # non-core namespace
         data, headers = archive.summary(aggregates=['mynamespace2.counter.avg'])
@@ -871,7 +875,7 @@ class TestQuery:
         archive.update_properties(muninn.Struct({'mynamespace': {'hello': 'hohoho'}}), self.uuid_a, True)
         archive.update_properties(muninn.Struct({'mynamespace': {'hello': 'hohoho'}}), self.uuid_b, True)
 
-        polygon = Polygon([LinearRing([Point(0,0), Point(4,0), Point(4,4), Point(0,4)])])
+        polygon = Polygon([LinearRing([Point(0, 0), Point(4, 0), Point(4, 4), Point(0, 4)])])
         archive.update_properties(muninn.Struct({'core': {'footprint': polygon}}), self.uuid_c, True)
 
         archive.link(self.uuid_b, [self.uuid_a])
@@ -907,9 +911,11 @@ class TestQuery:
         s = archive.search('not is_derived_from(is_derived_from(physical_name==\"a.txt\"))')
         assert len(s) == 2
 
-        s = archive.search('is_derived_from(physical_name==\"a.txt\") or is_derived_from(is_derived_from(physical_name==\"a.txt\"))')
+        s = archive.search('is_derived_from(physical_name==\"a.txt\") or ' +
+                           'is_derived_from(is_derived_from(physical_name==\"a.txt\"))')
         assert len(s) == 2
-        s = archive.search('not (is_derived_from(physical_name==\"a.txt\") or is_derived_from(is_derived_from(physical_name==\"a.txt\")))')
+        s = archive.search('not (is_derived_from(physical_name==\"a.txt\") or ' +
+                           'is_derived_from(is_derived_from(physical_name==\"a.txt\")))')
         assert len(s) == 1
 
     def test_IsSourceOf(self, archive):
@@ -940,14 +946,14 @@ class TestQuery:
         assert len(s) == 0
         s = archive.search('\"hiya\"==mynamespace.hello')
         assert len(s) == 0
-        s = archive.search('not mynamespace.hello==\"hiya\"') # TODO move to logic operator tests
+        s = archive.search('not mynamespace.hello==\"hiya\"')  # TODO move to logic operator tests
         assert len(s) == 3
         s = archive.search('mynamespace.hello!=\"hiya\"')
         assert len(s) == 3
-        s = archive.search('not mynamespace.hello!=\"hiya\"') # TODO move to logic operator tests, etc.
+        s = archive.search('not mynamespace.hello!=\"hiya\"')  # TODO move to logic operator tests, etc.
         assert len(s) == 0
 
-        s = archive.search('size!=0') # TODO to better place
+        s = archive.search('size!=0')  # TODO to better place
         assert len(s) == 3
         s = archive.search('0<size')
         assert len(s) == 3

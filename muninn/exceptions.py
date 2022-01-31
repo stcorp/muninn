@@ -17,5 +17,3 @@ class StorageError(Error):
     def __init__(self, orig, anything_stored):
         self.orig = orig
         self.anything_stored = anything_stored
-
-
