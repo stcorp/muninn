@@ -66,7 +66,7 @@ class TabulateWriter(PlainWriter):
         self._data.append(values)
 
     def footer(self):
-        print(tabulate.tabulate(self._data, headers=self._header, tablefmt=self._format))
+        print(tabulate.tabulate(self._data, headers=self._header, tablefmt=self._format, disable_numparse=True))
 
 
 class CSVWriter(PlainWriter):
