@@ -4,6 +4,7 @@ try:
 except ImportError:
     from ConfigParser import ConfigParser
 
+import datetime
 import glob
 import logging
 import os
@@ -541,6 +542,12 @@ class TestArchive:
         s = archive.search('uuid == %s' % uuid)
         assert len(s) == 1
         s = archive.search('%s' % uuid)
+        assert len(s) == 1
+
+        # 'covers' search on datetime field
+        s = archive.search('covers(@start, @stop, core.archive_date, core.archive_date)',
+                           parameters={'start': datetime.datetime.now() - datetime.timedelta(hours=24),
+                                       'stop': datetime.datetime.now()})
         assert len(s) == 1
 
         # use uuid as boolean
