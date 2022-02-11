@@ -470,8 +470,11 @@ class SQLiteBackend(object):
         except KeyError:
             raise Error("undefined namespace: \"%s\"" % namespace)
 
-    def _placeholder(self, name=""):
-        return "?" if not name else ":%s" % name
+    def _placeholder(self, name=None, arg=None):
+        if name is not None:
+            return ":%s" % name
+        else:
+            return "?"
 
     def _rewriter_property(self, column_name, subscript):
         # timestamp

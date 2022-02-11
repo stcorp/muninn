@@ -323,7 +323,7 @@ class _WhereExpressionVisitor(Visitor):
         parameter_name = str(self._root_visitor._count)
         self._root_visitor._parameters[parameter_name] = visitable.value
         self._root_visitor._count += 1
-        return self._named_placeholder(parameter_name)
+        return self._named_placeholder(parameter_name, arg=visitable.value)
 
     def visit_FunctionCall(self, visitable):
         try:

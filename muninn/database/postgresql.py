@@ -539,8 +539,14 @@ class PostgresqlBackend(object):
         except KeyError:
             raise Error("undefined namespace: \"%s\"" % namespace)
 
-    def _placeholder(self, name=""):
-        return "%s" if not name else "%%(%s)s" % name
+    def _placeholder(self, name=None, arg=None):
+        if name is not None:
+            result = "%%(%s)s" % name
+            if isinstance(arg, datetime.datetime):
+                result += "::timestamp"
+        else:
+            result = "%s"
+        return result
 
     def _rewriter_property(self, column_name, subscript):
         # timestamp
