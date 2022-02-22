@@ -522,6 +522,11 @@ class TestArchive:
         assert s[0].core.product_name == 'README'
         assert s[0].core.active is False
 
+    def test_attach(self, archive):
+        archive.ingest(['data/pi.txt'])
+        archive.strip()
+        archive.attach(['data/pi.txt'])
+
     def test_search(self, archive):  # TODO move to TestQuery?
         properties = self._ingest_file(archive)
         uuid = properties.core.uuid
