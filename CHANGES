@@ -1,3 +1,6 @@
+5.4 2022-02-22
+~~~~~~~~~~~~~~
+
 * Added muninn-attach/archive.attach() which acts as the inverse of
   muninn-strip/archive.strip().
 

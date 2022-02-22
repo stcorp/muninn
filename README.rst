@@ -62,12 +62,12 @@ often require super user privileges.
 
 Using pip: ::
 
-  $ pip install muninn-5.3.tar.gz
+  $ pip install muninn-5.4.tar.gz
 
 Using setup.py: ::
 
-  $ tar xvfz muninn-5.3.tar.gz
-  $ cd muninn-5.3
+  $ tar xvfz muninn-5.4.tar.gz
+  $ cd muninn-5.4
   $ python setup.py install
 
 The muninn distribution contains a generic archiving framework that cannot be
@@ -99,6 +99,13 @@ Upgrade instructions
 ====================
 This section contains instructions for upgrading existing archives that were
 created with prior versions of muninn.
+
+Upgrading to version 5.4
+------------------------
+
+The keyword 'grand_type' for oauth2 entries in any auth_file credentials
+configuration file should be renamed to the correctly spelled 'grant_type'.
+
 
 Upgrading to version 5.0
 ------------------------

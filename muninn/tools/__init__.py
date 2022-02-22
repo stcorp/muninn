@@ -1,3 +1,3 @@
 #
-# Copyright (C) 2014-2021 S[&]T, The Netherlands.
+# Copyright (C) 2014-2022 S[&]T, The Netherlands.
 #
