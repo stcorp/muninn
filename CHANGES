@@ -1,3 +1,6 @@
+* Added muninn-attach/archive.attach() which acts as the inverse of
+  muninn-strip/archive.strip().
+
 * Allow explicit setting of region for S3 backend.
 
 * Added (optional) 'paths' argument to plugin export methods.

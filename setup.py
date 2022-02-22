@@ -24,6 +24,7 @@ setup(
     license="BSD",
     packages=["muninn", "muninn.tools", "muninn.database", "muninn.storage"],
     entry_points={"console_scripts": [
+        "muninn-attach = muninn.tools.attach:main",
         "muninn-destroy = muninn.tools.destroy:main",
         "muninn-export = muninn.tools.export:main",
         "muninn-info = muninn.tools.info:main",

@@ -468,6 +468,110 @@ class Archive(object):
             properties.core = Struct()
         properties.core.metadata_date = self._database.server_time_utc()
 
+    def attach(self, paths, product_type=None, use_symlinks=None, verify_hash=False, use_current_path=False):
+        """Add a product to the archive using an existing metadata record in the database.
+
+        This function acts as the inverse of a strip(). A metadata record for this product should already exist in
+        the database and no product should exist for it in the archive.
+
+        The existing metadata record is found by performing a search based on product_type and physical_name.
+
+        Keyword arguments:
+        product_type     -- Product type of the product to ingest. If left unspecified, an attempt will be made to
+                            determine the product type automatically. By default, the product type will be determined
+                            automatically.
+        use_symlinks     -- If set to True, symbolic links to the original product will be stored in the archive
+                            instead of a copy of the original product. If set to None, the value of the corresponding
+                            archive wide configuration option will be used. By default, the archive configuration will
+                            be used.
+                            This option is ignored if use_current_path=True.
+        verify_hash      -- If set to True then, after the ingestion, the product in the archive will be matched against
+                            the hash from the metadata (only if the metadata contained a hash).
+        use_current_path -- Ingest the product by keeping the file(s) at the current path (which must be inside the
+                            root directory of the archive).
+                            This option is ignored if ingest_product=False.
+
+        """
+        if isinstance(paths, basestring):
+            paths = [paths]
+
+        if not paths:
+            raise muninn.Error("nothing to ingest")
+
+        # Use absolute paths to make error messages more useful, and to avoid broken links when ingesting a product
+        # using symbolic links.
+        paths = [os.path.realpath(path) for path in paths]
+
+        # Ensure that the set of files and / or directories that make up the product does not contain duplicate
+        # basenames.
+        basenames = [os.path.basename(path) for path in paths]
+        if len(set(basenames)) < len(basenames):
+            raise Error("basename of each part should be unique for multi-part products")
+
+        # Get the product type plug-in.
+        if product_type is None:
+            product_type = self.identify(paths)
+        plugin = self.product_type_plugin(product_type)
+
+        metadata = plugin.analyze(paths)
+        if hasattr(plugin, 'namespaces'):
+            namespaces = plugin.namespaces
+        else:
+            namespaces = []
+        for namespace in metadata:
+            if namespace != 'core' and namespace not in namespaces:
+                warnings.warn("plugin.namespaces does not contain '%s'" % namespace, DeprecationWarning)
+        if isinstance(metadata, (tuple, list)):
+            properties, tags = metadata
+        else:
+            properties, tags = metadata, []
+
+        # Determine physical product name.
+        if plugin.use_enclosing_directory:
+            physical_name = plugin.enclosing_directory(properties)
+        elif len(paths) == 1:
+            physical_name = os.path.basename(paths[0])
+        else:
+            raise Error("cannot determine physical name for multi-part product")
+
+        # Find product in catalogue
+        products = self.search(where="product_type == @product_type and physical_name == @physical_name",
+                               parameters={"product_type": product_type, "physical_name": physical_name},
+                               namespaces=plugin.namespaces)
+        if len(products) == 0:
+            raise Error("product with physical_name '%s' not found" % physical_name)
+        product = products[0]
+
+        # Determine archive path
+        if 'archive_path' in product.core:
+            raise Error("product with physical_name '%s' is already in the archive" % physical_name)
+        if use_current_path:
+            product.core.archive_path = self._storage.current_archive_path(paths)
+        else:
+            product.core.archive_path = plugin.archive_path(product)
+
+        # set archive_path and deactivate while we pull it in
+        metadata = {'active': False, 'archive_path': product.core.archive_path}
+        self.update_properties(Struct({'core': metadata}), product.core.uuid)
+
+        # Store the product into the archive.
+        use_enclosing_directory = plugin.use_enclosing_directory
+        self._storage.put(paths, product, use_enclosing_directory, use_symlinks)
+
+        # Verify product hash after copy
+        if verify_hash:
+            if self.verify_hash("uuid == @uuid", {"uuid": product.core.uuid}):
+                raise Error("ingested product has incorrect hash")
+
+        # Activate product.
+        metadata = {
+            'active': True,
+            'archive_date': self._database.server_time_utc(),
+        }
+        self.update_properties(Struct({'core': metadata}), product.core.uuid)
+
+        return properties
+
     def auth_file(self):
         """Return the path of the authentication file to download from remote locations"""
         return self._auth_file

@@ -250,6 +250,7 @@ Muninn comes with a number of command-line tools to interact with muninn
 archives.
 
 These tools are:
+  - muninn-attach
   - muninn-destroy
   - muninn-export
   - muninn-ingest
