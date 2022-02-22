@@ -39,7 +39,7 @@ def download_http_oath2(url, target_dir, credentials, timeout=60):
     from oauthlib.oauth2 import LegacyApplicationClient
     from oauthlib.oauth2.rfc6749 import tokens
 
-    assert credentials['grand_type'] == "ResourceOwnerPasswordCredentialsGrant"
+    assert credentials['grant_type'] == "ResourceOwnerPasswordCredentialsGrant"
 
     session = OAuth2Session(client=LegacyApplicationClient(client_id=credentials['client_id']))
     token = session.fetch_token(token_url=credentials['token_url'], username=credentials['username'],
