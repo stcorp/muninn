@@ -376,6 +376,17 @@ property, it is not automatically saved.
 ``post_remove_hook(self, archive, product)``
     Executed after a product removal.
 
+Global functions
+----------------
+``hook_extensions()``
+    Return a list containing the names of all hooks defined by the extension.
+
+``hook_extension(name)``
+    Return an instance of a class that implements one or more hook methods
+    (see above). An exception should be raised if the extension does not
+    support the specified hook.
+
+
 Remote backend plug-in API
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 A Remote backend plug-in is an instance of a class that implements the
