@@ -468,6 +468,25 @@ class Archive(object):
             properties.core = Struct()
         properties.core.metadata_date = self._database.server_time_utc()
 
+    def _check_paths(self, paths, action):
+        if isinstance(paths, basestring):
+            paths = [paths]
+
+        if not paths:
+            raise muninn.Error("nothing to %s" % action)
+
+        # Use absolute paths to make error messages more useful, and to avoid broken links when ingesting/attaching
+        # a product using symbolic links.
+        paths = [os.path.realpath(path) for path in paths]
+
+        # Ensure that the set of files and / or directories that make up the product does not contain duplicate
+        # basenames.
+        basenames = [os.path.basename(path) for path in paths]
+        if len(set(basenames)) < len(basenames):
+            raise Error("basename of each part should be unique for multi-part products")
+
+        return paths
+
     def attach(self, paths, product_type=None, use_symlinks=None, verify_hash=False, use_current_path=False):
         """Add a product to the archive using an existing metadata record in the database.
 
@@ -492,21 +511,8 @@ class Archive(object):
                             This option is ignored if ingest_product=False.
 
         """
-        if isinstance(paths, basestring):
-            paths = [paths]
 
-        if not paths:
-            raise muninn.Error("nothing to ingest")
-
-        # Use absolute paths to make error messages more useful, and to avoid broken links when ingesting a product
-        # using symbolic links.
-        paths = [os.path.realpath(path) for path in paths]
-
-        # Ensure that the set of files and / or directories that make up the product does not contain duplicate
-        # basenames.
-        basenames = [os.path.basename(path) for path in paths]
-        if len(set(basenames)) < len(basenames):
-            raise Error("basename of each part should be unique for multi-part products")
+        paths = self._check_paths(paths, 'attach')
 
         # Get the product type plug-in.
         if product_type is None:
@@ -811,21 +817,7 @@ class Archive(object):
                             or more derived products being removed (or stripped) along with it.
 
         """
-        if isinstance(paths, basestring):
-            paths = [paths]
-
-        if not paths:
-            raise Error("nothing to ingest")
-
-        # Use absolute paths to make error messages more useful, and to avoid broken links when ingesting a product
-        # using symbolic links.
-        paths = [os.path.realpath(path) for path in paths]
-
-        # Ensure that the set of files and / or directories that make up the product does not contain duplicate
-        # basenames.
-        basenames = [os.path.basename(path) for path in paths]
-        if len(set(basenames)) < len(basenames):
-            raise Error("basename of each part should be unique for multi-part products")
+        paths = self._check_paths(paths, 'ingest')
 
         # Get the product type plug-in.
         if product_type is None:
