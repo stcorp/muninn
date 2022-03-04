@@ -487,6 +487,25 @@ class Archive(object):
 
         return paths
 
+    def _analyze_paths(self, plugin, paths):
+        metadata = plugin.analyze(paths)
+
+        if hasattr(plugin, 'namespaces'):
+            namespaces = plugin.namespaces
+        else:
+            namespaces = []
+
+        for namespace in metadata:
+            if namespace != 'core' and namespace not in namespaces:
+                warnings.warn("plugin.namespaces does not contain '%s'" % namespace, DeprecationWarning)
+
+        if isinstance(metadata, (tuple, list)):
+            properties, tags = metadata
+        else:
+            properties, tags = metadata, []
+
+        return properties, tags
+
     def attach(self, paths, product_type=None, use_symlinks=None, verify_hash=False, use_current_path=False):
         """Add a product to the archive using an existing metadata record in the database.
 
@@ -514,23 +533,11 @@ class Archive(object):
 
         paths = self._check_paths(paths, 'attach')
 
-        # Get the product type plug-in.
         if product_type is None:
             product_type = self.identify(paths)
         plugin = self.product_type_plugin(product_type)
 
-        metadata = plugin.analyze(paths)
-        if hasattr(plugin, 'namespaces'):
-            namespaces = plugin.namespaces
-        else:
-            namespaces = []
-        for namespace in metadata:
-            if namespace != 'core' and namespace not in namespaces:
-                warnings.warn("plugin.namespaces does not contain '%s'" % namespace, DeprecationWarning)
-        if isinstance(metadata, (tuple, list)):
-            properties, tags = metadata
-        else:
-            properties, tags = metadata, []
+        properties, tags = self._analyze_paths(plugin, paths)
 
         # Determine physical product name.
         if plugin.use_enclosing_directory:
@@ -826,18 +833,7 @@ class Archive(object):
 
         # Extract product metadata.
         if properties is None:
-            metadata = plugin.analyze(paths)
-            if hasattr(plugin, 'namespaces'):
-                namespaces = plugin.namespaces
-            else:
-                namespaces = []
-            for namespace in metadata:
-                if namespace != 'core' and namespace not in namespaces:
-                    warnings.warn("plugin.namespaces does not contain '%s'" % namespace, DeprecationWarning)
-            if isinstance(metadata, (tuple, list)):
-                properties, tags = metadata
-            else:
-                properties, tags = metadata, []
+            properties, tags = self._analyze_paths(plugin, paths)
         else:
             properties, tags = copy.deepcopy(properties), []
 
@@ -1139,12 +1135,7 @@ class Archive(object):
         use_enclosing_directory = plugin.use_enclosing_directory
 
         def _rebuild_properties(paths):
-            metadata = plugin.analyze(paths)
-
-            if isinstance(metadata, (tuple, list)):
-                properties, tags = metadata
-            else:
-                properties, tags = metadata, []
+            properties, tags = self._analyze_paths(plugin, paths)
 
             # Remove properties that should not be changed.
             assert "core" in properties
