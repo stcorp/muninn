@@ -522,10 +522,49 @@ class TestArchive:
         assert s[0].core.product_name == 'README'
         assert s[0].core.active is False
 
+    def test_strip(self, archive):
+        path = os.path.join(archive._params['archive_path'], 'pi.txt')
+        if archive._params['use_enclosing_directory']:
+            path = os.path.join(path, 'pi.txt')
+
+        # ingest
+        properties = archive.ingest(['data/pi.txt'])
+        assert properties.core.archive_path is not None
+
+        # strip
+        nstripped = archive.strip()  # TODO strip_by_name, strip_by_uuid
+        assert nstripped == 1
+
+        # check
+        properties = archive.retrieve_properties(properties.core.uuid)
+        assert 'archive_path' not in properties.core
+        assert 'archive_date' not in properties.core
+
+        assert not archive._checker.exists(path)
+
     def test_attach(self, archive):
-        archive.ingest(['data/pi.txt'])
+        path = os.path.join(archive._params['archive_path'], 'pi.txt')
+        if archive._params['use_enclosing_directory']:
+            path = os.path.join(path, 'pi.txt')
+
+        # strip
+        properties = archive.ingest(['data/pi.txt'])
         archive.strip()
+
+        properties = archive.retrieve_properties(properties.core.uuid)
+        assert 'archive_path' not in properties.core
+        assert 'archive_date' not in properties.core
+
+        assert not archive._checker.exists(path)
+
+        # attach
         archive.attach(['data/pi.txt'])
+
+        properties = archive.retrieve_properties(properties.core.uuid)
+        assert 'archive_path' in properties.core
+        assert 'archive_date' in properties.core
+
+        assert archive._checker.exists(path)
 
     def test_search(self, archive):  # TODO move to TestQuery?
         properties = self._ingest_file(archive)
