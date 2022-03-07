@@ -564,7 +564,21 @@ class TestArchive:
         assert 'archive_path' in properties.core
         assert 'archive_date' in properties.core
 
-        assert archive._checker.exists(path)
+        # size/hash checks
+        properties.core.size = 12
+        archive.update_properties(properties)
+        archive.strip()
+        with pytest.raises(muninn.exceptions.Error) as excinfo:
+            archive.attach(['data/pi.txt'])
+            assert 'size mismatch' in str(excinfo)
+
+        properties.core.hash = properties.core.hash+'x'
+        archive.update_properties(properties)
+        archive.strip()
+        with pytest.raises(muninn.exceptions.Error) as excinfo:
+            archive.attach(['data/pi.txt'], force=True, verify_hash_before=True)
+            assert 'hash mismatch' in str(excinfo)
+
 
     def test_search(self, archive):  # TODO move to TestQuery?
         properties = self._ingest_file(archive)
