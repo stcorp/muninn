@@ -558,7 +558,7 @@ class Archive(object):
 
         properties, tags = self._analyze_paths(plugin, paths)
 
-        # Determine physical product name.
+        # Determine physical product name
         if plugin.use_enclosing_directory:
             physical_name = plugin.enclosing_directory(properties)
         elif len(paths) == 1:
@@ -571,8 +571,17 @@ class Archive(object):
                                     physical_name=physical_name,
                                     namespaces=plugin.namespaces)
 
+        # Determine archive path
+        if 'archive_path' in product.core:
+            raise Error("product with physical_name '%s' is already in the archive" % physical_name)
+        if use_current_path:
+            archive_path = self._storage.current_archive_path(paths)
+        else:
+            archive_path = plugin.archive_path(product)
+
         # Check size match
-        if not force and util.product_size(paths) != product.core.size:
+        size = util.product_size(paths)
+        if not force and size != product.core.size:
             raise Error("size mismatch between product and existing metadata")
 
         # Check hash match
@@ -587,16 +596,24 @@ class Archive(object):
                 if product_hash != stored_hash:
                     raise Error("hash mismatch between product and existing metadata")
 
-        # Determine archive path
-        if 'archive_path' in product.core:
-            raise Error("product with physical_name '%s' is already in the archive" % physical_name)
-        if use_current_path:
-            product.core.archive_path = self._storage.current_archive_path(paths)
+        # Determine hash using plugin hash type
+        hash_type = self._plugin_hash_type(plugin)
+        if hash_type is not None:
+            product_hash = util.product_hash(paths, hash_type=hash_type)
         else:
-            product.core.archive_path = plugin.archive_path(product)
+            product_hash = None
 
-        # set archive_path and deactivate while we pull it in
-        metadata = {'active': False, 'archive_path': product.core.archive_path}
+        # Set properties and deactivate while we pull the product in
+        product.core.active = False
+        product.core.size = size
+        product.core.archive_path = archive_path
+        metadata = {
+            'active': False,
+            'size': size,
+            'archive_path': archive_path
+        }
+        if hash_type is not None:
+            metadata['hash'] = product_hash
         self.update_properties(Struct({'core': metadata}), product.core.uuid)
 
         # Store the product into the archive.
@@ -609,15 +626,15 @@ class Archive(object):
                 raise Error("ingested product has incorrect hash")
 
         # Activate product.
-        properties.core.active = True
-        properties.core.archive_date = self._database.server_time_utc()
+        product.core.active = True
+        product.core.archive_date = self._database.server_time_utc()
         metadata = {
-            'active': properties.core.active,
-            'archive_date': properties.core.archive_date,
+            'active': True,
+            'archive_date': product.core.archive_date,
         }
         self.update_properties(Struct({'core': metadata}), product.core.uuid)
 
-        return properties
+        return product
 
     def auth_file(self):
         """Return the path of the authentication file to download from remote locations"""
