@@ -21,14 +21,15 @@ import muninn
 from .utils import Processor, create_parser, parse_args_and_run
 from .ingest import CheckProductListAction, filter_paths, get_path_expansion_function
 
-
 class AttachProcessor(Processor):
 
     def __init__(self, args):
         super(AttachProcessor, self).__init__(args.archive)
         self.path_expansion_function = get_path_expansion_function(args.path_is_stem, args.path_is_enclosing_directory)
         self.use_symlinks = args.link
+        self.force = args.force
         self.verify_hash = args.verify_hash
+        self.verify_hash_before = args.verify_hash_before
         self.exclude = args.exclude
         self.product_type = args.product_type
         self.keep = args.keep
@@ -53,7 +54,8 @@ class AttachProcessor(Processor):
 
         try:
             properties = archive.attach(product_paths, self.product_type, use_symlinks=self.use_symlinks,
-                                        verify_hash=self.verify_hash, use_current_path=self.keep)
+                                        verify_hash=self.verify_hash, verify_hash_before=self.verify_hash_before,
+                                        use_current_path=self.keep, force=self.force)
         except muninn.Error as error:
             logging.error("%s: unable to attach product [%s]" % (path, error))
             return 0
@@ -107,8 +109,11 @@ def main():
     group.add_argument("-l", "--link", action="store_true", help="attach symbolic links to each product")
     group.add_argument("-k", "--keep", action="store_true", help="attach product, using the current product path if it "
                                                                  "is in the muninn path, otherwise throws an error")
+    parser.add_argument("-f", "--force", action="store_true", help="skip matching size check before attaching products")
     parser.add_argument("--verify-hash", action="store_true",
                         help="verify the hash of the product after it has been put in the archive")
+    parser.add_argument("--verify-hash-before", action="store_true",
+                        help="verify the hash of the product before it is put in the archive")
     parser.add_argument("--parallel", action="store_true", help="use multi-processing to perform attach")
     parser.add_argument("--processes", type=int, help="use a specific amount of processes for --parallel")
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
