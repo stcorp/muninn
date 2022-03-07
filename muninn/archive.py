@@ -577,9 +577,11 @@ class Archive(object):
                 raise Error("ingested product has incorrect hash")
 
         # Activate product.
+        properties.core.active = True
+        properties.core.archive_date = self._database.server_time_utc()
         metadata = {
-            'active': True,
-            'archive_date': self._database.server_time_utc(),
+            'active': properties.core.active,
+            'archive_date': properties.core.archive_date,
         }
         self.update_properties(Struct({'core': metadata}), product.core.uuid)
 
