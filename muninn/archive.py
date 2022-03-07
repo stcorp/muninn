@@ -367,12 +367,27 @@ class Archive(object):
                     for product in products:
                         self._purge(product)
 
-    def _get_product(self, uuid):
-        products = self.search('uuid == @uuid', parameters={'uuid': uuid}, namespaces=self.namespaces())
+    def _get_product(self, uuid=None, namespaces=None, properties=None, must_exist=True, **kwargs):
+        if uuid is not None:
+            kwargs['uuid'] = uuid
+
+        if namespaces is None:
+            namespaces = self.namespaces()
+
+        cond = ' and '.join(['%s == @%s' % (key, key) for key in kwargs])
+
+        products = self.search(cond, parameters=kwargs, namespaces=namespaces)
+
         if len(products) == 0:
-            raise Error('No product found with UUID: %s' % uuid)
-        assert len(products) == 1
-        return products[0]
+            if must_exist:
+                cond = ' and '.join(['%s=%s' % item for item in kwargs.items()])
+                raise Error('No product found: %s' % cond)
+            else:
+                return None
+
+        else:
+            assert len(products) == 1
+            return products[0]
 
     def _product_path(self, product):
         if getattr(product.core, "archive_path", None) is None:
