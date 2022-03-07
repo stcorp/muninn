@@ -558,7 +558,7 @@ class TestArchive:
         assert not archive._checker.exists(path)
 
         # attach
-        archive.attach(['data/pi.txt'])
+        archive.attach(['data/pi.txt'], verify_hash=True, verify_hash_before=True)
 
         properties = archive.retrieve_properties(properties.core.uuid)
         assert 'archive_path' in properties.core

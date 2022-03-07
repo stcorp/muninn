@@ -521,7 +521,9 @@ class Archive(object):
 
         return properties, tags
 
-    def attach(self, paths, product_type=None, use_symlinks=None, verify_hash=False, use_current_path=False):
+    def attach(self, paths, product_type=None, use_symlinks=None,
+               verify_hash=False, verify_hash_before=False,
+               use_current_path=False, force=False):
         """Add a product to the archive using an existing metadata record in the database.
 
         This function acts as the inverse of a strip(). A metadata record for this product should already exist in
@@ -540,12 +542,14 @@ class Archive(object):
                             This option is ignored if use_current_path=True.
         verify_hash      -- If set to True then, after the ingestion, the product in the archive will be matched against
                             the hash from the metadata (only if the metadata contained a hash).
+        verify_hash_before  --  If set to True then, before the product is attached to the archive, it will be matched
+                            against the metadata hash (if it exists).
         use_current_path -- Ingest the product by keeping the file(s) at the current path (which must be inside the
                             root directory of the archive).
                             This option is ignored if ingest_product=False.
+        force            -- If set to True, then skip default size check between product and existing metadata.
 
         """
-
         paths = self._check_paths(paths, 'attach')
 
         if product_type is None:
@@ -566,6 +570,22 @@ class Archive(object):
         product = self._get_product(product_type=product_type,
                                     physical_name=physical_name,
                                     namespaces=plugin.namespaces)
+
+        # Check size match
+        if not force and util.product_size(paths) != product.core.size:
+            raise Error("size mismatch between product and existing metadata")
+
+        # Check hash match
+        if verify_hash_before:
+            stored_hash = getattr(product.core, 'hash', None)
+            if stored_hash is not None:
+                hash_type = self._extract_hash_type(stored_hash)
+                if hash_type is None:
+                    stored_hash = 'sha1:' + stored_hash
+                    hash_type = 'sha1'
+                product_hash = util.product_hash(paths, hash_type=hash_type)
+                if product_hash != stored_hash:
+                    raise Error("hash mismatch between product and existing metadata")
 
         # Determine archive path
         if 'archive_path' in product.core:
