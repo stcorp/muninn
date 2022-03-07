@@ -367,7 +367,7 @@ class Archive(object):
                     for product in products:
                         self._purge(product)
 
-    def _get_product(self, uuid=None, namespaces=None, properties=None, must_exist=True, **kwargs):
+    def _get_product(self, uuid=None, namespaces=None, property_names=None, must_exist=True, **kwargs):
         if uuid is not None:
             kwargs['uuid'] = uuid
 
@@ -376,7 +376,7 @@ class Archive(object):
 
         cond = ' and '.join(['%s == @%s' % (key, key) for key in kwargs])
 
-        products = self.search(cond, parameters=kwargs, namespaces=namespaces)
+        products = self.search(cond, parameters=kwargs, namespaces=namespaces, property_names=property_names)
 
         if len(products) == 0:
             if must_exist:
@@ -563,12 +563,9 @@ class Archive(object):
             raise Error("cannot determine physical name for multi-part product")
 
         # Find product in catalogue
-        products = self.search(where="product_type == @product_type and physical_name == @physical_name",
-                               parameters={"product_type": product_type, "physical_name": physical_name},
-                               namespaces=plugin.namespaces)
-        if len(products) == 0:
-            raise Error("product with physical_name '%s' not found" % physical_name)
-        product = products[0]
+        product = self._get_product(product_type=product_type,
+                                    physical_name=physical_name,
+                                    namespaces=plugin.namespaces)
 
         # Determine archive path
         if 'archive_path' in product.core:
@@ -888,11 +885,10 @@ class Archive(object):
 
         # Remove existing product with the same product type and name before ingesting
         if force:
-            existing = self.search(where="core.product_type == @product_type and core.product_name == @product_name",
-                                   parameters={'product_type': properties.core.product_type,
-                                               'product_name': properties.core.product_name})
-            if existing:
-                existing = existing[0]
+            existing = self._get_product(product_type=properties.core.product_type,
+                                         product_name=properties.core.product_name,
+                                         must_exist=False)
+            if existing is not None:
                 if 'archive_path' in existing.core and existing.core.archive_path is not None:
                     ingest_path = os.path.dirname(paths[0])
                     if plugin.use_enclosing_directory:
@@ -1029,24 +1025,17 @@ class Archive(object):
         """Return the path in storage where the product with the specified product.
         Product can be specified by either: uuid, product name or product properties.
         """
+
         if isinstance(uuid_or_name_or_properties, Struct):
             product = uuid_or_name_or_properties
-        elif isinstance(uuid_or_name_or_properties, uuid.UUID):
-            products = self.search(where="uuid == @uuid", parameters={"uuid": uuid_or_name_or_properties},
-                                   property_names=['archive_path', 'physical_name'])
-            if len(products) == 0:
-                raise Error("product with uuid '%s' not found" % uuid_or_name_or_properties)
-            assert len(products) == 1
-            product = products[0]
         else:
-            products = self.search(where="product_name == @product_name",
-                                   parameters={"product_name": uuid_or_name_or_properties},
-                                   property_names=['archive_path', 'physical_name'])
-            if len(products) == 0:
-                raise Error("product with name '%s' not found" % uuid_or_name_or_properties)
-            if len(products) != 1:
-                raise Error("more than one product found with name '%s'" % uuid_or_name_or_properties)
-            product = products[0]
+            property_names = ['archive_path', 'physical_name']
+            if isinstance(uuid_or_name_or_properties, uuid.UUID):
+                product = self._get_product(uuid_or_name_or_properties,
+                                            property_names=property_names)
+            else:
+                products = self._get_product(product_name=uuid_or_name_or_properties,
+                                       property_names=property_names)
 
         return os.path.join(self._storage.global_prefix, self._product_path(product))
 
@@ -1378,14 +1367,7 @@ class Archive(object):
                         defined in the "core" namespace will be retrieved.
 
         """
-        products = self.search(where="uuid == @uuid", parameters={"uuid": uuid}, namespaces=namespaces,
-                               property_names=property_names)
-        assert len(products) <= 1
-
-        if len(products) == 0:
-            raise Error("product with uuid '%s' not found" % uuid)
-
-        return products[0]
+        return self._get_product(uuid, namespaces=namespaces, property_names=property_names)
 
     def root(self):
         """Return the archive root path."""
@@ -1554,8 +1536,8 @@ class Archive(object):
                 uuid = properties.core.uuid if uuid is None else uuid
                 if uuid != properties.core.uuid:
                     raise Error("specified uuid does not match uuid included in the specified product properties")
-            existing_product = self.search(where='uuid == @uuid', parameters={'uuid': uuid},
-                                           namespaces=self.namespaces())[0]
+
+            existing_product = self._get_product(uuid)
             new_namespaces = list(set(vars(properties)) - set(vars(existing_product)))
         else:
             new_namespaces = None
