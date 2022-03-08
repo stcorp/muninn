@@ -146,10 +146,10 @@ For each existing archive, please perform the following steps:
 2. Execute the following SQL statements. ::
 
      BEGIN;
-     ALTER TABLE <schema name>.core ALTER COLUMN archive_date DROP NOT NULL;
-     ALTER TABLE <schema name>.core ADD COLUMN metadata_date timestamp NOT NULL DEFAULT now();
-     ALTER TABLE <schema name>.core ALTER COLUMN metadata_date DROP DEFAULT;
-     ALTER TABLE <schema name>.core ADD COLUMN remote_url text;
+     ALTER TABLE core ALTER COLUMN archive_date DROP NOT NULL;
+     ALTER TABLE core ADD COLUMN metadata_date timestamp NOT NULL DEFAULT now();
+     ALTER TABLE core ALTER COLUMN metadata_date DROP DEFAULT;
+     ALTER TABLE core ADD COLUMN remote_url text;
      COMMIT;
 
    You might also want to create indices for the new fields: ::
