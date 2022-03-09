@@ -603,7 +603,7 @@ class Archive(object):
         else:
             product_hash = None
 
-        # Set properties and deactivate while we pull the product in
+        # Set properties and deactivate while we attach the product
         product.core.active = False
         product.core.size = size
         product.core.archive_path = archive_path
@@ -625,7 +625,7 @@ class Archive(object):
             if self.verify_hash("uuid == @uuid", {"uuid": product.core.uuid}):
                 raise Error("ingested product has incorrect hash")
 
-        # Activate product.
+        # Activate product
         product.core.active = True
         product.core.archive_date = self._database.server_time_utc()
         metadata = {
