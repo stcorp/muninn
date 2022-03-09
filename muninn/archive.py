@@ -621,11 +621,11 @@ class Archive(object):
         try:
             self._storage.put(paths, product, use_enclosing_directory, use_symlinks)
         except Exception as e:
+            if not (isinstance(e, StorageError) and e.anything_stored):
+                # reset state to before attach
+                metadata = {'active': True, 'archive_path': None}
+                self.update_properties(Struct({'core': metadata}), product.core.uuid)
             if isinstance(e, StorageError):
-                if not e.anything_stored:
-                    # reset state to before attach
-                    metadata = {'active': True, 'archive_path': None}
-                    self.update_properties(Struct({'core': metadata}), product.core.uuid)
                 raise e.orig
             else:
                 raise
@@ -974,10 +974,10 @@ class Archive(object):
                 properties.core.archive_date = self._database.server_time_utc()
 
         except Exception as e:
+            if not (isinstance(e, StorageError) and e.anything_stored):
+                # Try to remove the entry for this product from the product catalogue.
+                self._database.delete_product_properties(properties.core.uuid)
             if isinstance(e, StorageError):
-                if not e.anything_stored:
-                    # Try to remove the entry for this product from the product catalogue.
-                    self._database.delete_product_properties(properties.core.uuid)
                 raise e.orig
             else:
                 raise
@@ -1142,11 +1142,11 @@ class Archive(object):
                 self._storage.put(None, product, use_enclosing_directory, use_symlinks=False,
                                   retrieve_files=retrieve_files, run_for_product=_pull)
             except Exception as e:
+                if not (isinstance(e, StorageError) and e.anything_stored):
+                    # reset state to before pull
+                    metadata = {'active': True, 'archive_path': None, 'archive_date': None}
+                    self.update_properties(Struct({'core': metadata}), product.core.uuid)
                 if isinstance(e, StorageError):
-                    if not e.anything_stored:
-                        # reset state to before pull
-                        metadata = {'active': True, 'archive_path': None, 'archive_date': None}
-                        self.update_properties(Struct({'core': metadata}), product.core.uuid)
                     raise e.orig
                 else:
                     raise

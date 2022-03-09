@@ -4,7 +4,7 @@ from .base import StorageBackend
 
 from muninn.schema import Mapping, Text, Boolean
 import muninn.util as util
-from muninn.exceptions import Error
+from muninn.exceptions import Error, StorageError
 import muninn.config as config
 from muninn.util import product_size
 
@@ -124,58 +124,63 @@ class FilesystemStorageBackend(StorageBackend):
             except EnvironmentError as _error:
                 raise Error("cannot create parent destination path '%s' [%s]" % (abs_archive_path, _error))
 
+            anything_stored = False
+
             # Create a temporary directory and transfer the product there, then move the product to its
             # destination within the archive.
             try:
                 tmp_root = self.get_tmp_root(properties)
                 with util.TemporaryDirectory(prefix=".put-", suffix="-%s" % uuid.hex,
                                              dir=tmp_root) as tmp_path:
-
-                    # Create enclosing directory if required.
-                    if use_enclosing_directory:
-                        tmp_path = os.path.join(tmp_path, physical_name)
-                        util.make_path(tmp_path)
-
-                    # Transfer the product (parts).
-                    if use_symlinks:
+                    try:
+                        # Create enclosing directory if required.
                         if use_enclosing_directory:
-                            abs_path = abs_product_path
-                        else:
-                            abs_path = abs_archive_path
+                            tmp_path = os.path.join(tmp_path, physical_name)
+                            util.make_path(tmp_path)
 
-                        # Create symbolic link(s) for the product (parts).
-                        for path in paths:
-                            if util.is_sub_path(path, self._root):
-                                # Create a relative symbolic link when the target is part of the archive
-                                # (i.e. when creating an intra-archive symbolic link). This ensures the
-                                # archive can be relocated without breaking intra-archive symbolic links.
-                                os.symlink(os.path.relpath(path, abs_path),
-                                           os.path.join(tmp_path, os.path.basename(path)))
+                        # Transfer the product (parts).
+                        if use_symlinks:
+                            if use_enclosing_directory:
+                                abs_path = abs_product_path
                             else:
-                                os.symlink(path, os.path.join(tmp_path, os.path.basename(path)))
-                    else:
-                        # Copy/retrieve product (parts).
-                        if retrieve_files:
-                            paths = retrieve_files(tmp_path)
-                        else:
-                            for path in paths:
-                                util.copy_path(path, tmp_path, resolve_root=True)
+                                abs_path = abs_archive_path
 
-                    # Move the transferred product into its destination within the archive.
-                    if use_enclosing_directory:
-                        os.rename(tmp_path, abs_product_path)
-                    else:
-                        assert(len(paths) == 1 and os.path.basename(paths[0]) == physical_name)
-                        tmp_product_path = os.path.join(tmp_path, physical_name)
-                        os.rename(tmp_product_path, abs_product_path)
+                            # Create symbolic link(s) for the product (parts).
+                            for path in paths:
+                                if util.is_sub_path(path, self._root):
+                                    # Create a relative symbolic link when the target is part of the archive
+                                    # (i.e. when creating an intra-archive symbolic link). This ensures the
+                                    # archive can be relocated without breaking intra-archive symbolic links.
+                                    os.symlink(os.path.relpath(path, abs_path),
+                                               os.path.join(tmp_path, os.path.basename(path)))
+                                else:
+                                    os.symlink(path, os.path.join(tmp_path, os.path.basename(path)))
+                        else:
+                            # Copy/retrieve product (parts).
+                            if retrieve_files:
+                                paths = retrieve_files(tmp_path)
+                            else:
+                                for path in paths:
+                                    util.copy_path(path, tmp_path, resolve_root=True)
+
+                        # Move the transferred product into its destination within the archive.
+                        if use_enclosing_directory:
+                            os.rename(tmp_path, abs_product_path)
+                        else:
+                            assert(len(paths) == 1 and os.path.basename(paths[0]) == physical_name)
+                            tmp_product_path = os.path.join(tmp_path, physical_name)
+                            os.rename(tmp_product_path, abs_product_path)
+                        anything_stored = True
+                    except EnvironmentError as _error:
+                        raise Error("unable to transfer product to destination path '%s' [%s]" %
+                                    (abs_product_path, _error))
 
                     # Run optional function on result
                     if run_for_product is not None:
                         self.run_for_product(properties, run_for_product, use_enclosing_directory)
 
-            except EnvironmentError as _error:
-                raise Error("unable to transfer product to destination path '%s' [%s]" %
-                            (abs_product_path, _error))
+            except Exception as e:
+                raise StorageError(e, anything_stored)
 
     # TODO product_path follows from product
     def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=None):
