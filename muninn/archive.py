@@ -618,7 +618,17 @@ class Archive(object):
 
         # Store the product into the archive.
         use_enclosing_directory = plugin.use_enclosing_directory
-        self._storage.put(paths, product, use_enclosing_directory, use_symlinks)
+        try:
+            self._storage.put(paths, product, use_enclosing_directory, use_symlinks)
+        except Exception as e:
+            if not (isinstance(e, StorageError) and e.anything_stored):
+                # reset state to before attach
+                metadata = {'active': True, 'archive_path': None}
+                self.update_properties(Struct({'core': metadata}), product.core.uuid)
+            if isinstance(e, StorageError):
+                raise e.orig
+            else:
+                raise
 
         # Verify product hash after copy
         if verify_hash:
@@ -1137,7 +1147,6 @@ class Archive(object):
                     # reset state to before pull
                     metadata = {'active': True, 'archive_path': None, 'archive_date': None}
                     self.update_properties(Struct({'core': metadata}), product.core.uuid)
-
                 if isinstance(e, StorageError):
                     raise e.orig
                 else:
