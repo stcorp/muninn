@@ -974,11 +974,10 @@ class Archive(object):
                 properties.core.archive_date = self._database.server_time_utc()
 
         except Exception as e:
-            if not (isinstance(e, StorageError) and e.anything_stored):
-                # Try to remove the entry for this product from the product catalogue.
-                self._database.delete_product_properties(properties.core.uuid)
-
             if isinstance(e, StorageError):
+                if not e.anything_stored:
+                    # Try to remove the entry for this product from the product catalogue.
+                    self._database.delete_product_properties(properties.core.uuid)
                 raise e.orig
             else:
                 raise
