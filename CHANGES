@@ -1,3 +1,6 @@
+* Added --force and --verify-hash-before options to muninn-attach and added
+  additional improvements to keep hash and size in line with attached product.
+
 5.4 2022-02-22
 ~~~~~~~~~~~~~~
 
