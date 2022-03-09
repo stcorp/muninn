@@ -1134,8 +1134,8 @@ class Archive(object):
                                   retrieve_files=retrieve_files, run_for_product=_pull)
             except Exception as e:
                 if not (isinstance(e, StorageError) and e.anything_stored):
-                    # reset archive_path
-                    metadata = {'archive_path': None}
+                    # reset state to before pull
+                    metadata = {'active': True, 'archive_path': None, 'archive_date': None}
                     self.update_properties(Struct({'core': metadata}), product.core.uuid)
 
                 if isinstance(e, StorageError):
