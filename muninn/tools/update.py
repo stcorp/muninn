@@ -23,9 +23,7 @@ logger = logging.getLogger(__name__)
 
 ACTIONS = [
     'ingest',
-    'post_ingest',
     'pull',
-    'post_pull',
     'retype',
 ]
 
@@ -46,23 +44,11 @@ class UpdateProcessor(Processor):
             archive.rebuild_properties(product.core.uuid, disable_hooks=self.disable_hooks,
                                        use_current_path=self.use_current_path)
 
-        elif self.action == 'post_ingest':
-            plugin = archive.product_type_plugin(product.core.product_type)
-            if hasattr(plugin, "post_ingest_hook"):
-                logger.debug('running update:post_ingest on %s ' % product.core.product_name)
-                plugin.post_ingest_hook(archive, product)
-
         elif self.action == 'pull':
             logger.debug('running update:pull on %s ' % product.core.product_name)
             archive.rebuild_pull_properties(product.core.uuid, verify_hash=self.verify_hash,
                                             disable_hooks=self.disable_hooks,
                                             use_current_path=self.use_current_path)
-
-        elif self.action == 'post_pull':
-            plugin = archive.product_type_plugin(product.core.product_type)
-            if hasattr(plugin, "post_pull_hook"):
-                logger.debug('running update:post_pull on %s ' % product.core.product_name)
-                plugin.post_pull_hook(archive, product)
 
         elif self.action == 'retype':
             if self.argument is not None:

@@ -4,6 +4,9 @@
 * Improved (re)setting metadata state after storage failure for attach, pull,
   and ingest.
 
+* Removed muninn-update post_ingest and post_pull commands since these were no
+  longer working with generic hooks and the S3/Swift storage backends.
+
 5.4 2022-02-22
 ~~~~~~~~~~~~~~
 
