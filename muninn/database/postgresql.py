@@ -900,7 +900,7 @@ class PostgresqlBackend(object):
         with self._connection:
             self._insert_namespace_properties(properties.core.uuid, "core", properties.core)
             for ns_name, ns_properties in vars(properties).items():
-                if ns_name == "core":
+                if ns_name == "core" or ns_properties is None:
                     continue
                 self._insert_namespace_properties(properties.core.uuid, ns_name, ns_properties)
 
