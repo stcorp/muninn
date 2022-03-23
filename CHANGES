@@ -7,6 +7,8 @@
 * Removed muninn-update post_ingest and post_pull commands since these were no
   longer working with generic hooks and the S3/Swift storage backends.
 
+* Fixed issue in zip auto-extraction for muninn-pull.
+
 5.4 2022-02-22
 ~~~~~~~~~~~~~~
 
