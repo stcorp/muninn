@@ -13,12 +13,6 @@ import tarfile
 import time
 import unittest
 
-PY3 = sys.version_info[0] == 3
-if PY3:
-    import urllib
-else:
-    import urllib2
-
 import pytest
 
 import boto3
@@ -365,14 +359,10 @@ class TestArchive:
 
         return properties
 
-    def _pull(self, archive):
-        URL = 'http://archive.debian.org/README'
-        if PY3:
-            urllib.request.urlretrieve(URL, 'data/README')
-        else:
-            data = urllib2.urlopen(URL).read()
-            with open('data/README', 'wb') as f:
-                f.write(data)
+    def _pull(self, archive, extract=False):
+        URL = 'file://' + os.path.realpath('data/README')
+        if extract:
+            URL += '.zip'
 
         props = archive.ingest(['data/README'], ingest_product=False)
         size = os.path.getsize('data/README')
@@ -503,10 +493,16 @@ class TestArchive:
             assert not archive._checker.exists(path)
 
     def test_pull(self, archive):
+        # normal pull
         properties = self._pull(archive)
 
+        # autoextract
+#        if archive._params['use_enclosing_directory']:
+        archive.remove()
+        properties = self._pull(archive, extract=True)
+
         # failing hook should result in inactive product
-        archive.strip("")
+        archive.strip('')
         archive.update_properties(muninn.Struct({'mynamespace2': {'counter': 27}}), properties.core.uuid)
 
         with pytest.raises(ZeroDivisionError):  # hook raises exception for counte==27

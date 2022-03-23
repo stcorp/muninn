@@ -116,12 +116,15 @@ class RemoteBackend(object):
         return result
 
     def auto_extract(self, file_path, product):
+        dirname = os.path.dirname(file_path)
         filename = os.path.basename(file_path)
         if filename == product.core.physical_name + ".zip" or filename == product.core.physical_name + ".ZIP":
             with zipfile.ZipFile(file_path, 'r') as ziparchive:
-                ziparchive.extractall(os.path.dirname(file_path))
-                paths = set([p.split('/', 1)[0] for p in ziparchive.namelist()])
-                return list(paths)
+                ziparchive.extractall(dirname)
+                paths = set([path.split('/', 1)[0] for path in ziparchive.namelist()])
+                paths = [os.path.join(dirname, path) for path in sorted(paths)]
+            util.remove_path(file_path)
+            return paths
         return [file_path]
 
 
