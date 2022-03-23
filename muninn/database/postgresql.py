@@ -996,7 +996,8 @@ class PostgresqlBackend(object):
                 if ns_name == "core":
                     continue
                 if ns_name in new_namespaces:
-                    self._insert_namespace_properties(uuid, ns_name, ns_properties)
+                    if ns_properties is not None:
+                        self._insert_namespace_properties(uuid, ns_name, ns_properties)
                 elif ns_properties is None:
                     self._delete_namespace_properties(uuid, ns_name)
                 else:
