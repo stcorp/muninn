@@ -505,12 +505,6 @@ class TestArchive:
     def test_pull(self, archive):
         properties = self._pull(archive)
 
-        path = os.path.join(archive._params['archive_path'], 'README')
-        if archive._params['use_enclosing_directory']:
-            path = os.path.join(path, 'README')
-
-        assert archive._checker.exists(path)
-
         # failing hook should result in inactive product
         archive.strip("")
         archive.update_properties(muninn.Struct({'mynamespace2': {'counter': 27}}), properties.core.uuid)
