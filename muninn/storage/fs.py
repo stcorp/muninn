@@ -139,27 +139,28 @@ class FilesystemStorageBackend(StorageBackend):
                             util.make_path(tmp_path)
 
                         # Transfer the product (parts).
-                        if use_symlinks:
-                            if use_enclosing_directory:
-                                abs_path = abs_product_path
-                            else:
-                                abs_path = abs_archive_path
-
-                            # Create symbolic link(s) for the product (parts).
-                            for path in paths:
-                                if util.is_sub_path(path, self._root):
-                                    # Create a relative symbolic link when the target is part of the archive
-                                    # (i.e. when creating an intra-archive symbolic link). This ensures the
-                                    # archive can be relocated without breaking intra-archive symbolic links.
-                                    os.symlink(os.path.relpath(path, abs_path),
-                                               os.path.join(tmp_path, os.path.basename(path)))
-                                else:
-                                    os.symlink(path, os.path.join(tmp_path, os.path.basename(path)))
+                        if retrieve_files:
+                            # Retrieve product (parts).
+                            paths = retrieve_files(tmp_path)
                         else:
-                            # Copy/retrieve product (parts).
-                            if retrieve_files:
-                                paths = retrieve_files(tmp_path)
+                            if use_symlinks:
+                                # Create symbolic link(s) for the product (parts).
+                                if use_enclosing_directory:
+                                    abs_path = abs_product_path
+                                else:
+                                    abs_path = abs_archive_path
+
+                                for path in paths:
+                                    if util.is_sub_path(path, self._root):
+                                        # Create a relative symbolic link when the target is part of the archive
+                                        # (i.e. when creating an intra-archive symbolic link). This ensures the
+                                        # archive can be relocated without breaking intra-archive symbolic links.
+                                        os.symlink(os.path.relpath(path, abs_path),
+                                                   os.path.join(tmp_path, os.path.basename(path)))
+                                    else:
+                                        os.symlink(path, os.path.join(tmp_path, os.path.basename(path)))
                             else:
+                                # Copy product (parts).
                                 for path in paths:
                                     util.copy_path(path, tmp_path, resolve_root=True)
 
