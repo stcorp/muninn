@@ -1077,6 +1077,7 @@ class TestQuery:
 
     def test_InList(self, archive):
         self._prep_data(archive)
+
         s = archive.search('size in [1015]')
         assert len(s) == 3
         s = archive.search('not size in [1015]')
@@ -1118,6 +1119,12 @@ class TestQuery:
         assert len(s) == 1
         s = archive.search('physical_name not in ["b.txt", "c.txt"]')
         assert len(s) == 1
+
+        # parameters
+        s = archive.search('physical_name in @somelist', parameters={'somelist': ["b.txt", "c.txt"]})
+        assert len(s) == 2
+#        s = archive.search('physical_name in [@b, "c.txt"]', parameters={'b': "b.txt"})
+#        assert len(s) == 2
 
     def test_RemoveProperties(self, archive):
         self._prep_data(archive)

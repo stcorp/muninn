@@ -320,10 +320,19 @@ class _WhereExpressionVisitor(Visitor):
         return '(' + ','.join(repr(v) for v in visitable.value) + ')'
 
     def visit_ParameterReference(self, visitable):
-        parameter_name = str(self._root_visitor._count)
-        self._root_visitor._parameters[parameter_name] = visitable.value
-        self._root_visitor._count += 1
-        return self._named_placeholder(parameter_name, arg=visitable.value)
+        if visitable.type is Sequence:
+            result = []
+            for value in visitable.value:
+                parameter_name = str(self._root_visitor._count)
+                self._root_visitor._parameters[parameter_name] = value
+                self._root_visitor._count += 1
+                result.append(self._named_placeholder(parameter_name, arg=value))
+            return '(' + ','.join(result) + ')'
+        else:
+            parameter_name = str(self._root_visitor._count)
+            self._root_visitor._parameters[parameter_name] = visitable.value
+            self._root_visitor._count += 1
+            return self._named_placeholder(parameter_name, arg=visitable.value)
 
     def visit_FunctionCall(self, visitable):
         try:

@@ -592,6 +592,9 @@ def parse_expression(stream):
 
 
 def _literal_type(literal):
+    if isinstance(literal, list):  # TODO use Sequence.validate..?
+        return Sequence
+
     for type in (Text, Timestamp, UUID, Boolean, Integer, Long, Real, Geometry):
         try:
             type.validate(literal)
