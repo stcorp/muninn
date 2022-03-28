@@ -43,5 +43,6 @@ Steps to check test coverage:
 
 - Install the following Python dependencies:
   - coverage
+  - pytest-cov
 - Run ./coverage.sh
 - Look at htmlcov/index.html
