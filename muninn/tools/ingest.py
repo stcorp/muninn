@@ -20,7 +20,7 @@ except ImportError:
 
 import muninn
 
-from .utils import Processor, create_parser, parse_args_and_run
+from muninn.tools.utils import Processor, create_parser, parse_args_and_run
 
 
 class Error(muninn.Error):
@@ -178,3 +178,7 @@ def main():
     parser.add_argument("path", metavar="PATH", nargs="+", action=CheckProductListAction,
                         help="products to ingest, or \"-\" to read the list of products from standard input")
     return parse_args_and_run(parser, ingest)
+
+
+if __name__ == '__main__':
+    main()

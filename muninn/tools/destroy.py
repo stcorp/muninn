@@ -7,7 +7,7 @@ from __future__ import absolute_import, division, print_function
 from muninn._compat import input
 import muninn
 
-from .utils import create_parser, parse_args_and_run
+from muninn.tools.utils import create_parser, parse_args_and_run
 
 
 def ask_yes_no(question, default=True):
@@ -52,3 +52,7 @@ def main():
     parser.add_argument("-y", "--yes", action="store_true", help="assume yes and do not prompt for confirmation")
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
     return parse_args_and_run(parser, destroy)
+
+
+if __name__ == '__main__':
+    main()

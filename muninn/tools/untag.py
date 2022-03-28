@@ -6,7 +6,7 @@ from __future__ import absolute_import, division, print_function
 
 import muninn
 
-from .utils import create_parser, parse_args_and_run
+from muninn.tools.utils import create_parser, parse_args_and_run
 
 
 def untag(args):
@@ -26,3 +26,7 @@ def main():
     parser.add_argument("expression", metavar="EXPRESSION", help="expression used to search for products to untag")
     parser.add_argument("tag", metavar="TAG", nargs="*", help="tags to remove")
     return parse_args_and_run(parser, untag)
+
+
+if __name__ == '__main__':
+    main()

@@ -14,7 +14,7 @@ try:
 except ImportError:
     tabulate = None
 
-from .utils import create_parser, parse_args_and_run
+from muninn.tools.utils import create_parser, parse_args_and_run
 
 OWN_SUPPORTED_FORMATS = ['psv', 'csv']
 if tabulate is None:
@@ -266,3 +266,6 @@ def main():
     parser.add_argument("expression", metavar="EXPRESSION", help="expression used to search for products")
 
     return parse_args_and_run(parser, run)
+
+if __name__ == '__main__':
+    main()

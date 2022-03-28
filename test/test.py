@@ -8,6 +8,7 @@ import datetime
 import glob
 import logging
 import os
+import subprocess
 import sys
 import tarfile
 import time
@@ -28,7 +29,6 @@ os.environ['MUNINN_CONFIG_PATH'] = '.'
 
 import shutil
 
-from muninn.schema import Mapping, optional, Text, Integer
 from muninn.geometry import Polygon, LinearRing, Point
 
 CFG = ConfigParser()
@@ -39,13 +39,9 @@ DATABASE_BACKENDS = [s.strip() for s in CFG.get('DEFAULT', 'database').split(','
 ARCHIVE_PATHS = [s.strip() for s in CFG.get('DEFAULT', 'archive_path').split(',')]
 USE_ENCLOSING_DIR = [s.strip() == 'true' for s in CFG.get('DEFAULT', 'use_enclosing_dir').split(',')]
 
-
-class MyNamespace(Mapping):
-    hello = optional(Text)
-
-
-class MyNamespace2(Mapping):
-    counter = optional(Integer)
+PY3 = sys.version_info[0] == 3
+MY_DIR = os.path.dirname(__file__)
+PARENT_DIR = os.path.dirname(MY_DIR)
 
 
 class BaseChecker(object):
@@ -201,8 +197,6 @@ def archive(database, storage, use_enclosing_directory, archive_path):
 
     # create clean archive
     with muninn.open('my_arch') as archive:
-        archive.register_namespace('mynamespace', MyNamespace)
-        archive.register_namespace('mynamespace2', MyNamespace2)
         archive.destroy()
         archive.prepare()
 
@@ -1169,3 +1163,73 @@ class TestQuery:
             assert s[0].core.uuid == self.uuid_c
         else:
             assert len(s) == 3
+
+
+class TestTools:
+    def _run(self, tool, args=''):
+        python_path = 'PYTHONPATH=%s:$PYTHONPATH' % PARENT_DIR
+        cmd = '%s python%s ../muninn/tools/%s.py my_arch %s 2>&1' % \
+              (python_path, '3' if PY3 else '', tool, args)
+
+        process = subprocess.run(
+            cmd,
+            shell=True,
+            capture_output=True,
+        )
+
+        assert process.returncode == 0
+        assert process.stderr == b''
+
+        return process.stdout.decode().splitlines()
+
+    def test_Search(self, archive):
+        output = self._run('search', '""')
+        assert len(output) == 2 # header
+        output = self._run('ingest', 'data/pi.txt')
+        output = self._run('search', '""')
+        assert len(output) == 3
+        output = self._run('search', '"" -c')
+        assert output == ['1']
+
+    def test_Ingest(self, archive):
+        output = self._run('ingest', 'data/pi.txt')
+        output = self._run('search', '"" -c')
+        assert output == ['1']
+
+    def test_Remove(self, archive):
+        output = self._run('ingest', 'data/pi.txt')
+        output = self._run('remove', '""')
+        output = self._run('search', '"" -c')
+        assert output == ['0']
+
+    def test_Tag(self, archive):
+        output = self._run('ingest', 'data/pi.txt')
+        output = self._run('tag', '"" mytag')
+        output = self._run('list_tags', '""')
+        assert len(output) == 1
+        assert output[0].endswith(': mytag')
+
+    def test_Untag(self, archive):
+        output = self._run('ingest', 'data/pi.txt')
+        output = self._run('tag', '"" mytag')
+        output = self._run('untag', '"" mytag')
+        output = self._run('list_tags', '""')
+        assert len(output) == 1
+        assert not output[0].endswith(': mytag')
+
+    def test_ListTags(self, archive):
+        output = self._run('ingest', 'data/pi.txt')
+        output = self._run('tag', '"" mytag')
+        output = self._run('list_tags', '""')
+
+        assert len(output) == 1
+        assert output[0].endswith(': mytag')
+
+    def test_Prepare(self, archive):
+        self._run('destroy', '-y')
+        self._run('prepare')
+        output = self._run('search', '"" -c')
+        assert output == ['0']
+
+    def test_Destroy(self, archive):
+        self._run('destroy', '-y')

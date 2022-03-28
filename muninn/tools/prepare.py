@@ -6,7 +6,7 @@ from __future__ import absolute_import, division, print_function
 
 import muninn
 
-from .utils import create_parser, parse_args_and_run
+from muninn.tools.utils import create_parser, parse_args_and_run
 
 
 def prepare(args):
@@ -31,3 +31,7 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="dump the SQL statements without executing them")
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
     return parse_args_and_run(parser, prepare)
+
+
+if __name__ == '__main__':
+    main()
