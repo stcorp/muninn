@@ -1126,6 +1126,9 @@ class TestQuery:
 #        s = archive.search('physical_name in [@b, "c.txt"]', parameters={'b': "b.txt"})
 #        assert len(s) == 2
 
+        s = archive.search('size in @sizes', parameters={'sizes': [1015]})
+        assert len(s) == 3
+
     def test_RemoveProperties(self, archive):
         self._prep_data(archive)
 
