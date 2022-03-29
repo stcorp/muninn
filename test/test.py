@@ -914,6 +914,9 @@ class TestArchive:
                 assert data[0][0] != data[1][0]
                 assert data[0][1] == data[1][1] == 1
 
+        data, headers = archive.summary(group_by=['core.product_type.length'])
+        assert data == [(7, 2)] or data == [[7, 2]]  # TODO pg8000
+
 
 class TestQuery:
     def _prep_data(self, archive):

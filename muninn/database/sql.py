@@ -36,7 +36,7 @@ GROUP_BY_FUNCTIONS = collections.OrderedDict([
     (Integer, [None, ]),
     # (Real, []),
     (Boolean, [None, ]),
-    (Text, [None]),  # (Text, [None, 'length']),
+    (Text, [None, 'length']),
     (Timestamp, ['year', 'month', 'yearmonth', 'date', 'day', 'hour', 'minute', 'second', 'time']),
     # (UUID, []),
     # (Geometry, []),
