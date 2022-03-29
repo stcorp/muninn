@@ -31,6 +31,7 @@ os.environ['MUNINN_CONFIG_PATH'] = '.'
 import shutil
 
 from muninn.geometry import Polygon, LinearRing, Point
+from muninn.extension import CascadeRule
 
 CFG = ConfigParser()
 CFG.read(u'test.cfg')
@@ -664,6 +665,39 @@ class TestArchive:
         assert len(uuids) == 0
         uuids = archive.derived_products(uuid_c)
         assert len(uuids) == 0
+
+    def test_cascade(self, archive):
+        plugin = archive._product_type_plugins['MY_TYPE']
+        try:
+            for cascade_rule in (CascadeRule.CASCADE, CascadeRule.STRIP):
+                archive.remove()
+
+                plugin.cascade_rule = cascade_rule
+
+                uuid_a = archive.ingest(['data/a.txt']).core.uuid
+                uuid_b = archive.ingest(['data/b.txt']).core.uuid
+                uuid_c = archive.ingest(['data/c.txt']).core.uuid
+                uuid_pi = archive.ingest(['data/pi.txt']).core.uuid
+
+                time.sleep(2) # grace period # TODO use >= 0 in sql instead of > 0?
+
+                archive.link(uuid_pi, [uuid_pi])  # TODO otherwise no source, so deleted?
+
+                archive.link(uuid_b, [uuid_a])
+                archive.link(uuid_c, [uuid_b])
+
+                # also remove derived products b and c
+                archive.remove_by_uuid(uuid_a)
+
+                if cascade_rule == CascadeRule.CASCADE:
+                    assert len(archive.search()) == 1
+                else:
+                    assert len(archive.search()) == 3
+                    for uuid in uuid_b, uuid_c:
+                        properties = archive.retrieve_properties(uuid)
+                        assert not hasattr(properties.core, 'archive_path')
+        finally:
+            plugin.cascade_rule = CascadeRule.IGNORE
 
     def test_retrieve_file(self, archive):
         self._ingest_file(archive)
