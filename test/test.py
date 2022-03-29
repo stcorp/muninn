@@ -634,6 +634,37 @@ class TestArchive:
         tags = archive.tags(uuid)
         assert tags == ['green']
 
+    def test_linking(self, archive):
+        uuid_a = archive.ingest(['data/a.txt']).core.uuid
+        uuid_b = archive.ingest(['data/b.txt']).core.uuid
+        uuid_c = archive.ingest(['data/c.txt']).core.uuid
+
+        archive.link(uuid_b, [uuid_a])
+        archive.link(uuid_c, [uuid_a, uuid_b])
+
+        uuids = archive.derived_products(uuid_a)
+        assert len(uuids) == 2
+        uuids = archive.derived_products(uuid_b)
+        assert len(uuids) == 1
+        uuids = archive.derived_products(uuid_c)
+        assert len(uuids) == 0
+
+        archive.unlink(uuid_c, uuid_b)
+        uuids = archive.derived_products(uuid_a)
+        assert len(uuids) == 2
+        uuids = archive.derived_products(uuid_b)
+        assert len(uuids) == 0
+        uuids = archive.derived_products(uuid_c)
+        assert len(uuids) == 0
+
+        archive.unlink(uuid_c, uuid_a)
+        uuids = archive.derived_products(uuid_a)
+        assert len(uuids) == 1
+        uuids = archive.derived_products(uuid_b)
+        assert len(uuids) == 0
+        uuids = archive.derived_products(uuid_c)
+        assert len(uuids) == 0
+
     def test_retrieve_file(self, archive):
         self._ingest_file(archive)
 

@@ -639,7 +639,7 @@ class SQLiteBackend(object):
             parameters = (uuid,)
         else:
             query = "DELETE FROM %s WHERE uuid = %s AND source_uuid IN (%s)" % \
-                (self._link_table_name, self._placeholder(), ','.join(self._placeholder() * len(tags)))
+                (self._link_table_name, self._placeholder(), ','.join(self._placeholder() * len(source_uuids)))
             parameters = [uuid] + list(source_uuids)
 
         cursor = self._connection.cursor()
