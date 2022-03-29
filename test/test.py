@@ -13,6 +13,7 @@ import sys
 import tarfile
 import time
 import unittest
+import uuid
 
 import pytest
 
@@ -511,20 +512,37 @@ class TestArchive:
         if archive._params['use_enclosing_directory']:
             path = os.path.join(path, 'pi.txt')
 
-        # ingest
-        properties = archive.ingest(['data/pi.txt'])
-        assert properties.core.archive_path is not None
+        for method in ('strip', 'strip_where', 'strip_by_name', 'strip_by_uuid'):
+            # ingest
+            archive.remove()
+            properties = archive.ingest(['data/pi.txt'])
+            assert properties.core.archive_path is not None
 
-        # strip
-        nstripped = archive.strip()  # TODO strip_by_name, strip_by_uuid
-        assert nstripped == 1
+            # strip
+            if method == 'strip':
+                nstripped = archive.strip()
+            elif method == 'strip_where':
+                nstripped = archive.strip('product_name == "pi.txt"')
+            elif method == 'strip_by_name':
+                nstripped = archive.strip_by_name('pi.txt')
+            elif method == 'strip_by_uuid':
+                nstripped = archive.strip_by_uuid(properties.core.uuid)
+            assert nstripped == 1
 
-        # check
-        properties = archive.retrieve_properties(properties.core.uuid)
-        assert 'archive_path' not in properties.core
-        assert 'archive_date' not in properties.core
+            # check
+            properties = archive.retrieve_properties(properties.core.uuid)
+            assert 'archive_path' not in properties.core
+            assert 'archive_date' not in properties.core
 
-        assert not archive._checker.exists(path)
+            assert not archive._checker.exists(path)
+
+        with pytest.raises(muninn.exceptions.Error) as excinfo:
+            nstripped = archive.strip_by_name('missing.txt')
+        assert 'no products found' in str(excinfo)
+
+        with pytest.raises(muninn.exceptions.Error) as excinfo:
+            nstripped = archive.strip_by_uuid(uuid.uuid4())
+        assert 'not found' in str(excinfo)
 
     def test_attach(self, archive):
         path = os.path.join(archive._params['archive_path'], 'pi.txt')
@@ -554,14 +572,14 @@ class TestArchive:
         archive.strip()
         with pytest.raises(muninn.exceptions.Error) as excinfo:
             archive.attach(['data/pi.txt'])
-            assert 'size mismatch' in str(excinfo)
+        assert 'size mismatch' in str(excinfo)
 
         properties.core.hash = properties.core.hash+'x'
         archive.update_properties(properties)
         archive.strip()
         with pytest.raises(muninn.exceptions.Error) as excinfo:
             archive.attach(['data/pi.txt'], force=True, verify_hash_before=True)
-            assert 'hash mismatch' in str(excinfo)
+        assert 'hash mismatch' in str(excinfo)
 
 
     def test_search(self, archive):  # TODO move to TestQuery?
