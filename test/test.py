@@ -430,14 +430,30 @@ class TestArchive:
             assert os.path.exists(product_path)
 
     def test_remove_file(self, archive):
-        self._ingest_file(archive)
-        archive.remove()
-
         path = os.path.join(archive._params['archive_path'], 'pi.txt')
         if archive._params['use_enclosing_directory']:
             path = os.path.join(path, 'pi.txt')
 
-        assert not archive._checker.exists(path)
+        for method in ('remove', 'remove_by_name', 'remove_by_uuid'): # where?
+            props = self._ingest_file(archive)
+
+            if method == 'remove':
+                count = archive.remove()
+            elif method == 'remove_by_name':
+                count = archive.remove_by_name('pi.txt')
+            elif method == 'remove_by_uuid':
+                count = archive.remove_by_uuid(props.core.uuid)
+            assert count == 1
+
+            assert not archive._checker.exists(path)
+
+        with pytest.raises(muninn.exceptions.Error) as excinfo:
+            archive.remove_by_name('missing.txt')
+        assert 'no products found' in str(excinfo)
+
+        with pytest.raises(muninn.exceptions.Error) as excinfo:
+            archive.remove_by_uuid(uuid.uuid4())
+        assert 'not found' in str(excinfo)
 
     def test_ingest_multi_file(self, archive):
         # copy
@@ -700,7 +716,7 @@ class TestArchive:
             plugin.cascade_rule = CascadeRule.IGNORE
 
     def test_retrieve_file(self, archive):
-        self._ingest_file(archive)
+        props = self._ingest_file(archive)
 
         name = 'pi.txt'
         size = os.path.getsize('data/pi.txt')
@@ -712,6 +728,17 @@ class TestArchive:
             path = os.path.join(tmp_path, name)
             assert os.path.isfile(path)
             assert os.path.getsize(path) == size
+
+            archive.retrieve_by_name('pi.txt', target_path=tmp_path)
+            archive.retrieve_by_uuid(props.core.uuid, target_path=tmp_path)
+
+            with pytest.raises(muninn.exceptions.Error) as excinfo:
+                archive.retrieve_by_name('missing.txt')
+            assert 'no products found' in str(excinfo)
+
+            with pytest.raises(muninn.exceptions.Error) as excinfo:
+                archive.retrieve_by_uuid(uuid.uuid4())
+            assert 'not found' in str(excinfo)
 
         # symlink
         if archive._params['storage'] == 'fs':
