@@ -7,8 +7,12 @@ from __future__ import absolute_import, division, print_function
 from muninn._compat import string_types as basestring
 
 from muninn.schema import *
+from muninn.exceptions import InternalError
 from muninn.visitor import TypeVisitor
 
+
+# TODO separate into configuration parser and individual field parser?
+# TODO missing stuff eg, visit_Real..
 
 class _ConfigParser(TypeVisitor):
     def visit(self, type, value):
