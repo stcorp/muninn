@@ -23,48 +23,49 @@ class StorageBackend(object):
             paths = [os.path.join(tmp_path, basename) for basename in os.listdir(tmp_path)]
             return fn(paths)
 
-    def prepare(self):
+    def prepare(self):  # pragma: no cover
         # Prepare storage for use.
         raise NotImplementedError()
 
-    def exists(self):
+    def exists(self):  # pragma: no cover
         # Check that storage exists.
         raise NotImplementedError()
 
-    def initialize(self, configuration):
+    def initialize(self, configuration):  # pragma: no cover
         # Initialize storage.
         raise NotImplementedError()
 
-    def destroy(self):
+    def destroy(self):  # pragma: no cover
         # Destroy storage
         raise NotImplementedError()
 
-    def product_path(self, product):  # TODO refactor away?
+    # TODO refactor away?
+    def product_path(self, product):  # pragma: no cover
         # Product path within storage
         raise NotImplementedError()
 
     # TODO lower-granularity put/get/delete?
 
     def put(self, paths, properties, use_enclosing_directory, use_symlinks=None,
-            retrieve_files=None, run_for_product=None):
+            retrieve_files=None, run_for_product=None):  # pragma: no cover
         # Place product file(s) into storage
         raise NotImplementedError()
 
-    def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=None):
+    def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=None):  # pragma: no cover
         # Retrieve product file(s) from storage
         raise NotImplementedError()
 
-    def size(self, product_path):
+    def size(self, product_path):  # pragma: no cover
         # Return product storage size
         raise NotImplementedError()
 
-    def delete(self, product_path, properties):
+    def delete(self, product_path, properties):  # pragma: no cover
         # Delete product file(s) from storage
         raise NotImplementedError()
 
-    def move(self, product, archive_path, paths=None):
+    def move(self, product, archive_path, paths=None):  # pragma: no cover
         # Move product
         raise NotImplementedError()
 
-    def current_archive_path(self, paths, properties):
+    def current_archive_path(self, paths, properties):  # pragma: no cover
         raise NotImplementedError()
