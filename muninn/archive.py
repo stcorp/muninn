@@ -488,7 +488,7 @@ class Archive(object):
             paths = [paths]
 
         if not paths:
-            raise muninn.Error("nothing to %s" % action)
+            raise Error("nothing to %s" % action)
 
         # Use absolute paths to make error messages more useful, and to avoid broken links when ingesting/attaching
         # a product using symbolic links.

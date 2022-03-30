@@ -598,6 +598,10 @@ class TestArchive:
             archive.attach(['data/pi.txt'], force=True, verify_hash_before=True)
         assert 'hash mismatch' in str(excinfo)
 
+        # no data
+        with pytest.raises(muninn.exceptions.Error) as excinfo:
+            archive.attach([])
+        assert 'nothing to attach' in str(excinfo)
 
     def test_search(self, archive):  # TODO move to TestQuery?
         properties = self._ingest_file(archive)
