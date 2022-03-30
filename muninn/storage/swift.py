@@ -73,7 +73,7 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
     def product_path(self, product):  # TODO needed?
         return os.path.join(product.core.archive_path, product.core.physical_name)
 
-    def current_archive_path(self, paths):
+    def current_archive_path(self, paths, properties):
         raise Error("Swift storage backend does not support ingesting already archived products")
 
     def put(self, paths, properties, use_enclosing_directory, use_symlinks=None,

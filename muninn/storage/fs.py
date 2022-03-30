@@ -77,7 +77,7 @@ class FilesystemStorageBackend(StorageBackend):
     def product_path(self, product):
         return os.path.join(self._root, product.core.archive_path, product.core.physical_name)
 
-    def current_archive_path(self, paths):
+    def current_archive_path(self, paths, properties):
         for path in paths:
             if not util.is_sub_path(os.path.realpath(path), self._root, allow_equal=True):
                 raise Error("cannot ingest a file in-place if it is not inside the muninn archive root")

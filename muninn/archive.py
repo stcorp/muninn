@@ -575,7 +575,7 @@ class Archive(object):
         if 'archive_path' in product.core:
             raise Error("product with physical_name '%s' is already in the archive" % physical_name)
         if use_current_path:
-            archive_path = self._storage.current_archive_path(paths)
+            archive_path = self._storage.current_archive_path(paths, product)
         else:
             archive_path = plugin.archive_path(product)
 
@@ -926,7 +926,7 @@ class Archive(object):
         # Determine archive path
         if ingest_product:
             if use_current_path:
-                properties.core.archive_path = self._storage.current_archive_path(paths)
+                properties.core.archive_path = self._storage.current_archive_path(paths, properties)
             else:
                 properties.core.archive_path = plugin.archive_path(properties)
 

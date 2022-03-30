@@ -118,7 +118,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
     def product_path(self, product):  # TODO needed?
         return os.path.join(product.core.archive_path, product.core.physical_name)
 
-    def current_archive_path(self, paths):
+    def current_archive_path(self, paths, properties):
         raise Error("S3 storage backend does not support ingesting already archived products")
 
     def _upload_file(self, key, path):

@@ -43,7 +43,7 @@ class StorageBackend(object):
         # Product path within storage
         raise NotImplementedError()
 
-    # TODO lower-granularity put/get/delete
+    # TODO lower-granularity put/get/delete?
 
     def put(self, paths, properties, use_enclosing_directory, use_symlinks=None,
             retrieve_files=None, run_for_product=None):
@@ -64,4 +64,7 @@ class StorageBackend(object):
 
     def move(self, product, archive_path, paths=None):
         # Move product
+        raise NotImplementedError()
+
+    def current_archive_path(self, paths, properties):
         raise NotImplementedError()
