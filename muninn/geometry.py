@@ -9,6 +9,8 @@ try:
 except ImportError:
     from collections import MutableSequence
 
+from muninn.exceptions import Error
+
 
 class Geometry(object):
     @property
