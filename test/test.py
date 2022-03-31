@@ -38,6 +38,7 @@ CFG.read(u'test.cfg')
 
 STORAGE_BACKENDS = [s.strip() for s in CFG.get('DEFAULT', 'storage').split(',')]
 DATABASE_BACKENDS = [s.strip() for s in CFG.get('DEFAULT', 'database').split(',')]
+REMOTE_BACKENDS = ['file', 'http', 'ftp']
 ARCHIVE_PATHS = [s.strip() for s in CFG.get('DEFAULT', 'archive_path').split(',')]
 USE_ENCLOSING_DIR = [s.strip() == 'true' for s in CFG.get('DEFAULT', 'use_enclosing_dir').split(',')]
 
@@ -214,6 +215,35 @@ def archive(database, storage, use_enclosing_directory, archive_path):
         yield archive
 
 
+@pytest.yield_fixture(params=REMOTE_BACKENDS, scope='session')
+def remote_backend(request):
+    proc = None
+
+    if request.param == 'file':
+        yield 'file://' + os.path.realpath('data/README')
+
+    elif request.param == 'http':
+        proc = subprocess.Popen(
+                   'exec python3 -m http.server --directory /home/srepmub/muninn/test/data 8104',
+                   shell=True
+               )
+        yield 'http://localhost:8097'
+
+    elif request.param == 'ftp':
+        proc = subprocess.Popen(
+                   'exec python3 -m pyftpdlib -d data -p 8105',
+                   shell=True
+               )
+        yield 'ftp://localhost:8105'
+
+    else:
+        assert False
+
+    if proc is not None:
+        proc.terminate()
+        proc.wait()
+
+
 class TestArchive:
     def _ingest_file(self, archive, use_symlinks=False, intra=False, name=None):
         name = name or 'pi.txt'
@@ -355,7 +385,7 @@ class TestArchive:
 
         return properties
 
-    def _pull(self, archive, extract=False):
+    def _pull(self, archive, remote_backend, extract=False):
         URL = 'file://' + os.path.realpath('data/README')
         if extract:
             URL += '.zip'
@@ -504,14 +534,14 @@ class TestArchive:
 
             assert not archive._checker.exists(path)
 
-    def test_pull(self, archive):
+    def test_pull(self, archive, remote_backend):
         # normal pull
-        properties = self._pull(archive)
+        properties = self._pull(archive, remote_backend)
 
         # autoextract
 #        if archive._params['use_enclosing_directory']:
         archive.remove()
-        properties = self._pull(archive, extract=True)
+        properties = self._pull(archive, remote_backend, extract=True)
 
         # failing hook should result in inactive product
         archive.strip('')
@@ -985,8 +1015,8 @@ class TestArchive:
         failed = archive.verify_hash()
         assert len(failed) == 1
 
-    def test_rebuild_pull_properties(self, archive):
-        properties = self._pull(archive)
+    def test_rebuild_pull_properties(self, archive, remote_backend):
+        properties = self._pull(archive, remote_backend)
         archive.rebuild_pull_properties(properties.core.uuid, verify_hash=True)
 
     def test_summary(self, archive):
