@@ -37,6 +37,9 @@ $ conda install -c conda-forge request tabulate tqdm pytest psycopg2 libspatiali
 Update the path to mod_spatialite in the test.cfg file to point to the version in the conda environment
 $ python -m pytest test.py
 
+The current test setup runs an HTTP server on port 8080, and an FTP server on port 21, so for now conflicts need to manually avoided.
+
+
 
 Steps to check test coverage:
 -----------------------------

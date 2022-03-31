@@ -220,21 +220,21 @@ def remote_backend(request):
     proc = None
 
     if request.param == 'file':
-        yield 'file://' + os.path.realpath('data/README')
+        yield 'file://' + os.path.realpath('.')
 
     elif request.param == 'http':
         proc = subprocess.Popen(
-                   'exec python3 -m http.server --directory /home/srepmub/muninn/test/data 8104',
+                   'exec python3 -m http.server 8080',  # TODO port
                    shell=True
                )
-        yield 'http://localhost:8097'
+        yield 'http://localhost:8080'
 
     elif request.param == 'ftp':
         proc = subprocess.Popen(
-                   'exec python3 -m pyftpdlib -d data -p 8105',
+                   'exec python3 -m pyftpdlib -p 21',  # TODO port
                    shell=True
                )
-        yield 'ftp://localhost:8105'
+        yield 'ftp://localhost'
 
     else:
         assert False
@@ -386,7 +386,7 @@ class TestArchive:
         return properties
 
     def _pull(self, archive, remote_backend, extract=False):
-        URL = 'file://' + os.path.realpath('data/README')
+        URL = os.path.join(remote_backend, 'data/README')
         if extract:
             URL += '.zip'
 
@@ -539,7 +539,6 @@ class TestArchive:
         properties = self._pull(archive, remote_backend)
 
         # autoextract
-#        if archive._params['use_enclosing_directory']:
         archive.remove()
         properties = self._pull(archive, remote_backend, extract=True)
 
