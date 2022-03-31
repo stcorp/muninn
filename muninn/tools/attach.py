@@ -18,8 +18,8 @@ except ImportError:
 
 import muninn
 
-from .utils import Processor, create_parser, parse_args_and_run
-from .ingest import CheckProductListAction, filter_paths, get_path_expansion_function
+from muninn.tools.utils import Processor, create_parser, parse_args_and_run
+from muninn.tools.ingest import CheckProductListAction, filter_paths, get_path_expansion_function
 
 class AttachProcessor(Processor):
 
@@ -120,3 +120,6 @@ def main():
     parser.add_argument("path", metavar="PATH", nargs="+", action=CheckProductListAction,
                         help="products to attach, or \"-\" to read the list of products from standard input")
     return parse_args_and_run(parser, attach)
+
+if __name__ == '__main__':
+    main()

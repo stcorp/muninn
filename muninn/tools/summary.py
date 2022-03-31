@@ -11,7 +11,7 @@ import argparse
 import muninn
 from muninn.schema import Timestamp
 from muninn.database.sql import AGGREGATE_FUNCTIONS, GROUP_BY_FUNCTIONS
-from .utils import create_parser, parse_args_and_run
+from muninn.tools.utils import create_parser, parse_args_and_run
 
 
 try:
@@ -257,3 +257,7 @@ def main():
     parser.add_argument("expression", metavar="EXPRESSION", nargs='?', help="expression used to search for products")
 
     return parse_args_and_run(parser, run)
+
+
+if __name__ == '__main__':
+    main()

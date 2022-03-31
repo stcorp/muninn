@@ -6,7 +6,7 @@ from __future__ import absolute_import, division, print_function
 
 import muninn
 
-from .utils import create_parser, parse_args_and_run
+from muninn.tools.utils import create_parser, parse_args_and_run
 
 
 def strip(args):
@@ -24,3 +24,7 @@ def main():
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
     parser.add_argument("expression", metavar="EXPRESSION", help="expression used to search for products to remove")
     return parse_args_and_run(parser, strip)
+
+
+if __name__ == '__main__':
+    main()

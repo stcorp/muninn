@@ -1396,5 +1396,26 @@ class TestTools:
         output = self._run('search', '"" -c')
         assert output == ['0']
 
+    def test_Summary(self, archive):
+        output = self._run('ingest', 'data/pi.txt')
+        output = self._run('summary', '"" -f csv')
+        assert len(output) == 2
+        assert output[1].split(',')[0] == '"1"'
+
+    def test_Retrieve(self, archive):
+        with muninn.util.TemporaryDirectory() as tmp_path:
+            output = self._run('ingest', 'data/pi.txt')
+            output = self._run('retrieve', '"" -d %s' % tmp_path)
+            assert os.listdir(tmp_path) == ['pi.txt']
+
+    def test_Strip(self, archive):
+        output = self._run('ingest', 'data/pi.txt')
+        output = self._run('strip', '""')
+
+    def test_Attach(self, archive):
+        output = self._run('ingest', 'data/pi.txt')
+        output = self._run('strip', '""')
+        output = self._run('attach', 'data/pi.txt')
+
     def test_Destroy(self, archive):
         self._run('destroy', '-y')
