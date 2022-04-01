@@ -1408,11 +1408,18 @@ class TestTools:
         assert len(output) == 2
         assert output[1].split(',')[0] == '"1"'
 
-    def test_Retrieve(self, archive):
+    def test_Retrieve(self, archive):  # TODO nprocesses fixture
         with muninn.util.TemporaryDirectory() as tmp_path:
             output = self._run('ingest', 'data/pi.txt')
             output = self._run('retrieve', '"" -d %s' % tmp_path)
             assert os.listdir(tmp_path) == ['pi.txt']
+        archive.remove()
+
+        # parallel
+        with muninn.util.TemporaryDirectory() as tmp_path:
+            output = self._run('ingest', '--parallel data/a.txt data/b.txt data/c.txt')
+            output = self._run('retrieve', '"" --parallel -d %s' % tmp_path)
+            assert set(os.listdir(tmp_path)) == set(['a.txt', 'b.txt', 'c.txt'])
 
     def test_Strip(self, archive):
         output = self._run('ingest', 'data/pi.txt')
