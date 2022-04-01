@@ -6,10 +6,17 @@ from __future__ import absolute_import, division, print_function
 
 import argparse
 import logging
-import muninn
+import multiprocessing
 import os
 import sys
 
+try:
+    from tqdm import tqdm as bar
+except ImportError:
+    def bar(range, total=None):
+        return range
+
+import muninn
 
 # This is a base class for operations on a list of items that can be performed in parallel using multiprocessing.
 # If you use the processor object as a callable then it is assumed that the operation is performed using subprocesses.
@@ -33,6 +40,29 @@ class Processor(object):
         except KeyboardInterrupt:
             # don't capture keyboard interrupts inside sub-processes (only the main process should handle it)
             pass
+
+    def process(self, archive, args, items):
+        total = len(items)
+        num_success = 0
+
+        if args.parallel:
+            if args.processes is not None:
+                pool = multiprocessing.Pool(args.processes)
+            else:
+                pool = multiprocessing.Pool()
+            num_success = sum(list(bar(pool.imap(self, items), total=total)))
+            pool.close()
+            pool.join()
+
+        elif total > 1:
+            for item in bar(items):
+                num_success += self.perform_operation(archive, item)
+
+        elif total == 1:
+            # don't show progress bar if we ingest just one item
+            num_success = self.perform_operation(archive, items[0])
+
+        return 0 if num_success == total else 1
 
 
 # This parser is used in combination with the parse_known_args() function as a way to implement a "--version"

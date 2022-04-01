@@ -8,15 +8,8 @@ import argparse
 import fnmatch
 import glob
 import logging
-import multiprocessing
 import os
 import sys
-
-try:
-    from tqdm import tqdm as bar
-except ImportError:
-    def bar(range, total=None):
-        return range
 
 import muninn
 
@@ -127,24 +120,7 @@ def ingest(args):
             paths = [path for path in sys.stdin]
         else:
             paths = args.path
-        total = len(paths)
-        num_success = 0
-        if args.parallel:
-            if args.processes is not None:
-                pool = multiprocessing.Pool(args.processes)
-            else:
-                pool = multiprocessing.Pool()
-            num_success = sum(list(bar(pool.imap(processor, paths), total=total)))
-            pool.close()
-            pool.join()
-        elif total > 1:
-            for path in bar(paths):
-                num_success += processor.perform_operation(archive, path)
-        elif total == 1:
-            # don't show progress bar if we ingest just one item
-            num_success = processor.perform_operation(archive, paths[0])
-
-    return 0 if num_success == total else 1
+        return processor.process(archive, args, paths)
 
 
 def main():

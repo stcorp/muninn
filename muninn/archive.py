@@ -1536,7 +1536,7 @@ class Archive(object):
         """
         return self._database.summary(where, parameters, aggregates, group_by, group_by_tag, order_by)
 
-    def tag(self, uuid, tags):
+    def tag(self, uuid, tags):  # TODO add where=""? can we make that a single database statement, or do we need --parallel?
         """Set one or more tags on a product."""
         if isinstance(tags, basestring):
             tags = [tags]

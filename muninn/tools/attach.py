@@ -6,20 +6,14 @@ from __future__ import absolute_import, division, print_function
 
 import argparse
 import logging
-import multiprocessing
 import sys
 import os
-
-try:
-    from tqdm import tqdm as bar
-except ImportError:
-    def bar(range, total=None):
-        return range
 
 import muninn
 
 from muninn.tools.utils import Processor, create_parser, parse_args_and_run
 from muninn.tools.ingest import CheckProductListAction, filter_paths, get_path_expansion_function
+
 
 class AttachProcessor(Processor):
 
@@ -70,24 +64,7 @@ def attach(args):
             paths = [path for path in sys.stdin]
         else:
             paths = args.path
-        total = len(paths)
-        num_success = 0
-        if args.parallel:
-            if args.processes is not None:
-                pool = multiprocessing.Pool(args.processes)
-            else:
-                pool = multiprocessing.Pool()
-            num_success = sum(list(bar(pool.imap(processor, paths), total=total)))
-            pool.close()
-            pool.join()
-        elif total > 1:
-            for path in bar(paths):
-                num_success += processor.perform_operation(archive, path)
-        elif total == 1:
-            # don't show progress bar if we attach just one item
-            num_success = processor.perform_operation(archive, paths[0])
-
-    return 0 if num_success == total else 1
+        return processor.process(archive, args, paths)
 
 
 def main():
