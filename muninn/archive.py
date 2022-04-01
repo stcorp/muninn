@@ -1284,7 +1284,7 @@ class Archive(object):
 
         self._storage.run_for_product(product, _rebuild_pull_properties, use_enclosing_directory)
 
-    def remove(self, where="", parameters={}, force=False):
+    def remove(self, where="", parameters={}, force=False, cascade=True):
         """Remove one or more products from the archive, both from storage as well as from the product catalogue.
         Return the number of products removed.
 
@@ -1297,6 +1297,7 @@ class Archive(object):
         force       --  If set to True, also remove partially ingested products. This affects products for which a
                         failure occured during ingestion, as well as products in the process of being ingested. Use
                         this option with care.
+        cascade     --  Apply cascade rules to strip/remove dependent products.
         """
         products = self.search(where=where, parameters=parameters,
                                property_names=['uuid', 'active', 'product_name', 'archive_path', 'physical_name',
@@ -1308,12 +1309,12 @@ class Archive(object):
             self._purge(product)
 
         # Remove (or strip) derived products if necessary.
-        if len(products) > 0:
+        if cascade and len(products) > 0:
             self._establish_invariants()
 
         return len(products)
 
-    def remove_by_name(self, product_name, force=False):
+    def remove_by_name(self, product_name, force=False, cascade=True):
         """Remove one or more products from the archive by name.
 
         This is a convenience function that is equivalent to:
@@ -1326,12 +1327,12 @@ class Archive(object):
         An exception will be raised if no products with the specified name can be found.
 
         """
-        count = self.remove("product_name == @product_name", {"product_name": product_name}, force)
+        count = self.remove("product_name == @product_name", {"product_name": product_name}, force, cascade)
         if count == 0:
             raise Error("no products found with name '%s'" % product_name)
         return count
 
-    def remove_by_uuid(self, uuid, force=False):
+    def remove_by_uuid(self, uuid, force=False, cascade=True):
         """Remove a product from the archive by uuid.
 
         This is a convenience function that is equivalent to:
@@ -1341,7 +1342,7 @@ class Archive(object):
         An exception will be raised if no product with the specified uuid can be found.
 
         """
-        count = self.remove("uuid == @uuid", {"uuid": uuid}, force)
+        count = self.remove("uuid == @uuid", {"uuid": uuid}, force, cascade)
         if count == 0:
             raise Error("product with uuid '%s' not found" % uuid)
         return count
@@ -1445,7 +1446,7 @@ class Archive(object):
         """Return the UUIDs of the products that are linked to the given product as source products."""
         return self._database.source_products(uuid)
 
-    def strip(self, where="", parameters={}, force=False):
+    def strip(self, where="", parameters={}, force=False, cascade=True):
         """Remove one or more products from storage only (not from the product catalogue). Return the number of products
         stripped.
 
@@ -1458,6 +1459,7 @@ class Archive(object):
         force       --  If set to True, also strip partially ingested products. This affects products for which a
                         failure occured during ingestion, as well as products in the process of being ingested. Use
                         this option with care.
+        cascade     --  Apply cascade rules to strip/purge dependent products.
         """
         query = "is_defined(archive_path)"
         if where:
@@ -1471,12 +1473,12 @@ class Archive(object):
             self._strip(product)
 
         # Strip (or remove) derived products if necessary.
-        if len(products) > 0:
+        if cascade and len(products) > 0:
             self._establish_invariants()
 
         return len(products)
 
-    def strip_by_name(self, product_name, force=False):
+    def strip_by_name(self, product_name, force=False, cascade=True):
         """Remove one or more products from storage only (not from the product catalogue).
 
         This is a convenience function that is equivalent to:
@@ -1489,7 +1491,7 @@ class Archive(object):
         An exception will be raised if no products with the specified name can be found.
 
         """
-        count = self.strip("product_name == @product_name", {"product_name": product_name}, force=force)
+        count = self.strip("product_name == @product_name", {"product_name": product_name}, force, cascade)
         if count == 0:
             raise Error("no products found with name '%s'" % product_name)
         return count
@@ -1504,7 +1506,7 @@ class Archive(object):
         An exception will be raised if no product with the specified uuid can be found.
 
         """
-        count = self.strip("uuid == @uuid", {"uuid": uuid}, force=force)
+        count = self.strip("uuid == @uuid", {"uuid": uuid}, force)
         if count == 0:
             raise Error("product with uuid '%s' not found" % uuid)
         return count

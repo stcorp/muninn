@@ -225,14 +225,18 @@ def remote_backend(request):
     elif request.param == 'http':
         proc = subprocess.Popen(
                    'exec python3 -m http.server 8080',  # TODO port
-                   shell=True
+                   shell=True,
+                   stdout=subprocess.PIPE,
+                   stderr=subprocess.PIPE,
                )
         yield 'http://localhost:8080'
 
     elif request.param == 'ftp':
         proc = subprocess.Popen(
                    'exec python3 -m pyftpdlib -p 21',  # TODO port
-                   shell=True
+                   shell=True,
+                   stdout=subprocess.PIPE,
+                   stderr=subprocess.PIPE,
                )
         yield 'ftp://localhost'
 
@@ -896,9 +900,6 @@ class TestArchive:
             with muninn.util.TemporaryDirectory() as tmp_path:
                 # no format passed, and plugin has no 'export' method: use default (retrieve)!
                 archive.export(target_path=tmp_path)
-
-                os.system('tree '+tmp_path)
-
                 path = os.path.join(
                            tmp_path,
                            'pi.txt'  # TODO does not add archive path?
