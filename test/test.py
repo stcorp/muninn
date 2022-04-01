@@ -1372,6 +1372,13 @@ class TestTools:  # TODO more result checking, preferrably using tools
         output = self._run('remove', '""')
         output = self._run('search', '"" -c')
         assert output == ['0']
+        archive.remove()
+
+        # parallel
+        output = self._run('ingest', '--parallel data/a.txt data/b.txt data/c.txt')
+        output = self._run('remove', '"" --parallel')
+        output = self._run('search', '"" -c')
+        assert output == ['0']
 
     def test_tag(self, archive):
         output = self._run('ingest', 'data/pi.txt')
