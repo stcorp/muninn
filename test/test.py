@@ -1396,6 +1396,16 @@ class TestTools:
         output = self._run('list_tags', '""')
         assert len(output) == 1
         assert not output[0].endswith(': mytag')
+        archive.remove()
+
+        # parallel
+        output = self._run('ingest', '--parallel data/a.txt data/b.txt data/c.txt')
+        output = self._run('tag', '"" --parallel mytag')
+        output = self._run('untag', '--parallel "" mytag')  # TODO why can't we use --parallel mytag here
+        output = self._run('list_tags', '""')
+        assert len(output) == 3
+        for line in output:
+            assert not line.endswith(': mytag')
 
     def test_ListTags(self, archive):
         output = self._run('ingest', 'data/pi.txt')
