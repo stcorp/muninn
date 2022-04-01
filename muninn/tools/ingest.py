@@ -148,7 +148,7 @@ def ingest(args):
 
 
 def main():
-    parser = create_parser(description="Ingest products into a muninn archive.")
+    parser = create_parser(description="Ingest products into a muninn archive.", parallel=True)
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-s", "--path-is-stem", action="store_true", help="each product path is interpreted as a "
                        "stem; any file or directory of which the name starts with this stem is considered to be part "
@@ -172,8 +172,6 @@ def main():
                                                                    "name before ingesting the new product")
     parser.add_argument("--verify-hash", action="store_true",
                         help="verify the hash of the product after it has been put in the archive")
-    parser.add_argument("--parallel", action="store_true", help="use multi-processing to perform ingestion")
-    parser.add_argument("--processes", type=int, help="use a specific amount of processes for --parallel")
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
     parser.add_argument("path", metavar="PATH", nargs="+", action=CheckProductListAction,
                         help="products to ingest, or \"-\" to read the list of products from standard input")

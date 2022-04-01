@@ -95,11 +95,9 @@ def update(args):
 def main():
     parser = create_parser(description="""Updates properties of existing products.
         This is an archive maintenance tool, meant to be used when the archive structure has changed.
-        Use with care!""")
+        Use with care!""", parallel=True)
     parser.add_argument("--disable-hooks", action="store_true",
                         help="do not run the hooks associated with the action")
-    parser.add_argument("--parallel", action="store_true", help="use multi-processing to perform update")
-    parser.add_argument("--processes", type=int, help="use a specific amount of processes for --parallel")
     parser.add_argument("--verify-hash", action="store_true",
                         help="verify the hash of the product after a `pull` update")
     parser.add_argument("-k", "--keep", action="store_true",

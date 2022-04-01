@@ -46,8 +46,17 @@ version_parser.add_argument("--version", action="store_true", help="output versi
 
 
 def create_parser(*args, **kwargs):
+    parallel = False
+    if 'parallel' in kwargs:
+        parallel = kwargs.pop('parallel')
+
     parser = argparse.ArgumentParser(*args, parents=[version_parser], **kwargs)
     parser.add_argument("--verbose", action="store_true", help="display debug information")
+
+    if parallel:
+        parser.add_argument("--parallel", action="store_true", help="use multi-processing to perform operation")
+        parser.add_argument("--processes", type=int, help="use a specific amount of processes for --parallel")
+
     return parser
 
 

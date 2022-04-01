@@ -62,14 +62,12 @@ def retrieve(args):
 
 
 def main():
-    parser = create_parser(description="Retrieve products from a muninn archive.")
+    parser = create_parser(description="Retrieve products from a muninn archive.", parallel=True)
     parser.add_argument("-d", "--directory", type=directory, help="directory in which retrieved products will be"
                         " stored; by default, retrieved products will be stored in the current working directory")
     parser.add_argument("-l", "--link", action="store_true", help="retrieve using symbolic links instead of copy")
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
     parser.add_argument("expression", metavar="EXPRESSION", help="expression used to search for products to retrieve")
-    parser.add_argument("--parallel", action="store_true", help="use multi-processing to perform ingestion")
-    parser.add_argument("--processes", type=int, help="use a specific amount of processes for --parallel")
     return parse_args_and_run(parser, retrieve)
 
 
