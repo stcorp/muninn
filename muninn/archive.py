@@ -1476,7 +1476,7 @@ class Archive(object):
 
         return len(products)
 
-    def strip_by_name(self, product_name):
+    def strip_by_name(self, product_name, force=False):
         """Remove one or more products from storage only (not from the product catalogue).
 
         This is a convenience function that is equivalent to:
@@ -1489,12 +1489,12 @@ class Archive(object):
         An exception will be raised if no products with the specified name can be found.
 
         """
-        count = self.strip("product_name == @product_name", {"product_name": product_name})
+        count = self.strip("product_name == @product_name", {"product_name": product_name}, force=force)
         if count == 0:
             raise Error("no products found with name '%s'" % product_name)
         return count
 
-    def strip_by_uuid(self, uuid):
+    def strip_by_uuid(self, uuid, force=False):
         """Remove a product from storage only (not from the product catalogue).
 
         This is a convenience function that is equivalent to:
@@ -1504,7 +1504,7 @@ class Archive(object):
         An exception will be raised if no product with the specified uuid can be found.
 
         """
-        count = self.strip("uuid == @uuid", {"uuid": uuid})
+        count = self.strip("uuid == @uuid", {"uuid": uuid}, force=force)
         if count == 0:
             raise Error("product with uuid '%s' not found" % uuid)
         return count

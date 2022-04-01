@@ -6,19 +6,30 @@ from __future__ import absolute_import, division, print_function
 
 import muninn
 
-from muninn.tools.utils import create_parser, parse_args_and_run
+from muninn.tools.utils import Processor, create_parser, parse_args_and_run
+
+
+class StripProcessor(Processor):
+    def __init__(self, args):
+        super(StripProcessor, self).__init__(args.archive)
+        self.args = args
+
+    def perform_operation(self, archive, product):
+        archive.strip_by_uuid(product.core.uuid, force=self.args.force)
+        return 1
 
 
 def strip(args):
+    processor = StripProcessor(args)
     with muninn.open(args.archive) as archive:
-        archive.strip(args.expression, force=args.force)
-    return 0
+        products = archive.search(where=args.expression, property_names=['uuid'])
+        return processor.process(archive, args, products)
 
 
 def main():
     parser = create_parser(description="Strip products contained in a muninn archive (i.e. remove "
                            "products from disk, but don't remove the corresponding entries from the product "
-                           "catalogue)")
+                           "catalogue)", parallel=True)
     parser.add_argument("-f", "--force", action="store_true", help="also strip partially ingested products; note"
                         " that this can cause product files to be removed while in the process of being ingested")
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")

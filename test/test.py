@@ -1330,7 +1330,7 @@ class TestQuery:
             assert len(s) == 3
 
 
-class TestTools:
+class TestTools:  # TODO more result checking, preferrably using tools
     def _run(self, tool, args=''):
         python_path = 'PYTHONPATH=%s:$PYTHONPATH' % PARENT_DIR
         cmd = '%s python%s ../muninn/tools/%s.py my_arch %s 2>&1' % \
@@ -1443,6 +1443,11 @@ class TestTools:
     def test_strip(self, archive):
         output = self._run('ingest', 'data/pi.txt')
         output = self._run('strip', '""')
+        archive.remove()
+
+        # parallel
+        output = self._run('ingest', '--parallel data/a.txt data/b.txt data/c.txt')
+        output = self._run('strip', '"" --parallel')
 
     def test_attach(self, archive):
         output = self._run('ingest', 'data/pi.txt')
