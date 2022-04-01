@@ -15,7 +15,7 @@ class StripProcessor(Processor):
         self.args = args
 
     def perform_operation(self, archive, product):
-        archive.strip_by_uuid(product.core.uuid, force=self.args.force)
+        archive.strip_by_uuid(product.core.uuid, force=self.args.force, cascade=False)
         return 1
 
 
@@ -23,7 +23,9 @@ def strip(args):
     processor = StripProcessor(args)
     with muninn.open(args.archive) as archive:
         products = archive.search(where=args.expression, property_names=['uuid'])
-        return processor.process(archive, args, products)
+        returncode = processor.process(archive, args, products)
+        archive.do_cascade()
+        return returncode
 
 
 def main():

@@ -18,7 +18,7 @@ class RemoveProcessor(Processor):
         if self.args.catalogue_only:
             archive.delete_properties_by_uuid(product.core.uuid)
         else:
-            archive.remove_by_uuid(product.core.uuid, force=self.args.force)
+            archive.remove_by_uuid(product.core.uuid, force=self.args.force, cascade=False)
         return 1
 
 
@@ -26,7 +26,10 @@ def remove(args):
     processor = RemoveProcessor(args)
     with muninn.open(args.archive) as archive:
         products = archive.search(where=args.expression, property_names=['uuid'])
-        return processor.process(archive, args, products)
+        returncode = processor.process(archive, args, products)
+        if not args.catalogue_only:
+            archive.do_cascade()
+        return returncode
 
 
 def main():

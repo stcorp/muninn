@@ -328,7 +328,7 @@ class Archive(object):
         if middle == ':' and prefix in HASH_ALGORITHMS:
             return prefix
 
-    def _establish_invariants(self):
+    def do_cascade(self):
         repeat = True
         cycle = 0
         while repeat and cycle < self._max_cascade_cycles:
@@ -1310,7 +1310,7 @@ class Archive(object):
 
         # Remove (or strip) derived products if necessary.
         if cascade and len(products) > 0:
-            self._establish_invariants()
+            self.do_cascade()
 
         return len(products)
 
@@ -1474,7 +1474,7 @@ class Archive(object):
 
         # Strip (or remove) derived products if necessary.
         if cascade and len(products) > 0:
-            self._establish_invariants()
+            self.do_cascade()
 
         return len(products)
 
@@ -1496,7 +1496,7 @@ class Archive(object):
             raise Error("no products found with name '%s'" % product_name)
         return count
 
-    def strip_by_uuid(self, uuid, force=False):
+    def strip_by_uuid(self, uuid, force=False, cascade=True):
         """Remove a product from storage only (not from the product catalogue).
 
         This is a convenience function that is equivalent to:
@@ -1506,7 +1506,7 @@ class Archive(object):
         An exception will be raised if no product with the specified uuid can be found.
 
         """
-        count = self.strip("uuid == @uuid", {"uuid": uuid}, force)
+        count = self.strip("uuid == @uuid", {"uuid": uuid}, force, cascade)
         if count == 0:
             raise Error("product with uuid '%s' not found" % uuid)
         return count
