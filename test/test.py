@@ -1360,6 +1360,12 @@ class TestTools:
         output = self._run('ingest', 'data/pi.txt')
         output = self._run('search', '"" -c')
         assert output == ['1']
+        archive.remove()
+
+        # parallel
+        output = self._run('ingest', '--parallel --processes=2 data/a.txt data/b.txt data/c.txt')
+        output = self._run('search', '"" -c')
+        assert output == ['3']
 
     def test_Remove(self, archive):
         output = self._run('ingest', 'data/pi.txt')
