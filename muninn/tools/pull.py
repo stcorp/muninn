@@ -8,7 +8,7 @@ import logging
 
 import muninn
 
-from .utils import create_parser, parse_args_and_run
+from muninn.tools.utils import create_parser, parse_args_and_run
 
 
 def pull(args):
@@ -37,3 +37,7 @@ def main():
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
     parser.add_argument("expression", metavar="EXPRESSION", help="expression to filter products to pull")
     return parse_args_and_run(parser, pull)
+
+
+if __name__ == '__main__':
+    main()

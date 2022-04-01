@@ -1445,5 +1445,16 @@ class TestTools:
         output = self._run('strip', '""')
         output = self._run('attach', '--parallel data/a.txt data/b.txt data/c.txt')
 
+    def test_Pull(self, archive):
+        uuid = archive.ingest(['data/README']).core.uuid # TODO get uuid via tools
+        self._run('strip', '""')
+
+        metadata = {
+            'remote_url': 'file://' + os.path.realpath('data/README')
+        }
+        archive.update_properties(muninn.Struct({'core': metadata}), uuid)
+
+        output = self._run('pull', '""')
+
     def test_Destroy(self, archive):
         self._run('destroy', '-y')
