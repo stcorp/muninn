@@ -1347,7 +1347,7 @@ class TestTools:
 
         return process.stdout.decode().splitlines()
 
-    def test_Search(self, archive):
+    def test_search(self, archive):
         output = self._run('search', '""')
         assert len(output) == 2 # header
         output = self._run('ingest', 'data/pi.txt')
@@ -1356,7 +1356,7 @@ class TestTools:
         output = self._run('search', '"" -c')
         assert output == ['1']
 
-    def test_Ingest(self, archive):
+    def test_ingest(self, archive):
         output = self._run('ingest', 'data/pi.txt')
         output = self._run('search', '"" -c')
         assert output == ['1']
@@ -1367,13 +1367,13 @@ class TestTools:
         output = self._run('search', '"" -c')
         assert output == ['3']
 
-    def test_Remove(self, archive):
+    def test_remove(self, archive):
         output = self._run('ingest', 'data/pi.txt')
         output = self._run('remove', '""')
         output = self._run('search', '"" -c')
         assert output == ['0']
 
-    def test_Tag(self, archive):
+    def test_tag(self, archive):
         output = self._run('ingest', 'data/pi.txt')
         output = self._run('tag', '"" mytag')
         output = self._run('list_tags', '""')
@@ -1389,7 +1389,7 @@ class TestTools:
         for line in output:
             assert line.endswith(': mytag')
 
-    def test_Untag(self, archive):
+    def test_untag(self, archive):
         output = self._run('ingest', 'data/pi.txt')
         output = self._run('tag', '"" mytag')
         output = self._run('untag', '"" mytag')
@@ -1407,7 +1407,7 @@ class TestTools:
         for line in output:
             assert not line.endswith(': mytag')
 
-    def test_ListTags(self, archive):
+    def test_listtags(self, archive):
         output = self._run('ingest', 'data/pi.txt')
         output = self._run('tag', '"" mytag')
         output = self._run('list_tags', '""')
@@ -1415,19 +1415,19 @@ class TestTools:
         assert len(output) == 1
         assert output[0].endswith(': mytag')
 
-    def test_Prepare(self, archive):
+    def test_prepare(self, archive):
         self._run('destroy', '-y')
         self._run('prepare')
         output = self._run('search', '"" -c')
         assert output == ['0']
 
-    def test_Summary(self, archive):
+    def test_summary(self, archive):
         output = self._run('ingest', 'data/pi.txt')
         output = self._run('summary', '"" -f csv')
         assert len(output) == 2
         assert output[1].split(',')[0] == '"1"'
 
-    def test_Retrieve(self, archive):  # TODO nprocesses fixture
+    def test_retrieve(self, archive):  # TODO nprocesses setting & fixture?
         with muninn.util.TemporaryDirectory() as tmp_path:
             output = self._run('ingest', 'data/pi.txt')
             output = self._run('retrieve', '"" -d %s' % tmp_path)
@@ -1440,11 +1440,11 @@ class TestTools:
             output = self._run('retrieve', '"" --parallel -d %s' % tmp_path)
             assert set(os.listdir(tmp_path)) == set(['a.txt', 'b.txt', 'c.txt'])
 
-    def test_Strip(self, archive):
+    def test_strip(self, archive):
         output = self._run('ingest', 'data/pi.txt')
         output = self._run('strip', '""')
 
-    def test_Attach(self, archive):
+    def test_attach(self, archive):
         output = self._run('ingest', 'data/pi.txt')
         output = self._run('strip', '""')
         output = self._run('attach', 'data/pi.txt')
@@ -1455,16 +1455,26 @@ class TestTools:
         output = self._run('strip', '""')
         output = self._run('attach', '--parallel data/a.txt data/b.txt data/c.txt')
 
-    def test_Pull(self, archive):
-        uuid = archive.ingest(['data/README']).core.uuid # TODO get uuid via tools
-        self._run('strip', '""')
+    def test_pull(self, archive):  # TODO parameterize over remote backends?
+        uuid = archive.ingest(['data/README'], ingest_product=False).core.uuid # TODO get uuid via tools
 
         metadata = {
             'remote_url': 'file://' + os.path.realpath('data/README')
         }
         archive.update_properties(muninn.Struct({'core': metadata}), uuid)
+        output = self._run('pull', '""') # TODO check
+        archive.remove()
 
-        output = self._run('pull', '""')
+        # parallel
+        files = ['a.txt', 'b.txt', 'c.txt']
+        uuids = [archive.ingest('data/'+name, ingest_product=False).core.uuid for name in files]
+        for name, uuid in zip(files, uuids):
+            metadata = {
+                'remote_url': 'file://' + os.path.realpath('data/'+name)
+            }
+            archive.update_properties(muninn.Struct({'core': metadata}), uuid)
 
-    def test_Destroy(self, archive):
+        output = self._run('pull', '"" --parallel') # TODO check
+
+    def test_destroy(self, archive):
         self._run('destroy', '-y')

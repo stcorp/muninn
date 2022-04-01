@@ -8,28 +8,43 @@ import logging
 
 import muninn
 
-from muninn.tools.utils import create_parser, parse_args_and_run
+from muninn.tools.utils import Processor, create_parser, parse_args_and_run
+
+
+class PullProcessor(Processor):
+    def __init__(self, args):
+        super(PullProcessor, self).__init__(args.archive)
+        self.args = args
+        self.verify_hash = True if args.verify_hash else False
+        self.verify_hash_download = True if args.verify_hash_download else False
+
+    def perform_operation(self, archive, product):
+        archive.pull(  # TODO pull_by_uuid?
+            'uuid == @uuid',
+            {'uuid': product.core.uuid},
+            verify_hash=self.verify_hash,
+            verify_hash_download=self.verify_hash_download
+        )
+        return 1
 
 
 def pull(args):
+    processor = PullProcessor(args)
     with muninn.open(args.archive) as archive:
-        verify_hash = True if args.verify_hash else False
-        verify_hash_download = True if args.verify_hash_download else False
-
         # find all remote products that satisfy filter
         expression = "active and is_defined(remote_url) and not is_defined(archive_path)"
         if args.expression:
             expression = "%s and (%s)" % (expression, args.expression)
-
         logging.debug('Going to pull products that match: %s', expression)
-        num_products = archive.pull(expression, verify_hash=verify_hash, verify_hash_download=verify_hash_download)
-        logging.debug('Pulled %d product(s)', num_products)
-
-    return 0
+        products = archive.search(where=expression, property_names=['uuid'])
+        returncode = processor.process(archive, args, products)
+        if returncode == 0:
+            logging.debug('Pulled %d product(s)', len(products))
+        return returncode
 
 
 def main():
-    parser = create_parser(description="Pull remote files into the archive.")
+    parser = create_parser(description="Pull remote files into the archive.", parallel=True)
     parser.add_argument("--verify-hash", action="store_true",
                         help="verify the hash of the product after it has been put in the archive")
     parser.add_argument("--verify-hash-download", action="store_true",
