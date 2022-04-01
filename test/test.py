@@ -1363,7 +1363,7 @@ class TestTools:
         archive.remove()
 
         # parallel
-        output = self._run('ingest', '--parallel --processes=2 data/a.txt data/b.txt data/c.txt')
+        output = self._run('ingest', '--parallel data/a.txt data/b.txt data/c.txt')
         output = self._run('search', '"" -c')
         assert output == ['3']
 
@@ -1429,6 +1429,12 @@ class TestTools:
         output = self._run('ingest', 'data/pi.txt')
         output = self._run('strip', '""')
         output = self._run('attach', 'data/pi.txt')
+        archive.remove()
+
+        # parallel
+        output = self._run('ingest', '--parallel data/a.txt data/b.txt data/c.txt')
+        output = self._run('strip', '""')
+        output = self._run('attach', '--parallel data/a.txt data/b.txt data/c.txt')
 
     def test_Destroy(self, archive):
         self._run('destroy', '-y')
