@@ -1337,16 +1337,16 @@ class TestTools:  # TODO more result checking, preferrably using tools
         cmd = '%s python%s ../muninn/tools/%s.py my_arch %s 2>&1' % \
               (python_path, '3' if PY3 else '', tool, args)
 
-        process = subprocess.run(
+        proc = subprocess.Popen(
             cmd,
             shell=True,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
-
-        assert process.returncode == 0
-        assert process.stderr == b''
-
-        return process.stdout.decode().splitlines()
+        output, errs = proc.communicate()
+        assert proc.returncode == 0
+        assert not errs
+        return output.decode().splitlines()
 
     def test_search(self, archive):
         output = self._run('search', '""')
