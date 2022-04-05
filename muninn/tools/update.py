@@ -17,7 +17,7 @@ except ImportError:
 import muninn
 from muninn.struct import Struct
 
-from .utils import Processor, create_parser, parse_args_and_run
+from muninn.tools.utils import Processor, create_parser, parse_args_and_run
 
 logger = logging.getLogger(__name__)
 
@@ -108,3 +108,7 @@ def main():
     parser.add_argument("expression", metavar="EXPRESSION", default="", help="expression to select products")
     parser.add_argument("argument", metavar="ARGUMENT", nargs='?', help="product type for retype action")
     return parse_args_and_run(parser, update)
+
+
+if __name__ == '__main__':
+    main()

@@ -1363,10 +1363,10 @@ class TestQuery:
 
 
 class TestTools:  # TODO more result checking, preferrably using tools
-    def _run(self, tool, args=''):
+    def _run(self, tool, args='', action=''):
         python_path = 'PYTHONPATH=%s:$PYTHONPATH' % PARENT_DIR
-        cmd = '%s python%s ../muninn/tools/%s.py my_arch %s 2>&1' % \
-              (python_path, '3' if PY3 else '', tool, args)
+        cmd = '%s python%s ../muninn/tools/%s.py %s my_arch %s 2>&1' % \
+              (python_path, '3' if PY3 else '', tool, action, args)
 
         proc = subprocess.Popen(
             cmd,
@@ -1375,6 +1375,11 @@ class TestTools:  # TODO more result checking, preferrably using tools
             stderr=subprocess.PIPE,
         )
         output, errs = proc.communicate()
+        if proc.returncode != 0:
+            for line in output.decode().splitlines():
+                print(line)
+            for line in errs.decode().splitlines():
+                print(line)
         assert proc.returncode == 0
         assert not errs
         return output.decode().splitlines()
@@ -1500,13 +1505,13 @@ class TestTools:  # TODO more result checking, preferrably using tools
         output = self._run('attach', '--parallel data/a.txt data/b.txt data/c.txt')
 
     def test_pull(self, archive):  # TODO parameterize over remote backends?
-        uuid = archive.ingest(['data/README'], ingest_product=False).core.uuid # TODO get uuid via tools
+        uuid = archive.ingest(['data/README'], ingest_product=False).core.uuid  # TODO get uuid via tools
 
         metadata = {
             'remote_url': 'file://' + os.path.realpath('data/README')
         }
         archive.update_properties(muninn.Struct({'core': metadata}), uuid)
-        output = self._run('pull', '""') # TODO check
+        output = self._run('pull', '""')  # TODO check
         archive.remove()
 
         # parallel
@@ -1518,7 +1523,13 @@ class TestTools:  # TODO more result checking, preferrably using tools
             }
             archive.update_properties(muninn.Struct({'core': metadata}), uuid)
 
-        output = self._run('pull', '"" --parallel') # TODO check
+        output = self._run('pull', '"" --parallel')  # TODO check
+
+    def test_update(self, archive):  # TODO parallel
+        output = self._run('ingest', 'data/pi.txt')
+        output = self._run('update', '""', 'ingest')
+        output = self._run('update', '""', 'pull')
+        output = self._run('update', '"" prodtype', 'retype')
 
     def test_destroy(self, archive):
         self._run('destroy', '-y')
