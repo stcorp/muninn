@@ -513,8 +513,7 @@ class PostgresqlBackend(object):
             except (TypeError, IndexError, AttributeError, KeyError):
                 pass
 
-        if not swallow:
-            raise
+        return swallow
 
     def _link(self, uuid, source_uuids):
         query = "INSERT INTO %s (uuid, source_uuid) SELECT %s, %s" % (self._link_table_name, self._placeholder(),
@@ -529,7 +528,8 @@ class PostgresqlBackend(object):
                 try:
                     cursor.execute(query, (uuid, source_uuid, uuid, source_uuid))
                 except self._connection._backend.Error as _error:
-                    self._swallow_unique_violation(_error)
+                    if not self._swallow_unique_violation(_error):
+                        raise
                 finally:
                     cursor.close()
 
