@@ -658,6 +658,19 @@ class TestArchive:
         s = archive.search('%s' % uuid)
         assert len(s) == 1
 
+        # search on datetime
+        s = archive.search('archive_date > 2001-01-01')
+        assert len(s) == 1
+        s = archive.search('archive_date <= 2001-01-01')
+        assert len(s) == 0
+        s = archive.search('archive_date > 0000-00-00')
+        assert len(s) == 1
+        s = archive.search('archive_date >= 9999-99-99')
+        assert len(s) == 0
+        with pytest.raises(muninn.exceptions.Error) as excinfo:
+            s = archive.search('archive_date > 2000-00-00')
+        assert 'invalid timestamp' in str(excinfo)
+
         # 'covers' search on datetime field
         s = archive.search('covers(@start, @stop, core.archive_date, core.archive_date)',
                            parameters={'start': datetime.datetime.now() - datetime.timedelta(hours=24),
