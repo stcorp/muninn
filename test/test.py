@@ -206,6 +206,7 @@ def archive(database, storage, use_enclosing_directory, archive_path):
         # store params  # TODO this could be nicer
         archive._params = {
             'database': database,
+            'database_options': database_options,
             'storage': storage,
             'use_enclosing_directory': use_enclosing_directory,
             'archive_path':  archive_path,
@@ -1323,6 +1324,8 @@ class TestQuery:
     def test_geometry(self, archive):
         self._prep_data(archive)
 
+        # covers
+        # TODO note that covers raises an error if used on two polygons (only for postgresql..)
         s = archive.search('covers(core.footprint, POINT (1.0 3.0))')
         assert len(s) == 1
         assert s[0].core.uuid == self.uuid_c
@@ -1342,6 +1345,21 @@ class TestQuery:
             assert s[0].core.uuid == self.uuid_c
         else:
             assert len(s) == 3
+
+        # intersects
+        s = archive.search('intersects(core.footprint, POLYGON ((1 1, 3 1, 3 3, 1 3, 1 1)))')
+        assert len(s) == 1
+        s = archive.search('intersects(core.footprint, POLYGON ((11 11, 13 11, 13 13, 11 13, 11 11)))')
+        assert len(s) == 0
+
+        s = archive.search('intersects(core.footprint, MULTIPOLYGON (((1 1, 3 1, 3 3, 1 3, 1 1), (7 7, 8 7, 7 8, 7 7))))')
+        assert len(s) == 1
+        s = archive.search('intersects(core.footprint, MULTIPOLYGON (((11 11, 13 11, 13 13, 11 13, 11 11))))')
+        assert len(s) == 0
+
+        if archive._params['database'] != 'sqlite':  # TODO
+            s = archive.search('intersects(core.footprint, POLYGON EMPTY)')
+            assert len(s) == 0
 
 
 class TestTools:  # TODO more result checking, preferrably using tools
