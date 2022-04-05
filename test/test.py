@@ -1109,7 +1109,7 @@ class TestQuery:
         archive.link(self.uuid_b, [self.uuid_a])
         archive.link(self.uuid_c, [self.uuid_a, self.uuid_b])
 
-    def test_IsDerivedFrom(self, archive):
+    def test_is_derived_from(self, archive):
         self._prep_data(archive)
 
         uuids = archive.derived_products(self.uuid_a)
@@ -1146,7 +1146,7 @@ class TestQuery:
                            'is_derived_from(is_derived_from(physical_name==\"a.txt\")))')
         assert len(s) == 1
 
-    def test_IsSourceOf(self, archive):
+    def test_is_source_of(self, archive):
         self._prep_data(archive)
 
         uuids = archive.source_products(self.uuid_b)
@@ -1167,7 +1167,7 @@ class TestQuery:
         c = archive.count('not is_source_of(%s)' % self.uuid_b)
         assert c == 2
 
-    def test_Namespaces(self, archive):
+    def test_namespaces(self, archive):
         self._prep_data(archive)
 
         s = archive.search('mynamespace.hello==\"hiya\"')
@@ -1227,7 +1227,7 @@ class TestQuery:
         s = archive.search('is_derived_from(physical_name==\"a.txt\") and mynamespace.hello==\"hohoho\"')
         assert len(s) == 1
 
-    def test_IsDefined(self, archive):
+    def test_is_defined(self, archive):
         self._prep_data(archive)
 
         # namespace.property
@@ -1248,7 +1248,7 @@ class TestQuery:
         s = archive.search('is_defined(physical_name)')
         assert len(s) == 3
 
-    def test_InList(self, archive):
+    def test_in(self, archive):
         self._prep_data(archive)
 
         s = archive.search('size in [1015]')
@@ -1302,7 +1302,7 @@ class TestQuery:
         s = archive.search('size in @sizes', parameters={'sizes': [1015]})
         assert len(s) == 3
 
-    def test_RemoveProperties(self, archive):
+    def test_remove_properties(self, archive):  # TODO to TestArchive
         self._prep_data(archive)
 
         p = archive.retrieve_properties(uuid=self.uuid_a, namespaces=['mynamespace'])
@@ -1320,7 +1320,7 @@ class TestQuery:
         p = archive.retrieve_properties(uuid=self.uuid_a, namespaces=['mynamespace'])
         assert not hasattr(p, 'mynamespace')
 
-    def test_Geometry(self, archive):
+    def test_geometry(self, archive):
         self._prep_data(archive)
 
         s = archive.search('covers(core.footprint, POINT (1.0 3.0))')
