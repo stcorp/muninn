@@ -49,8 +49,8 @@ def download_http_oath2(url, target_dir, credentials, timeout=60):
         r = session.get(url, timeout=timeout, stream=True)
         r.raise_for_status()
         local_file = os.path.join(target_dir, os.path.basename(urlparse(r.url).path))
-        if "Content-Disposition" in r.headers.keys():
-            matches = re.findall("filename=\"?([^\"]+)\"?", r.headers["Content-Disposition"])
+        if "content-disposition" in [k.lower() for k in r.headers.keys()]:
+            matches = re.findall("filename=\"?([^\"]+)\"?", r.headers["content-disposition"])
             if len(matches) > 0:
                 local_file = os.path.join(target_dir, matches[-1])
         with open(local_file, 'wb') as output:
@@ -70,8 +70,8 @@ def download_http(url, target_dir, credentials=None, timeout=60):
         r = requests.get(url, timeout=timeout, stream=True, auth=auth)
         r.raise_for_status()
         local_file = os.path.join(target_dir, os.path.basename(urlparse(r.url).path))
-        if "Content-Disposition" in r.headers.keys():
-            matches = re.findall("filename=\"?([^\"]+)\"?", r.headers["Content-Disposition"])
+        if "content-disposition" in [k.lower() for k in r.headers.keys()]:
+            matches = re.findall("filename=\"?([^\"]+)\"?", r.headers["content-disposition"])
             if len(matches) > 0:
                 local_file = os.path.join(target_dir, matches[-1])
         with open(local_file, 'wb') as output:
