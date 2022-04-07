@@ -1081,7 +1081,7 @@ class Archive(object):
                                             property_names=property_names)
             else:
                 products = self._get_product(product_name=uuid_or_name_or_properties,
-                                       property_names=property_names)
+                                             property_names=property_names)
 
         return os.path.join(self._storage.global_prefix, self._product_path(product))
 
