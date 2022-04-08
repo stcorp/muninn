@@ -414,8 +414,13 @@ class Archive(object):
 
             where = 'uuid == @uuid'
             parameters = {'uuid': product_uuid}
-            product = self.search(where, parameters=parameters, namespaces=namespaces, property_names=property_names)[0]
-            products.append(product)
+            matches = self.search(where, parameters=parameters, namespaces=namespaces, property_names=property_names)
+            if len(matches) == 0:
+                raise Error("product with uuid '%s' not found" % product_uuid)
+            else:
+                assert len(matches) == 1
+
+            products.append(matches[0])
 
         return products
 
@@ -950,7 +955,7 @@ class Archive(object):
                         # do not remove the product being ingested (only remove from catalogue)
                         self.delete_properties(existing.core.uuid)
                     else:
-                        self.remove_by_uuid(existing.core.uuid, force=True)
+                        self.remove(existing.core.uuid, force=True)
                 else:
                     self.delete_properties(existing.core.uuid)
 
@@ -1293,16 +1298,23 @@ class Archive(object):
         products being removed (or stripped) along with it. Such products are _not_ included in the returned count.
 
         Keyword arguments:
-        where       --  Search expression that determines which products to remove.
+        where       --  Search expression or one or more product uuid(s) or properties.
         parameters  --  Parameters referenced in the search expression (if any).
         force       --  If set to True, also remove partially ingested products. This affects products for which a
                         failure occured during ingestion, as well as products in the process of being ingested. Use
                         this option with care.
         cascade     --  Apply cascade rules to strip/remove dependent products.
         """
-        products = self.search(where=where, parameters=parameters,
-                               property_names=['uuid', 'active', 'product_name', 'archive_path', 'physical_name',
-                                               'product_type'])
+        property_names = [
+            'uuid',
+            'active',
+            'product_name',
+            'archive_path',
+            'physical_name',
+            'product_type'
+        ]
+        products = self._get_products(where, parameters, property_names=property_names)
+
         for product in products:
             if not product.core.active and not force:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
@@ -1314,21 +1326,6 @@ class Archive(object):
             self.do_cascade()
 
         return len(products)
-
-    def remove_by_uuid(self, uuid, force=False, cascade=True):
-        """Remove a product from the archive by uuid.
-
-        This is a convenience function that is equivalent to:
-
-            self.remove("uuid == @uuid", {"uuid": uuid}, force)
-
-        An exception will be raised if no product with the specified uuid can be found.
-
-        """
-        count = self.remove("uuid == @uuid", {"uuid": uuid}, force, cascade)
-        if count == 0:
-            raise Error("product with uuid '%s' not found" % uuid)
-        return count
 
     def retrieve(self, where="", parameters={}, target_path=os.path.curdir, use_symlinks=False):
         """Retrieve one or more products from the archive. Return a list of target paths of the retrieved products.

@@ -469,19 +469,19 @@ class TestArchive:
         if archive._params['use_enclosing_directory']:
             path = os.path.join(path, 'pi.txt')
 
-        for method in ('remove', 'remove_by_uuid'): # where?
+        for method in ('remove', 'remove_by_uuid'):
             props = self._ingest_file(archive)
 
             if method == 'remove':
                 count = archive.remove()
             elif method == 'remove_by_uuid':
-                count = archive.remove_by_uuid(props.core.uuid)
+                count = archive.remove(props.core.uuid)
             assert count == 1
 
             assert not archive._checker.exists(path)
 
         with pytest.raises(muninn.exceptions.Error) as excinfo:
-            archive.remove_by_uuid(uuid.uuid4())
+            archive.remove(uuid.uuid4())
         assert 'not found' in str(excinfo)
 
     def test_ingest_multi_file(self, archive):
@@ -748,7 +748,7 @@ class TestArchive:
                 archive.link(uuid_c, [uuid_b])
 
                 # also remove derived products b and c
-                archive.remove_by_uuid(uuid_a)
+                archive.remove(uuid_a)
 
                 if cascade_rule == CascadeRule.CASCADE:
                     assert len(archive.search()) == 1
