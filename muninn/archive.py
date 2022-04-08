@@ -795,24 +795,6 @@ class Archive(object):
 
         return result
 
-    def export_by_name(self, product_name, target_path=os.path.curdir, format=None):
-        """Export one or more products from the archive by name.
-
-        This is a convenience function that is equivalent to:
-
-            self.export("product_name == @product_name", {"product_name": product_name}, target_path, format)
-
-        NB. A product name is not guaranteed to be unique (only the combination of product type and product name is),
-        so this function may export one or more products.
-
-        An exception will be raised if no products with the specified name can be found.
-
-        """
-        paths = self.export("product_name == @product_name", {"product_name": product_name}, target_path, format)
-        if not paths:
-            raise Error("no products found with name '%s'" % product_name)
-        return paths
-
     def export_by_uuid(self, uuid, target_path=os.path.curdir, format=None):
         """Export a product from the archive by uuid.
 
@@ -1067,20 +1049,20 @@ class Archive(object):
         """
         return self._database.prepare(dry_run=dry_run)
 
-    def product_path(self, uuid_or_name_or_properties):
-        """Return the path in storage where the product with the specified product.
-        Product can be specified by either: uuid, product name or product properties.
+    def product_path(self, uuid_or_properties):
+        """Return the path in storage to the specified product.
+        The product can be specified by either uuid or as product properties.
         """
 
-        if isinstance(uuid_or_name_or_properties, Struct):
-            product = uuid_or_name_or_properties
+        if isinstance(uuid_or_properties, Struct):
+            product = uuid_or_properties
         else:
             property_names = ['archive_path', 'physical_name']
-            if isinstance(uuid_or_name_or_properties, uuid.UUID):
-                product = self._get_product(uuid_or_name_or_properties,
+            if isinstance(uuid_or_properties, uuid.UUID):
+                product = self._get_product(uuid_or_properties,
                                             property_names=property_names)
             else:
-                products = self._get_product(product_name=uuid_or_name_or_properties,
+                products = self._get_product(product_name=uuid_or_properties,
                                              property_names=property_names)
 
         return os.path.join(self._storage.global_prefix, self._product_path(product))
@@ -1314,24 +1296,6 @@ class Archive(object):
 
         return len(products)
 
-    def remove_by_name(self, product_name, force=False, cascade=True):
-        """Remove one or more products from the archive by name.
-
-        This is a convenience function that is equivalent to:
-
-            self.remove("product_name == @product_name", {"product_name": product_name}, force)
-
-        NB. A product name is not guaranteed to be unique (only the combination of product type and product name is),
-        so this function may remove one or more products.
-
-        An exception will be raised if no products with the specified name can be found.
-
-        """
-        count = self.remove("product_name == @product_name", {"product_name": product_name}, force, cascade)
-        if count == 0:
-            raise Error("no products found with name '%s'" % product_name)
-        return count
-
     def remove_by_uuid(self, uuid, force=False, cascade=True):
         """Remove a product from the archive by uuid.
 
@@ -1370,25 +1334,6 @@ class Archive(object):
             result.append(self._retrieve(product, target_path, use_symlinks))
 
         return result
-
-    def retrieve_by_name(self, product_name, target_path=os.path.curdir, use_symlinks=False):
-        """Retrieve a product from the archive by name.
-
-        This is a convenience function that is equivalent to:
-
-            self.retrieve("product_name == @product_name", {"product_name": product_name}, target_path, use_symlinks)
-
-        NB. A product name is not guaranteed to be unique (only the combination of product type and product name is),
-        so this function may retrieve one or more products.
-
-        An exception will be raised if no products with the specified name can be found.
-
-        """
-        products = self.retrieve("product_name == @product_name", {"product_name": product_name}, target_path,
-                                 use_symlinks)
-        if len(products) == 0:
-            raise Error("no products found with name '%s'" % product_name)
-        return products
 
     def retrieve_by_uuid(self, uuid, target_path=os.path.curdir, use_symlinks=False):
         """Retrieve a product from the archive by uuid.
@@ -1477,24 +1422,6 @@ class Archive(object):
             self.do_cascade()
 
         return len(products)
-
-    def strip_by_name(self, product_name, force=False, cascade=True):
-        """Remove one or more products from storage only (not from the product catalogue).
-
-        This is a convenience function that is equivalent to:
-
-            self.strip("product_name == @product_name", {"product_name": product_name})
-
-        NB. A product name is not guaranteed to be unique (only the combination of product type and product name is),
-        so this function may strip one or more products.
-
-        An exception will be raised if no products with the specified name can be found.
-
-        """
-        count = self.strip("product_name == @product_name", {"product_name": product_name}, force, cascade)
-        if count == 0:
-            raise Error("no products found with name '%s'" % product_name)
-        return count
 
     def strip_by_uuid(self, uuid, force=False, cascade=True):
         """Remove a product from storage only (not from the product catalogue).
