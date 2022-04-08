@@ -948,11 +948,11 @@ class Archive(object):
                         raise Error('cannot force ingest because of archive_path mismatch')
                     if ingest_path == current_path:
                         # do not remove the product being ingested (only remove from catalogue)
-                        self.delete_properties_by_uuid(existing.core.uuid)
+                        self.delete_properties(existing.core.uuid)
                     else:
                         self.remove_by_uuid(existing.core.uuid, force=True)
                 else:
-                    self.delete_properties_by_uuid(existing.core.uuid)
+                    self.delete_properties(existing.core.uuid)
 
         self.create_properties(properties, disable_hooks=True)
 

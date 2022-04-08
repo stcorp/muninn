@@ -16,7 +16,7 @@ class RemoveProcessor(Processor):
 
     def perform_operation(self, archive, product):
         if self.args.catalogue_only:
-            archive.delete_properties_by_uuid(product.core.uuid)
+            archive.delete_properties(product.core.uuid)
         else:
             archive.remove_by_uuid(product.core.uuid, force=self.args.force, cascade=False)
         return 1
