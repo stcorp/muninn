@@ -15,7 +15,7 @@ class StripProcessor(Processor):
         self.args = args
 
     def perform_operation(self, archive, product):
-        archive.strip_by_uuid(product.core.uuid, force=self.args.force, cascade=False)
+        archive.strip(product.core.uuid, force=self.args.force, cascade=False)
         return 1
 
 

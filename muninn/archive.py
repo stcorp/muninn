@@ -1317,7 +1317,7 @@ class Archive(object):
         """Retrieve one or more products from the archive. Return a list of target paths of the retrieved products.
 
         Keyword arguments:
-        where           --  Search expression that determines which products to retrieve.
+        where           --  Search expression or one or more product uuid(s) or properties.
         parameters      --  Parameters referenced in the search expression (if any).
         target_path     --  Directory under which the retrieved products will be stored.
         use_symlinks    --  If set to True, products will be retrieved as symbolic links to the original products kept
@@ -1325,32 +1325,27 @@ class Archive(object):
                             By default, products will be retrieved as copies.
 
         """
+        property_names = [  # TODO merge similar?
+            'uuid',
+            'active',
+            'product_type',
+            'product_name',
+            'archive_path',
+            'physical_name',
+        ]
+
+        products = self._get_products(where, parameters, property_names=property_names)
+
         result = []
-        products = self.search(where=where, parameters=parameters,
-                               property_names=['uuid', 'active', 'product_type', 'product_name', 'archive_path',
-                                               'physical_name'])
         for product in products:
             if not product.core.active or 'archive_path' not in product.core:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
-
             result.append(self._retrieve(product, target_path, use_symlinks))
 
-        return result
-
-    def retrieve_by_uuid(self, uuid, target_path=os.path.curdir, use_symlinks=False):
-        """Retrieve a product from the archive by uuid.
-
-        This is a convenience function that is equivalent to:
-
-            self.retrieve("uuid == @uuid", {"uuid": uuid}, target_path, use_symlinks)[0]
-
-        An exception will be raised if no product with the specified uuid can be found.
-
-        """
-        products = self.retrieve("uuid == @uuid", {"uuid": uuid}, target_path, use_symlinks)
-        if len(products) == 0:
-            raise Error("product with uuid '%s' not found" % uuid)
-        return products[0]
+        if isinstance(where, uuid.UUID):
+            return result[0]
+        else:
+            return result
 
     def retrieve_properties(self, uuid, namespaces=[], property_names=[]):
         """Retrieve product properties for the product with the specified UUID.
@@ -1401,19 +1396,26 @@ class Archive(object):
         products being stripped (or removed) along with it.
 
         Keyword arguments:
-        where       --  Search expression that determines which products to stip.
+        where       --  Search expression or one or more product uuid(s) or properties.
         parameters  --  Parameters referenced in the search expression (if any).
         force       --  If set to True, also strip partially ingested products. This affects products for which a
                         failure occured during ingestion, as well as products in the process of being ingested. Use
                         this option with care.
         cascade     --  Apply cascade rules to strip/purge dependent products.
         """
-        query = "is_defined(archive_path)"
-        if where:
-            query += " and (" + where + ")"
-        products = self.search(where=query, parameters=parameters,
-                               property_names=['uuid', 'active', 'product_name', 'archive_path', 'physical_name'])
+        property_names = [
+            'uuid',
+            'active',
+            'product_name',
+            'archive_path',
+            'physical_name'
+        ]
+
+        products = self._get_products(where, parameters, property_names=property_names)
+
         for product in products:
+            if not 'archive_path' in product.core:
+                continue
             if not product.core.active and not force:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
 
@@ -1424,21 +1426,6 @@ class Archive(object):
             self.do_cascade()
 
         return len(products)
-
-    def strip_by_uuid(self, uuid, force=False, cascade=True):
-        """Remove a product from storage only (not from the product catalogue).
-
-        This is a convenience function that is equivalent to:
-
-            self.strip("uuid == @uuid", {"uuid": uuid})
-
-        An exception will be raised if no product with the specified uuid can be found.
-
-        """
-        count = self.strip("uuid == @uuid", {"uuid": uuid}, force, cascade)
-        if count == 0:
-            raise Error("product with uuid '%s' not found" % uuid)
-        return count
 
     def summary(self, where="", parameters=None, aggregates=None, group_by=None, group_by_tag=False, order_by=None):
         """Return a summary of the products matching the specified search expression.

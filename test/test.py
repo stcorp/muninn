@@ -569,7 +569,7 @@ class TestArchive:
             elif method == 'strip_where':
                 nstripped = archive.strip('product_name == "pi.txt"')
             elif method == 'strip_by_uuid':
-                nstripped = archive.strip_by_uuid(properties.core.uuid)
+                nstripped = archive.strip(properties.core.uuid)
             assert nstripped == 1
 
             # check
@@ -580,7 +580,7 @@ class TestArchive:
             assert not archive._checker.exists(path)
 
         with pytest.raises(muninn.exceptions.Error) as excinfo:
-            nstripped = archive.strip_by_uuid(uuid.uuid4())
+            nstripped = archive.strip(uuid.uuid4())
         assert 'not found' in str(excinfo)
 
     def test_attach(self, archive):
@@ -774,10 +774,10 @@ class TestArchive:
             assert os.path.isfile(path)
             assert os.path.getsize(path) == size
 
-            archive.retrieve_by_uuid(props.core.uuid, target_path=tmp_path)
+            archive.retrieve(props.core.uuid, target_path=tmp_path)
 
             with pytest.raises(muninn.exceptions.Error) as excinfo:
-                archive.retrieve_by_uuid(uuid.uuid4())
+                archive.retrieve(uuid.uuid4())
             assert 'not found' in str(excinfo)
 
         # symlink

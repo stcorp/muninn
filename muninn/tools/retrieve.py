@@ -26,7 +26,7 @@ class RetrieveProcessor(Processor):
         self.target_path = target_path
 
     def perform_operation(self, archive, product):
-        archive.retrieve_by_uuid(product.core.uuid, target_path=self.target_path, use_symlinks=self.args.link)
+        archive.retrieve(product.core.uuid, target_path=self.target_path, use_symlinks=self.args.link)
         return 1
 
 
