@@ -910,7 +910,24 @@ class TestArchive:
         assert archive.delete_properties("") == 1
 
         product = archive.ingest(['data/b.txt'])
-        archive.delete_properties_by_uuid(product.core.uuid)
+        assert archive.delete_properties(product.core.uuid) == 1
+
+        product = archive.ingest(['data/c.txt'])
+        assert archive.delete_properties(product) == 1
+
+        product = archive.ingest(['data/pi.txt'])
+        assert archive.delete_properties([product]) == 1
+
+        product = archive.ingest(['data/README'])
+        assert archive.delete_properties([product.core.uuid]) == 1
+
+        with pytest.raises(muninn.exceptions.Error) as excinfo:
+            archive.delete_properties(14)
+        assert 'Invalid' in str(excinfo)
+
+        with pytest.raises(muninn.exceptions.Error) as excinfo:
+            archive.delete_properties([""])
+        assert 'Invalid' in str(excinfo)
 
     def test_rebuild_properties_file(self, archive):
         properties = self._ingest_file(archive)

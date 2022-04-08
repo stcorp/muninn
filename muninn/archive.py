@@ -389,6 +389,36 @@ class Archive(object):
             assert len(products) == 1
             return products[0]
 
+    def _get_products(self, where, parameters=None, namespaces=None, property_names=None):
+        if isinstance(where, basestring):
+            return self.search(where, parameters=parameters, namespaces=namespaces, property_names=property_names)
+
+        if isinstance(where, uuid.UUID):
+            where = [where]
+        elif isinstance(where, Struct):
+            where = [where]
+        else:
+            try:
+                where = list(where)
+            except:
+                raise Error('Invalid product selection')
+
+        products = []
+        for term in where:
+            if isinstance(term, uuid.UUID):
+                product_uuid = term
+            elif isinstance(term, Struct):
+                product_uuid = term.core.uuid
+            else:
+                raise Error('Invalid product selection')
+
+            where = 'uuid == @uuid'
+            parameters = {'uuid': product_uuid}
+            product = self.search(where, parameters=parameters, namespaces=namespaces, property_names=property_names)[0]
+            products.append(product)
+
+        return products
+
     def _product_path(self, product):
         if getattr(product.core, "archive_path", None) is None:
             return None
@@ -685,31 +715,20 @@ class Archive(object):
             plugin = self.product_type_plugin(properties.core.product_type)
             self._run_hooks('post_create_hook', plugin, properties)
 
-    def delete_properties(self, where="", parameters={}):
+    def delete_properties(self, where="", parameters={}):  # TODO default delete-all??
         """Remove properties for one or more products from the catalogue. Return the number of products removed.
 
         This function will _not_ remove any product files from storage and will _not_ trigger any of the specific
         cascade rules.
 
         Keyword arguments:
-        where       --  Search expression that determines which products to remove.
+        where       --  Search expression or one or more product uuid(s) or properties.
         parameters  --  Parameters referenced in the search expression (if any).
         """
-        products = self.search(where=where, parameters=parameters, property_names=['uuid'])
+        products = self._get_products(where, parameters, property_names=['uuid'])
         for product in products:
             self._database.delete_product_properties(product.core.uuid)
         return len(products)
-
-    def delete_properties_by_uuid(self, uuid):
-        """Remove properties from the catalogue for product with the given uuid.
-
-        This function will _not_ remove any product files from storage and will _not_ trigger any of the specific
-        cascade rules.
-
-        Keyword arguments:
-        uuid  --  UUID of the product whose metadata needs to be removed from the catalogue.
-        """
-        self._database.delete_product_properties(uuid)
 
     def derived_products(self, uuid):
         """Return the UUIDs of the products that are linked to the given product as derived products."""
