@@ -469,22 +469,16 @@ class TestArchive:
         if archive._params['use_enclosing_directory']:
             path = os.path.join(path, 'pi.txt')
 
-        for method in ('remove', 'remove_by_name', 'remove_by_uuid'): # where?
+        for method in ('remove', 'remove_by_uuid'): # where?
             props = self._ingest_file(archive)
 
             if method == 'remove':
                 count = archive.remove()
-            elif method == 'remove_by_name':
-                count = archive.remove_by_name('pi.txt')
             elif method == 'remove_by_uuid':
                 count = archive.remove_by_uuid(props.core.uuid)
             assert count == 1
 
             assert not archive._checker.exists(path)
-
-        with pytest.raises(muninn.exceptions.Error) as excinfo:
-            archive.remove_by_name('missing.txt')
-        assert 'no products found' in str(excinfo)
 
         with pytest.raises(muninn.exceptions.Error) as excinfo:
             archive.remove_by_uuid(uuid.uuid4())
@@ -563,7 +557,7 @@ class TestArchive:
         if archive._params['use_enclosing_directory']:
             path = os.path.join(path, 'pi.txt')
 
-        for method in ('strip', 'strip_where', 'strip_by_name', 'strip_by_uuid'):
+        for method in ('strip', 'strip_where', 'strip_by_uuid'):
             # ingest
             archive.remove()
             properties = archive.ingest(['data/pi.txt'])
@@ -574,8 +568,6 @@ class TestArchive:
                 nstripped = archive.strip()
             elif method == 'strip_where':
                 nstripped = archive.strip('product_name == "pi.txt"')
-            elif method == 'strip_by_name':
-                nstripped = archive.strip_by_name('pi.txt')
             elif method == 'strip_by_uuid':
                 nstripped = archive.strip_by_uuid(properties.core.uuid)
             assert nstripped == 1
@@ -586,10 +578,6 @@ class TestArchive:
             assert 'archive_date' not in properties.core
 
             assert not archive._checker.exists(path)
-
-        with pytest.raises(muninn.exceptions.Error) as excinfo:
-            nstripped = archive.strip_by_name('missing.txt')
-        assert 'no products found' in str(excinfo)
 
         with pytest.raises(muninn.exceptions.Error) as excinfo:
             nstripped = archive.strip_by_uuid(uuid.uuid4())
@@ -786,12 +774,7 @@ class TestArchive:
             assert os.path.isfile(path)
             assert os.path.getsize(path) == size
 
-            archive.retrieve_by_name('pi.txt', target_path=tmp_path)
             archive.retrieve_by_uuid(props.core.uuid, target_path=tmp_path)
-
-            with pytest.raises(muninn.exceptions.Error) as excinfo:
-                archive.retrieve_by_name('missing.txt')
-            assert 'no products found' in str(excinfo)
 
             with pytest.raises(muninn.exceptions.Error) as excinfo:
                 archive.retrieve_by_uuid(uuid.uuid4())
@@ -921,6 +904,13 @@ class TestArchive:
 
                 assert os.path.exists(path)
                 assert os.path.getsize(path) == 1015
+
+    def test_delete_properties(self, archive):
+        product = archive.ingest(['data/a.txt'])
+        assert archive.delete_properties("") == 1
+
+        product = archive.ingest(['data/b.txt'])
+        archive.delete_properties_by_uuid(product.core.uuid)
 
     def test_rebuild_properties_file(self, archive):
         properties = self._ingest_file(archive)
