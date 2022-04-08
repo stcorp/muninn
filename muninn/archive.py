@@ -389,6 +389,7 @@ class Archive(object):
             assert len(products) == 1
             return products[0]
 
+    # TODO for performance, we may want to call something like 'run_for_uuids' instead of search
     def _get_products(self, where, parameters=None, namespaces=None, property_names=None):
         if isinstance(where, basestring):
             return self.search(where, parameters=parameters, namespaces=namespaces, property_names=property_names)
@@ -770,7 +771,7 @@ class Archive(object):
         retrieve one or more derived products and bundle them together with the product itself.
 
         Keyword arguments:
-        where           --  Search expression that determines which products to export.
+        where           --  Search expression or one or more product uuid(s) or properties.
         parameters      --  Parameters referenced in the search expression (if any).
         target_path     --  Directory in which the retrieved products will be stored.
         format          --  Format in which the products will be exported.
@@ -782,9 +783,9 @@ class Archive(object):
                 raise Error("invalid export format '%s'" % format)
             export_method_name += "_" + format
 
-        result = []
-        products = self.search(where=where, parameters=parameters, namespaces=self.namespaces())
+        products = self._get_products(where, parameters, namespaces=self.namespaces())
 
+        result = []
         for product in products:
             if not product.core.active:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
@@ -818,21 +819,6 @@ class Archive(object):
                 result.append(exported_path)
 
         return result
-
-    def export_by_uuid(self, uuid, target_path=os.path.curdir, format=None):
-        """Export a product from the archive by uuid.
-
-        This is a convenience function that is equivalent to:
-
-            self.export("uuid == @uuid", {"uuid": uuid}, target_path, format)
-
-        An exception will be raised if no product with the specified uuid can be found.
-
-        """
-        paths = self.export("uuid == @uuid", {"uuid": uuid}, target_path, format)
-        if not paths:
-            raise Error("product with uuid '%s' not found" % uuid)
-        return paths
 
     def export_formats(self):
         """Return a list of supported alternative export formats."""
