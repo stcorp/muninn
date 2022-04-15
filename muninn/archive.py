@@ -1294,7 +1294,7 @@ class Archive(object):
             self.tag(product.core.uuid, tags)
 
             # Run the post ingest hook (if defined by the product type plug-in or hook extensions).
-            if not disable_hooks and self._hook_exists('post_ingest_hook', plugin):
+            if not disable_hooks:
                 product.update(properties)
                 if 'hash' not in product.core:
                     product.core.hash = None
