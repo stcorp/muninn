@@ -610,8 +610,6 @@ class Archive(object):
 
         Arguments:
         paths            -- List of paths pointing to product files.
-
-        Keyword arguments:
         product_type     -- Product type of the product to ingest. If left unspecified, an attempt will be made to
                             determine the product type automatically. By default, the product type will be determined
                             automatically.
@@ -629,7 +627,7 @@ class Archive(object):
                             This option is ignored if ingest_product=False.
         force            -- If set to True, then skip default size check between product and existing metadata.
 
-        Return value:
+        Returns:
         The attached product.
         """
         paths = self._check_paths(paths, 'attach')
@@ -743,7 +741,7 @@ class Archive(object):
     def count(self, where="", parameters={}):
         """Return the number of products matching the specified search expression.
 
-        Keyword arguments:
+        Arguments:
         where       --  Search expression.
         parameters  --  Parameters referenced in the search expression (if any).
 
@@ -776,11 +774,11 @@ class Archive(object):
         This function will _not_ remove any product files from storage and
         will _not_ trigger any of the specific cascade rules.
 
-        Keyword arguments:
+        Arguments:
         where       --  Search expression or one or more product uuid(s) or properties.
         parameters  --  Parameters referenced in the search expression (if any).
 
-        Return value:
+        Returns:
         The number of updated products
         """
         products = self._get_products(where, parameters, property_names=['uuid'])
@@ -827,13 +825,13 @@ class Archive(object):
         customized by the product type plug-in. For example, the custom implementation for a certain product type might
         retrieve one or more derived products and bundle them together with the product itself.
 
-        Keyword arguments:
+        Arguments:
         where           --  Search expression or one or more product uuid(s) or properties.
         parameters      --  Parameters referenced in the search expression (if any).
         target_path     --  Directory in which the retrieved products will be stored.
         format          --  Format in which the products will be exported.
 
-        Return value:
+        Returns:
         A list with the export path for each product
         """
         export_method_name = "export"
@@ -895,7 +893,7 @@ class Archive(object):
         Arguments:
         paths            -- List of paths pointing to product files.
 
-        Return value:
+        Returns:
         Determined product type
         """
         for product_type, plugin in self._product_type_plugins.items():
@@ -919,8 +917,6 @@ class Archive(object):
 
         Arguments:
         paths            -- List of paths pointing to product files.
-
-        Keyword arguments:
         product_type     -- Product type of the product to ingest. If left unspecified, an attempt will be made to
                             determine the product type automatically. By default, the product type will be determined
                             automatically.
@@ -943,7 +939,7 @@ class Archive(object):
                             NB. Depending on product type specific cascade rules, removing a product can result in one
                             or more derived products being removed (or stripped) along with it.
 
-        Return value:
+        Returns:
         The ingested product
         """
         paths = self._check_paths(paths, 'ingest')
@@ -1110,7 +1106,7 @@ class Archive(object):
         The root path will be created and the product catalogue will be
         initialized such that the archive is ready for use.
 
-        Keyword arguments:
+        Arguments:
         force   --  If set to True then any existing products and / or product
                     catalogue will be removed.
         """
@@ -1156,7 +1152,7 @@ class Archive(object):
         Products should have a valid remote_url core metadata field and they should not yet exist in the local
         archive (i.e. the archive_path core metadata field should not be set).
 
-        Keyword arguments:
+        Arguments:
         where         --  Search expression.
         parameters    --  Parameters referenced in the search expression (if any).
         verify_hash   --  If set to True then, after the pull, the product in the archive will be matched against
@@ -1164,7 +1160,7 @@ class Archive(object):
         verify_hash_download  --  If set to True then, before the product is stored in the archive, the pulled
                           product will be matched against the metadata hash (if it exists).
 
-        Return value:
+        Returns:
         The number of pulled products
         """
         queue = self.search(where=where, parameters=parameters, namespaces=self.namespaces())
@@ -1231,8 +1227,6 @@ class Archive(object):
 
         Arguments:
         uuid             -- Product UUID
-
-        Keyword arguments:
         disable_hooks    --  Disable product type hooks (not meant for routine operation).
         use_current_path -- Do not attempt to relocate the product to the location specified in the product
                             type plug-in. Useful for read-only archives.
@@ -1313,8 +1307,6 @@ class Archive(object):
 
         Arguments:
         uuid             -- Product UUID
-
-        Keyword arguments:
         verify_hash   --  If set to True then the product in the archive will be matched against
                           the hash from the metadata (only if the metadata contained a hash).
         disable_hooks --  Disable product type hooks (not meant for routine operation).
@@ -1362,7 +1354,7 @@ class Archive(object):
         NB. Depending on product type specific cascade rules, removing a product can result in one or more derived
         products being removed (or stripped) along with it. Such products are _not_ included in the returned count.
 
-        Keyword arguments:
+        Arguments:
         where       --  Search expression or one or more product uuid(s) or properties.
         parameters  --  Parameters referenced in the search expression (if any).
         force       --  If set to True, also remove partially ingested products. This affects products for which a
@@ -1395,7 +1387,7 @@ class Archive(object):
     def retrieve(self, where="", parameters={}, target_path=os.path.curdir, use_symlinks=False):
         """Retrieve one or more products from the archive.
 
-        Keyword arguments:
+        Arguments:
         where           --  Search expression or one or more product uuid(s) or properties.
         parameters      --  Parameters referenced in the search expression (if any).
         target_path     --  Directory under which the retrieved products will be stored.
@@ -1403,7 +1395,7 @@ class Archive(object):
                             in the archive. If set to False, products will retrieved as copies of the original products.
                             By default, products will be retrieved as copies.
 
-        Return value:
+        Returns:
         A list with the target paths for the retrieved products
         """
         property_names = [  # TODO merge similar?
@@ -1433,8 +1425,6 @@ class Archive(object):
 
         Arguments:
         uuid        -- Product UUID
-
-        Keyword arguments:
         namespaces  -- List of namespaces of which the properties should be retrieved. By default, only properties
                        defined in the "core" namespace will be retrieved.
         """
@@ -1447,7 +1437,7 @@ class Archive(object):
     def search(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], property_names=[]):
         """Search the product catalogue for products matching the specified search expression.
 
-        Keyword arguments:
+        Arguments:
         where       --  Search expression.
         order_by    --  A list of property names that determines the ordering of the results. If the list is empty, the
                         order of the results in undetermined and can very between calls to this function. Each property
@@ -1465,7 +1455,7 @@ class Archive(object):
                         (the namespace can be omitted for the 'core' namespace).
                         If the property_names parameter is provided then the namespaces parameter is ignored.
 
-        Return value:
+        Returns:
         A list of matching products
         """
         return self._database.search(where, order_by, limit, parameters, namespaces, property_names)
@@ -1484,7 +1474,7 @@ class Archive(object):
         NB. Depending on product type specific cascade rules, stripping a product can result in one or more derived
         products being stripped (or removed) along with it.
 
-        Keyword arguments:
+        Arguments:
         where       --  Search expression or one or more product uuid(s) or properties.
         parameters  --  Parameters referenced in the search expression (if any).
         force       --  If set to True, also strip partially ingested products. This affects products for which a
@@ -1492,7 +1482,7 @@ class Archive(object):
                         this option with care.
         cascade     --  Apply cascade rules to strip/purge dependent products.
 
-        Return value:
+        Returns:
         The number of stripped products
         """
         property_names = [
@@ -1522,7 +1512,7 @@ class Archive(object):
     def summary(self, where="", parameters=None, aggregates=None, group_by=None, group_by_tag=False, order_by=None):
         """Return a summary of the products matching the specified search expression.
 
-        Keyword arguments:
+        Arguments:
         where         --  Search expression.
         parameters    --  Parameters referenced in the search expression (if any).
         aggregates    --  A list of property aggregates defined as "<property_name>.<reduce_fn>".
@@ -1602,8 +1592,6 @@ class Archive(object):
 
         Argument:
         properties         -- Product properties
-
-        Keyword arguments:
         uuid               --  UUID of the product to update. By default, the UUID will be taken from the "core.uuid"
                                property.
         create_namespaces  --  Test if all namespaces are already defined for the product, and create them if needed
@@ -1658,11 +1646,11 @@ class Archive(object):
         If there is no hash available in the metadata for a product then an
         error will be raised.
 
-        Keyword arguments:
+        Arguments:
         where           --  Search expression that determines which products to retrieve.
         parameters      --  Parameters referenced in the search expression (if any).
 
-        Return value:
+        Returns:
         A list of UUIDs of products for which the verification failed.
         """
         property_names=[  # TODO merge similar
