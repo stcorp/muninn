@@ -272,7 +272,7 @@ class Archive(object):
         self._remote_backend_plugins[remote_backend] = plugin
 
     def remote_backend(self, remote_backend):
-        """Return the schema definition of a remote backend."""
+        """Return a reference to the remote backend plugin for a remote backend."""
         try:
             return self._remote_backend_plugins[remote_backend]
         except KeyError:
