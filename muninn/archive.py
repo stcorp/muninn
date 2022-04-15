@@ -170,6 +170,22 @@ def create(configuration):
 
 
 class Archive(object):
+    """Archive class
+
+    The Archive class is used to represent and interact with Muninn archives.
+    It provides functionality such as querying existing or ingesting new
+    products. While at the core of the Muninn command-line tools, it can also
+    be used directly.
+
+    It is typically instantiated and used as follows:
+
+        with muninn.open(archive_name) as archive:
+            product = archive.ingest(file_path)
+
+    Please see the Muninn documentation for details about how to configure
+    a Muninn archive (and also set an environment variable so Muninn can find
+    its configuration file.)
+    """
 
     def __init__(self, backend, storage, use_symlinks=False, cascade_grace_period=0, max_cascade_cycles=25,
                  auth_file=None, root=None):
@@ -192,9 +208,8 @@ class Archive(object):
         """Register a namespace.
 
         Arguments:
-        namespace -- Name of the namespace.
+        namespace -- Namespace name
         schema    -- Schema definition of the namespace.
-
         """
         if not re.match(r"[a-z][_a-z]*(\.[a-z][_a-z]*)*", namespace):
             raise ValueError("invalid namespace name %s" % namespace)
@@ -204,7 +219,11 @@ class Archive(object):
         self._namespace_schemas[namespace] = schema
 
     def namespace_schema(self, namespace):
-        """Return the schema definition of a namespace."""
+        """Return the schema definition of the specified namespace.
+
+        Arguments:
+        namespace -- Namespace name
+        """
         try:
             return self._namespace_schemas[namespace]
         except KeyError:
@@ -212,17 +231,18 @@ class Archive(object):
                         (namespace, util.quoted_list(self._namespace_schemas.keys())))
 
     def namespaces(self):
-        """Return a list of supported namespaces."""
+        """Return a list of registered namespaces."""
         return list(self._namespace_schemas.keys())
 
     def register_product_type(self, product_type, plugin):
         """Register a product type.
 
         Arguments:
-        product_type -- Product type.
-        plugin       -- Reference to an object that implements the product type plugin API and as such takes care of
-                        the details of extracting product properties from products of the specified product type.
-
+        product_type -- Product type name
+        plugin       -- Reference to an object that implements the product type
+                        plugin API and as such takes care of the details of
+                        extracting product properties from products of the
+                        specified product type.
         """
         if product_type in self._product_type_plugins:
             raise Error("redefinition of product type: \"%s\"" % product_type)
@@ -246,7 +266,10 @@ class Archive(object):
         self._update_export_formats(plugin)
 
     def product_type_plugin(self, product_type):
-        """Return a reference to the product type plugin for a product type."""
+        """Return a reference to the specified product type plugin.
+
+        product_type -- Product type name
+        """
         try:
             return self._product_type_plugins[product_type]
         except KeyError:
@@ -254,16 +277,18 @@ class Archive(object):
                         (product_type, util.quoted_list(self._product_type_plugins.keys())))
 
     def product_types(self):
-        """Return a list of supported product types."""
+        """Return a list of registered product types."""
         return list(self._product_type_plugins.keys())
 
     def register_remote_backend(self, remote_backend, plugin):
-        """Register a remote backend.
+        """Register a remote backend
 
         Arguments:
-        remote_backend -- Remote backend.
-        plugin         -- Reference to an object that implements the remote backend plugin API and as such takes care of
-                          the details of extracting product properties from products of the specified remote backend.
+        remote_backend -- Remote backend name.
+        plugin         -- Reference to an object that implements the remote
+                          backend plugin API and as such takes care of the
+                          details of extracting product properties from
+                          products of the specified remote backend.
 
         """
         if remote_backend in self._remote_backend_plugins:
@@ -272,7 +297,11 @@ class Archive(object):
         self._remote_backend_plugins[remote_backend] = plugin
 
     def remote_backend(self, remote_backend):
-        """Return a reference to the remote backend plugin for a remote backend."""
+        """Return a reference to the specified remote backend plugin
+
+        Arguments:
+        remote_backend -- Remote backend name
+        """
         try:
             return self._remote_backend_plugins[remote_backend]
         except KeyError:
@@ -288,7 +317,8 @@ class Archive(object):
 
         Arguments:
         hook_extension -- Hook extension name
-        plugin         -- Reference to an object that implements the hook extension plugin API
+        plugin         -- Reference to an object that implements the hook
+                          extension plugin API
         """
         if hook_extension in self._hook_extensions:
             raise Error("redefinition of hook extension: \"%s\"" % hook_extension)
@@ -296,7 +326,11 @@ class Archive(object):
         self._hook_extensions[hook_extension] = plugin
 
     def hook_extension(self, hook_extension):
-        """Return the hook extension with the specified name."""
+        """Return the hook extension with the specified name.
+
+        Arguments:
+        hook_extension -- Hook extension name
+        """
         try:
             return self._hook_extensions[hook_extension]
         except KeyError:
@@ -329,6 +363,13 @@ class Archive(object):
             return prefix
 
     def do_cascade(self):
+        """Strip/remove all derived products for which the source products no
+        longer exist, depending on the cascade rule configured in the
+        respective product type plugins.
+
+        Please see the Muninn documentation for more information on how to
+        configure cascade rules.
+        """
         repeat = True
         cycle = 0
         while repeat and cycle < self._max_cascade_cycles:
@@ -567,6 +608,9 @@ class Archive(object):
 
         The existing metadata record is found by performing a search based on product_type and physical_name.
 
+        Arguments:
+        paths            -- List of paths pointing to product files.
+
         Keyword arguments:
         product_type     -- Product type of the product to ingest. If left unspecified, an attempt will be made to
                             determine the product type automatically. By default, the product type will be determined
@@ -585,6 +629,8 @@ class Archive(object):
                             This option is ignored if ingest_product=False.
         force            -- If set to True, then skip default size check between product and existing metadata.
 
+        Return value:
+        The attached product.
         """
         paths = self._check_paths(paths, 'attach')
 
@@ -683,14 +729,14 @@ class Archive(object):
         return product
 
     def auth_file(self):
-        """Return the path of the authentication file to download from remote locations"""
+        """Return the path of the authentication file to download from remote locations."""
         return self._auth_file
 
     def close(self):
-        """Close the archive immediately instead of when (and if) the archive instance is collected.
+        """Close the archive immediately instead of when (and if) the archive
+        instance is collected.
 
         Using the archive after calling this function results in undefined behavior.
-
         """
         self._database.disconnect()
 
@@ -705,13 +751,16 @@ class Archive(object):
         return self._database.count(where, parameters)
 
     def create_properties(self, properties, disable_hooks=False):
-        """ Create record for product in the product catalogue.
-            An important side effect of this operation is that it
-            will fail if:
+        """Create a record for the given product in the product catalogue.
+        An important side effect of this operation is that it will fail if:
 
             1. The core.uuid is not unique within the product catalogue.
             2. The combination of core.archive_path and core.physical_name is
                not unique within the product catalogue.
+
+        Arguments:
+        properties    -- Product properties
+        disable_hooks -- Do not execute any hooks (default False)
         """
         self._update_metadata_date(properties)
         self._database.insert_product_properties(properties)
@@ -722,14 +771,17 @@ class Archive(object):
             self._run_hooks('post_create_hook', plugin, properties)
 
     def delete_properties(self, where="", parameters={}):  # TODO default delete-all??
-        """Remove properties for one or more products from the catalogue. Return the number of products removed.
+        """Remove properties for one or more products from the catalogue.
 
-        This function will _not_ remove any product files from storage and will _not_ trigger any of the specific
-        cascade rules.
+        This function will _not_ remove any product files from storage and
+        will _not_ trigger any of the specific cascade rules.
 
         Keyword arguments:
         where       --  Search expression or one or more product uuid(s) or properties.
         parameters  --  Parameters referenced in the search expression (if any).
+
+        Return value:
+        The number of updated products
         """
         products = self._get_products(where, parameters, property_names=['uuid'])
         for product in products:
@@ -737,15 +789,21 @@ class Archive(object):
         return len(products)
 
     def derived_products(self, uuid):
-        """Return the UUIDs of the products that are linked to the given product as derived products."""
+        """Return the UUIDs of the products that are linked to the given
+        product as derived products.
+
+        Arguments:
+        uuid -- Product UUID
+        """
         return self._database.derived_products(uuid)
 
     def destroy(self):
-        """Completely remove the archive, both the products as well as the product catalogue.
+        """Completely remove the archive, including both the products and the
+        product catalogue.
 
-        Using the archive after calling this function results in undefined behavior. The prepare() function can be used
-        to bring the archive back into a useable state.
-
+        Using the archive after calling this function results in undefined
+        behavior. The prepare() function can be used to bring the archive back
+        into a useable state.
         """
         self.destroy_catalogue()
 
@@ -757,14 +815,13 @@ class Archive(object):
         Using the archive after calling this function results in undefined behavior.
         Using the prepare_catalogue() function and ingesting all products again, can bring the archive
         back into a useable state.
-
         """
         # Call the backend to remove anything related to the archive.
         if self._database.exists():
             self._database.destroy()
 
     def export(self, where="", parameters={}, target_path=os.path.curdir, format=None):
-        """Export one or more products from the archive. Return the list of file paths of the exported products.
+        """Export one or more products from the archive.
 
         By default, a copy of the original product will be retrieved from the archive. This default behavior can be
         customized by the product type plug-in. For example, the custom implementation for a certain product type might
@@ -776,6 +833,8 @@ class Archive(object):
         target_path     --  Directory in which the retrieved products will be stored.
         format          --  Format in which the products will be exported.
 
+        Return value:
+        A list with the export path for each product
         """
         export_method_name = "export"
         if format is not None:
@@ -833,6 +892,11 @@ class Archive(object):
         """Determine the product type of the product (specified as a single path, or a list of paths if it is a
         multi-part product).
 
+        Arguments:
+        paths            -- List of paths pointing to product files.
+
+        Return value:
+        Determined product type
         """
         for product_type, plugin in self._product_type_plugins.items():
             if plugin.identify(paths):
@@ -852,6 +916,9 @@ class Archive(object):
         If the product to be ingested is already located at the target location within the archive (and there was not
         already another catalogue entry pointing to it), muninn will leave the product at its location as-is, and won't
         try to copy/symlink it.
+
+        Arguments:
+        paths            -- List of paths pointing to product files.
 
         Keyword arguments:
         product_type     -- Product type of the product to ingest. If left unspecified, an attempt will be made to
@@ -876,6 +943,8 @@ class Archive(object):
                             NB. Depending on product type specific cascade rules, removing a product can result in one
                             or more derived products being removed (or stripped) along with it.
 
+        Return value:
+        The ingested product
         """
         paths = self._check_paths(paths, 'ingest')
 
@@ -1024,7 +1093,12 @@ class Archive(object):
                     hook_method(self, properties)
 
     def link(self, uuid_, source_uuids):
-        """Link a product to one or more source products."""
+        """Link a product to one or more source products.
+
+        Arguments:
+        uuid         -- Product UUID
+        source_uuids -- Source UUIDs
+        """
         if isinstance(source_uuids, uuid.UUID):
             source_uuids = [source_uuids]
 
@@ -1033,12 +1107,12 @@ class Archive(object):
     def prepare(self, force=False):
         """Prepare the archive for (first) use.
 
-        The root path will be created and the product catalogue will be initialized such that the archive is ready for
-        use.
+        The root path will be created and the product catalogue will be
+        initialized such that the archive is ready for use.
 
         Keyword arguments:
-        force   --  If set to True then any existing products and / or product catalogue will be removed.
-
+        force   --  If set to True then any existing products and / or product
+                    catalogue will be removed.
         """
         if not force:
             if self._storage.exists():
@@ -1054,16 +1128,15 @@ class Archive(object):
         self._storage.prepare()
 
     def prepare_catalogue(self, dry_run=False):
-        """Prepare the catalogue of the archive for (first) use.
-
-        """
+        """Prepare the catalogue of the archive for (first) use."""
         return self._database.prepare(dry_run=dry_run)
 
     def product_path(self, uuid_or_properties):
         """Return the path in storage to the specified product.
-        The product can be specified by either uuid or as product properties.
-        """
 
+        Arguments:
+        uuid_or_properties: UUID or product
+        """
         if isinstance(uuid_or_properties, Struct):
             product = uuid_or_properties
         else:
@@ -1079,7 +1152,6 @@ class Archive(object):
 
     def pull(self, where="", parameters={}, verify_hash=False, verify_hash_download=False):
         """Pull one or more remote products into the archive.
-        Return the number of products pulled.
 
         Products should have a valid remote_url core metadata field and they should not yet exist in the local
         archive (i.e. the archive_path core metadata field should not be set).
@@ -1092,6 +1164,8 @@ class Archive(object):
         verify_hash_download  --  If set to True then, before the product is stored in the archive, the pulled
                           product will be matched against the metadata hash (if it exists).
 
+        Return value:
+        The number of pulled products
         """
         queue = self.search(where=where, parameters=parameters, namespaces=self.namespaces())
         for product in queue:
@@ -1150,13 +1224,16 @@ class Archive(object):
         return len(queue)
 
     def rebuild_properties(self, uuid, disable_hooks=False, use_current_path=False):
-        """Rebuilds product properties by re-extracting these properties (using product type plug-ins) from the
+        """Rebuild product properties by re-extracting these properties (using product type plug-ins) from the
         products stored in the archive.
         Only properties and tags that are returned by the product type plug-in will be updated. Other properties or
         tags will remain as they were.
 
+        Arguments:
+        uuid             -- Product UUID
+
         Keyword arguments:
-        disable_hooks --  Disable product type hooks (not meant for routine operation).
+        disable_hooks    --  Disable product type hooks (not meant for routine operation).
         use_current_path -- Do not attempt to relocate the product to the location specified in the product
                             type plug-in. Useful for read-only archives.
 
@@ -1234,13 +1311,15 @@ class Archive(object):
     def rebuild_pull_properties(self, uuid, verify_hash=False, disable_hooks=False, use_current_path=False):
         """Refresh products by re-running the pull, but using the existing products stored in the archive.
 
+        Arguments:
+        uuid             -- Product UUID
+
         Keyword arguments:
         verify_hash   --  If set to True then the product in the archive will be matched against
                           the hash from the metadata (only if the metadata contained a hash).
         disable_hooks --  Disable product type hooks (not meant for routine operation).
         use_current_path -- Do not attempt to relocate the product to the location specified in the product
                             type plug-in. Useful for read-only archives.
-
         """
         product = self._get_product(uuid)
         if 'archive_path' not in product.core:
@@ -1314,7 +1393,7 @@ class Archive(object):
         return len(products)
 
     def retrieve(self, where="", parameters={}, target_path=os.path.curdir, use_symlinks=False):
-        """Retrieve one or more products from the archive. Return a list of target paths of the retrieved products.
+        """Retrieve one or more products from the archive.
 
         Keyword arguments:
         where           --  Search expression or one or more product uuid(s) or properties.
@@ -1324,6 +1403,8 @@ class Archive(object):
                             in the archive. If set to False, products will retrieved as copies of the original products.
                             By default, products will be retrieved as copies.
 
+        Return value:
+        A list with the target paths for the retrieved products
         """
         property_names = [  # TODO merge similar?
             'uuid',
@@ -1348,12 +1429,14 @@ class Archive(object):
             return result
 
     def retrieve_properties(self, uuid, namespaces=[], property_names=[]):
-        """Retrieve product properties for the product with the specified UUID.
+        """Return properties for the specified product.
+
+        Arguments:
+        uuid        -- Product UUID
 
         Keyword arguments:
-        namespaces  --  List of namespaces of which the properties should be retrieved. By default, only properties
-                        defined in the "core" namespace will be retrieved.
-
+        namespaces  -- List of namespaces of which the properties should be retrieved. By default, only properties
+                       defined in the "core" namespace will be retrieved.
         """
         return self._get_product(uuid, namespaces=namespaces, property_names=property_names)
 
@@ -1381,16 +1464,22 @@ class Archive(object):
                         Properties are specified as '<namespace>.<identifier>'
                         (the namespace can be omitted for the 'core' namespace).
                         If the property_names parameter is provided then the namespaces parameter is ignored.
+
+        Return value:
+        A list of matching products
         """
         return self._database.search(where, order_by, limit, parameters, namespaces, property_names)
 
     def source_products(self, uuid):
-        """Return the UUIDs of the products that are linked to the given product as source products."""
+        """Return the UUIDs of the products that are linked to the given product as source products.
+
+        Arguments:
+        uuid -- Product UUID
+        """
         return self._database.source_products(uuid)
 
     def strip(self, where="", parameters={}, force=False, cascade=True):
-        """Remove one or more products from storage only (not from the product catalogue). Return the number of products
-        stripped.
+        """Remove one or more products from storage only (not from the product catalogue).
 
         NB. Depending on product type specific cascade rules, stripping a product can result in one or more derived
         products being stripped (or removed) along with it.
@@ -1402,6 +1491,9 @@ class Archive(object):
                         failure occured during ingestion, as well as products in the process of being ingested. Use
                         this option with care.
         cascade     --  Apply cascade rules to strip/purge dependent products.
+
+        Return value:
+        The number of stripped products
         """
         property_names = [
             'uuid',
@@ -1455,25 +1547,44 @@ class Archive(object):
         return self._database.summary(where, parameters, aggregates, group_by, group_by_tag, order_by)
 
     def tag(self, uuid, tags):  # TODO add where=""? can we make that a single database statement, or do we need --parallel?
-        """Set one or more tags on a product."""
+        """Set one or more tags on a product.
+
+        Arguments:
+        uuid -- Product UUID
+        tags -- One or more tags
+        """
         if isinstance(tags, basestring):
             tags = [tags]
 
         self._database.tag(uuid, tags)
 
     def tags(self, uuid):
-        """Return the tags of a product."""
+        """Return the tags of a product.
+
+        Arguments:
+        uuid -- Product UUID
+        """
         return self._database.tags(uuid)
 
     def unlink(self, uuid_, source_uuids=None):
-        """Remove the link between a product and one or more of its source products."""
+        """Remove the link between a product and one or more of its source products.
+
+        Arguments:
+        uuid         -- Product UUID
+        source_uuids -- Source product UUIDs
+        """
         if isinstance(source_uuids, uuid.UUID):
             source_uuids = [source_uuids]
 
         self._database.unlink(uuid_, source_uuids)
 
     def untag(self, uuid, tags=None):
-        """Remove one or more tags from a product."""
+        """Remove one or more tags from a product.
+
+        Arguments:
+        uuid -- Product UUID
+        tags -- One or more tags (default all existing tags)
+        """
         if isinstance(tags, basestring):
             tags = [tags]
 
@@ -1489,10 +1600,14 @@ class Archive(object):
         retrieve_properties() or search(), change the properties, and then use this function to update the product
         catalogue.
 
-        Keyword arguments:
-        uuid    --  UUID of the product to update. By default, the UUID will be taken from the "core.uuid" property.
-        create_namespaces  --  Tests if all namespaces are already defined for the product, and creates them if needed
+        Argument:
+        properties         -- Product properties
 
+        Keyword arguments:
+        uuid               --  UUID of the product to update. By default, the UUID will be taken from the "core.uuid"
+                               property.
+        create_namespaces  --  Test if all namespaces are already defined for the product, and create them if needed
+                               (default False)
         """
         if create_namespaces:
             if 'core' in properties and 'uuid' in properties.core:
@@ -1538,21 +1653,29 @@ class Archive(object):
 
     def verify_hash(self, where="", parameters={}):
         """Verify the hash for one or more products in the archive.
-        Returns a list of UUIDs of products for which the verification failed.
-        This will be an empty list '[]' if all products match their hash.
 
         Products that are not active or are not in the archive will be skipped.
-        If there is no hash available in the metadata for a product then an error will be raised.
+        If there is no hash available in the metadata for a product then an
+        error will be raised.
 
         Keyword arguments:
         where           --  Search expression that determines which products to retrieve.
         parameters      --  Parameters referenced in the search expression (if any).
 
+        Return value:
+        A list of UUIDs of products for which the verification failed.
         """
+        property_names=[  # TODO merge similar
+            'uuid',
+            'active',
+            'product_name',
+            'archive_path',
+            'physical_name',
+            'hash',
+            'product_type'
+        ]
         failed_products = []
-        products = self.search(where=where, parameters=parameters,
-                               property_names=['uuid', 'active', 'product_name', 'archive_path', 'physical_name',
-                                               'hash', 'product_type'])
+        products = self.search(where=where, parameters=parameters, property_names=property_names)
         for product in products:
             if not self._verify_hash(product):
                 failed_products.append(product.core.uuid)
