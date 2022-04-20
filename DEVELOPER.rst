@@ -41,7 +41,8 @@ The package is now available in the ``dist`` directory.
 
 Update API documentation
 ------------------------
-If the Python API documentation needs to be updated, a command
+If the Python API documentation needs to be updated, commands
 similar to the following may be used: :::
 
-  pydoc-markdown -m muninn -m muninn.archive | markdown > api.html
+  pydoc-markdown -m muninn -m muninn.archive > api.md
+  python3 -m markdown --extension=extra api.md > api.html

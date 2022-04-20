@@ -29,7 +29,7 @@ def open(id=None, **kwargs):
     id  --  Archive id (name of configuration file)
 
     Returns:
-    Instance of #muninn.archive.Archive
+    Instance of `muninn.archive.Archive`
     """
     if id is None:
         configuration = {}
