@@ -723,6 +723,11 @@ class PostgresqlBackend(object):
         if tags is None:
             query = "DELETE FROM %s WHERE uuid = %s" % (self._tag_table_name, self._placeholder())
             parameters = (uuid,)
+            cursor = self._connection.cursor()
+            try:
+                cursor.execute(query, parameters)
+            finally:
+                cursor.close()
         else:
             for tag in tags:
                 query = "DELETE FROM %s WHERE uuid = %s AND tag = %s" % (self._tag_table_name,
