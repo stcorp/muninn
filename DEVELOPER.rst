@@ -37,3 +37,11 @@ To create the muninn package: ::
   $ python setup.py sdist
 
 The package is now available in the ``dist`` directory.
+
+
+Update API documentation
+------------------------
+If the Python API documentation needs to be updated, a command
+similar to the following may be used: :::
+
+  pydoc-markdown -m muninn -m muninn.archive | markdown > api.html

@@ -17,10 +17,20 @@ from muninn.struct import Struct
 
 
 def config_path():
+    """Returns value of `MUNINN_CONFIG_PATH` environment variable."""
     return _os.environ.get("MUNINN_CONFIG_PATH", "")
 
 
 def open(id=None, **kwargs):
+    """Opens archive for given archive id, by searching using the
+    `MUNINN_CONFIG_PATH` enivironment variable.
+
+    Arguments:
+    id  --  Archive id (name of configuration file)
+
+    Returns:
+    Instance of #muninn.archive.Archive
+    """
     if id is None:
         configuration = {}
     else:
