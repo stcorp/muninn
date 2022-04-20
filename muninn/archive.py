@@ -1162,7 +1162,7 @@ class Archive(object):
         archive (i.e. the archive_path core metadata field should not be set).
 
         Arguments:
-        where         --  Search expression.
+        where         --  Search expression or one or more product uuid(s) or properties.
         parameters    --  Parameters referenced in the search expression (if any).
         verify_hash   --  If set to True then, after the pull, the product in the archive will be matched against
                           the hash from the metadata (only if the metadata contained a hash).
@@ -1172,8 +1172,9 @@ class Archive(object):
         Returns:
         The number of pulled products
         """
-        queue = self.search(where=where, parameters=parameters, namespaces=self.namespaces())
-        for product in queue:
+        products = self._get_products(where, parameters, namespaces=self.namespaces())
+
+        for product in products:
             if not product.core.active:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
             if 'archive_path' in product.core:
@@ -1226,7 +1227,7 @@ class Archive(object):
             metadata = {'active': True}
             self.update_properties(Struct({'core': metadata}), product.core.uuid)
 
-        return len(queue)
+        return len(products)
 
     def rebuild_properties(self, uuid, disable_hooks=False, use_current_path=False):
         """Rebuild product properties by re-extracting these properties (using product type plug-ins) from the
@@ -1672,7 +1673,7 @@ class Archive(object):
         error will be raised.
 
         Arguments:
-        where           --  Search expression that determines which products to retrieve.
+        where           --  Search expression or one or more product uuid(s) or properties.
         parameters      --  Parameters referenced in the search expression (if any).
 
         Returns:
@@ -1688,7 +1689,9 @@ class Archive(object):
             'product_type'
         ]
         failed_products = []
-        products = self.search(where=where, parameters=parameters, property_names=property_names)
+
+        products = self._get_products(where, parameters, property_names=property_names)
+
         for product in products:
             if not self._verify_hash(product):
                 failed_products.append(product.core.uuid)
