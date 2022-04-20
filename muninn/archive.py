@@ -832,7 +832,8 @@ class Archive(object):
         format          --  Format in which the products will be exported.
 
         Returns:
-        A list with the export path for each product
+        A list with the export paths for the exported products (when a search expression or multiple properties/uuids
+        were passed), or a single export path.
         """
         export_method_name = "export"
         if format is not None:
@@ -875,7 +876,10 @@ class Archive(object):
                 exported_path = self._retrieve(product, target_path, False)
                 result.append(exported_path)
 
-        return result
+        if isinstance(where, uuid.UUID):
+            return result[0]
+        else:
+            return result
 
     def export_formats(self):
         """Return a list of supported alternative export formats."""
@@ -1380,7 +1384,7 @@ class Archive(object):
 
         # Remove (or strip) derived products if necessary.
         if cascade and len(products) > 0:
-            self.do_cascade()
+            self.cleanup_derived_products()
 
         return len(products)
 
@@ -1396,7 +1400,8 @@ class Archive(object):
                             By default, products will be retrieved as copies.
 
         Returns:
-        A list with the target paths for the retrieved products
+        A list with the target paths for the retrieved products (when a search expression or multiple properties/uuids
+        were passed), or a single target path.
         """
         property_names = [  # TODO merge similar?
             'uuid',
@@ -1505,7 +1510,7 @@ class Archive(object):
 
         # Strip (or remove) derived products if necessary.
         if cascade and len(products) > 0:
-            self.do_cascade()
+            self.cleanup_derived_products()
 
         return len(products)
 

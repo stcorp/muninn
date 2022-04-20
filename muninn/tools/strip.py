@@ -24,7 +24,7 @@ def strip(args):
     with muninn.open(args.archive) as archive:
         products = archive.search(where=args.expression, property_names=['uuid'])
         returncode = processor.process(archive, args, products)
-        archive.do_cascade()
+        archive.cleanup_derived_products()
         return returncode
 
 

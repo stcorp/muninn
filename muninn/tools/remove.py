@@ -28,7 +28,7 @@ def remove(args):
         products = archive.search(where=args.expression, property_names=['uuid'])
         returncode = processor.process(archive, args, products)
         if not args.catalogue_only:
-            archive.do_cascade()
+            archive.cleanup_derived_products()
         return returncode
 
 
