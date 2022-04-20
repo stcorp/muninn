@@ -696,6 +696,11 @@ class TestArchive:
         tags = archive.tags(uuid)
         assert tags == ['green']
 
+        # untag all by default?
+        archive.untag(uuid)
+        tags = archive.tags(uuid)
+        assert tags == []
+
     def test_linking(self, archive):
         uuid_a = archive.ingest(['data/a.txt']).core.uuid
         uuid_b = archive.ingest(['data/b.txt']).core.uuid

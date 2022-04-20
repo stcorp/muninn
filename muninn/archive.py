@@ -1536,17 +1536,26 @@ class Archive(object):
         """
         return self._database.summary(where, parameters, aggregates, group_by, group_by_tag, order_by)
 
-    def tag(self, uuid, tags):  # TODO add where=""? can we make that a single database statement, or do we need --parallel?
-        """Set one or more tags on a product.
+    def tag(self, where=None, tags=None, parameters={}):
+        """Set one or more tags on one or more product(s).
 
         Arguments:
-        uuid -- Product UUID
-        tags -- One or more tags
+        where       --  Search expression or one or more product uuid(s) or properties.
+        tags        --  One or more tags
+        parameters  --  Parameters referenced in the search expression (if any).
         """
         if isinstance(tags, basestring):
             tags = [tags]
+        for tag in tags:
+            if not isinstance(tag, basestring):
+                raise Error('tag must be a string')
 
-        self._database.tag(uuid, tags)
+        if isinstance(where, uuid.UUID):
+            self._database.tag(where, tags)
+        else:
+            products = self._get_products(where, parameters, property_names=['uuid'])
+            for product in products:
+                self._database.tag(product.core.uuid, tags)
 
     def tags(self, uuid):
         """Return the tags of a product.
@@ -1568,17 +1577,23 @@ class Archive(object):
 
         self._database.unlink(uuid_, source_uuids)
 
-    def untag(self, uuid, tags=None):
-        """Remove one or more tags from a product.
+    def untag(self, where=None, tags=None, parameters={}):
+        """Remove one or more tags from one or more product(s).
 
         Arguments:
-        uuid -- Product UUID
-        tags -- One or more tags (default all existing tags)
+        where       --  Search expression or one or more product uuid(s) or properties.
+        tags        --  One or more tags (default all existing tags)
+        parameters  --  Parameters referenced in the search expression (if any).
         """
         if isinstance(tags, basestring):
             tags = [tags]
 
-        self._database.untag(uuid, tags)
+        if isinstance(where, uuid.UUID):
+            self._database.untag(where, tags)
+        else:
+            products = self._get_products(where, parameters, property_names=['uuid'])
+            for product in products:
+                self._database.untag(product.core.uuid, tags)
 
     def update_properties(self, properties, uuid=None, create_namespaces=False):
         """Update product properties in the product catalogue. The UUID of the product to update will be taken from the
