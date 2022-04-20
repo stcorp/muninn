@@ -103,7 +103,7 @@ def _inspect_nargs(func):
     return len(getargspec(func).args)
 
 
-def create(configuration):
+def create(configuration, id=None):
     options = config.parse(configuration.get("archive", {}), _ArchiveConfig)
     _ArchiveConfig.validate(options)
 
@@ -125,7 +125,7 @@ def create(configuration):
     product_type_extensions = options.pop("product_type_extensions", [])
     remote_backend_extensions = options.pop("remote_backend_extensions", [])
     hook_extensions = options.pop("hook_extensions", [])
-    archive = Archive(backend=backend, storage=storage, **options)
+    archive = Archive(backend=backend, storage=storage, id=id, **options)
 
     # Register core namespace.
     archive.register_namespace("core", Core)
@@ -185,10 +185,13 @@ class Archive(object):
     Please see the Muninn documentation for details about how to configure
     a Muninn archive (and also set an environment variable so Muninn can find
     its configuration file.)
+
+    Instance attributes:
+    id  --  Archive id (usually name of configuration file)
     """
 
-    def __init__(self, backend, storage, use_symlinks=False, cascade_grace_period=0, max_cascade_cycles=25,
-                 auth_file=None, root=None):
+    def __init__(self, backend, storage, cascade_grace_period=0,
+                 max_cascade_cycles=25, auth_file=None, id=None):
         self._cascade_grace_period = datetime.timedelta(minutes=cascade_grace_period)
         self._max_cascade_cycles = max_cascade_cycles
         self._auth_file = auth_file
@@ -203,6 +206,8 @@ class Archive(object):
         self._database.initialize(self._namespace_schemas)
 
         self._storage = storage
+
+        self.id = id
 
     def register_namespace(self, namespace, schema):
         """Register a namespace.

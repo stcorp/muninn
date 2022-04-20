@@ -200,6 +200,8 @@ def archive(database, storage, use_enclosing_directory, archive_path):
 
     # create clean archive
     with muninn.open('my_arch') as archive:
+        assert archive.id == 'my_arch'
+
         archive.destroy()
         archive.prepare()
 

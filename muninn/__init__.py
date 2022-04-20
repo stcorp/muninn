@@ -20,16 +20,17 @@ def config_path():
     return _os.environ.get("MUNINN_CONFIG_PATH", "")
 
 
-def open(id="", **kwargs):
-    configuration = {} if not id else _read_archive_config_file(_locate_archive_config_file(id))
-    _merge_configuration(configuration, kwargs)
-    return _create_archive(configuration)
+def open(id=None, **kwargs):
+    if id is None:
+        configuration = {}
+    else:
+        configuration = _read_archive_config_file(_locate_archive_config_file(id))
 
-
-def _merge_configuration(configuration, other_configuration):
-    for name, value in other_configuration.items():
+    for name, value in kwargs.items():
         section = configuration.setdefault(name, {})
         section.update(value)
+
+    return _create_archive(configuration, id)
 
 
 def _read_archive_config_file(path):
