@@ -362,13 +362,13 @@ class Archive(object):
         if middle == ':' and prefix in HASH_ALGORITHMS:
             return prefix
 
-    def do_cascade(self):
-        """Strip/remove all derived products for which the source products no
-        longer exist, depending on the cascade rule configured in the
+    def cleanup_derived_products(self):
+        """Clean up all derived products for which the source products no
+        longer exist, as specified by the cascade rule configured in the
         respective product type plugins.
 
-        Please see the Muninn documentation for more information on how to
-        configure cascade rules.
+        Please see the Muninn documentation for more information on how
+        to configure cascade rules.
         """
         repeat = True
         cycle = 0
