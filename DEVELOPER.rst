@@ -46,3 +46,4 @@ similar to the following may be used: :::
 
   pydoc-markdown -m muninn -m muninn.archive > api.md
   python3 -m markdown --extension=extra api.md > api.html
+  sed -i -e 's/ | //g' api.html
