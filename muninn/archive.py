@@ -186,9 +186,10 @@ class Archive(object):
     a Muninn archive (and also set an environment variable so Muninn can find
     its configuration file.)
 
-    Instance attributes:
-    id  --  Archive id (usually name of configuration file)
     """
+
+    #: Archive id (usually name of configuration file)
+    id = None
 
     def __init__(self, backend, storage, cascade_grace_period=0,
                  max_cascade_cycles=25, auth_file=None, id=None):
