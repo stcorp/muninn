@@ -1545,5 +1545,18 @@ class TestTools:  # TODO more result checking, preferrably using tools
         output = self._run('update', '""', 'pull')
         output = self._run('update', '"" prodtype', 'retype')
 
+    def test_export(self, archive):
+        output = self._run('ingest', 'data/pi.txt')
+        with muninn.util.TemporaryDirectory() as tmp_path:
+            output = self._run('export', '"" -d %s' % tmp_path)
+            assert set(os.listdir(tmp_path)) == set(['pi.txt'])
+        archive.remove()
+
+        # parallel
+        with muninn.util.TemporaryDirectory() as tmp_path:
+            output = self._run('ingest', '--parallel data/a.txt data/b.txt data/c.txt')
+            output = self._run('export', '"" --parallel -d %s' % tmp_path)
+            assert set(os.listdir(tmp_path)) == set(['a.txt', 'b.txt', 'c.txt'])
+
     def test_destroy(self, archive):
         self._run('destroy', '-y')
