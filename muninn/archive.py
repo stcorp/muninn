@@ -169,6 +169,16 @@ def create(configuration, id=None):
     return archive
 
 
+_CORE_PROP_NAMES = [
+    'uuid',
+    'active',
+    'product_name',
+    'archive_path',
+    'physical_name',
+    'product_type',
+]
+
+
 class Archive(object):
     """Archive class
 
@@ -1373,15 +1383,7 @@ class Archive(object):
                         this option with care.
         cascade     --  Apply cascade rules to strip/remove dependent products.
         """
-        property_names = [
-            'uuid',
-            'active',
-            'product_name',
-            'archive_path',
-            'physical_name',
-            'product_type'
-        ]
-        products = self._get_products(where, parameters, property_names=property_names)
+        products = self._get_products(where, parameters, property_names=_CORE_PROP_NAMES)
 
         for product in products:
             if not product.core.active and not force:
@@ -1410,16 +1412,7 @@ class Archive(object):
         A list with the target paths for the retrieved products (when a search expression or multiple properties/uuids
         were passed), or a single target path.
         """
-        property_names = [  # TODO merge similar?
-            'uuid',
-            'active',
-            'product_type',
-            'product_name',
-            'archive_path',
-            'physical_name',
-        ]
-
-        products = self._get_products(where, parameters, property_names=property_names)
+        products = self._get_products(where, parameters, property_names=_CORE_PROP_NAMES)
 
         result = []
         for product in products:
@@ -1497,15 +1490,7 @@ class Archive(object):
         Returns:
         The number of stripped products
         """
-        property_names = [
-            'uuid',
-            'active',
-            'product_name',
-            'archive_path',
-            'physical_name'
-        ]
-
-        products = self._get_products(where, parameters, property_names=property_names)
+        products = self._get_products(where, parameters, property_names=_CORE_PROP_NAMES)
 
         for product in products:
             if not 'archive_path' in product.core:
@@ -1680,19 +1665,10 @@ class Archive(object):
         Returns:
         A list of UUIDs of products for which the verification failed.
         """
-        property_names=[  # TODO merge similar
-            'uuid',
-            'active',
-            'product_name',
-            'archive_path',
-            'physical_name',
-            'hash',
-            'product_type'
-        ]
-        failed_products = []
-
+        property_names = _CORE_PROP_NAMES + ['hash']
         products = self._get_products(where, parameters, property_names=property_names)
 
+        failed_products = []
         for product in products:
             if not self._verify_hash(product):
                 failed_products.append(product.core.uuid)
