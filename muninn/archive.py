@@ -470,7 +470,7 @@ class Archive(object):
             else:
                 raise Error('Invalid product selection')
 
-            where = 'uuid == @uuid'
+            where = 'uuid == @uuid'  # TODO simplify to _get_product(product_uuid)..?
             parameters = {'uuid': product_uuid}
             matches = self.search(where, parameters=parameters, namespaces=namespaces, property_names=property_names)
             if len(matches) == 0:
@@ -728,7 +728,7 @@ class Archive(object):
 
         # Verify product hash after copy
         if verify_hash:
-            if self.verify_hash("uuid == @uuid", {"uuid": product.core.uuid}):
+            if self.verify_hash(product.core.uuid):
                 raise Error("ingested product has incorrect hash")
 
         # Activate product
@@ -1070,7 +1070,7 @@ class Archive(object):
 
         # Verify product hash after copy
         if ingest_product and verify_hash:
-            if self.verify_hash("uuid == @uuid", {"uuid": properties.core.uuid}):
+            if self.verify_hash(properties.core.uuid):
                 raise Error("ingested product has incorrect hash")
 
         # Run post create/ingest hooks (if defined by the product type plug-in or hook extensions).
@@ -1212,7 +1212,7 @@ class Archive(object):
 
                 # verify product hash.
                 if verify_hash and 'hash' in product.core:
-                    if self.verify_hash("uuid == @uuid", {"uuid": product.core.uuid}):
+                    if self.verify_hash(product.core.uuid):
                         raise Error("pulled product '%s' (%s) has incorrect hash" %
                                     (product.core.product_name, product.core.uuid))
 
