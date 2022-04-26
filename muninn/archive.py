@@ -15,16 +15,16 @@ import hashlib
 import os
 import re
 import sys
-import uuid
+from uuid import UUID, uuid4
 import warnings
 
 import muninn.config as config
 import muninn.util as util
 
 from muninn.core import Core
-from muninn.exceptions import *
+from muninn.exceptions import Error, StorageError
 from muninn.extension import CascadeRule
-from muninn.schema import *
+from muninn.schema import Text, Boolean, Integer, Sequence, Mapping
 from muninn.struct import Struct
 from muninn import remote
 
@@ -451,7 +451,7 @@ class Archive(object):
         if isinstance(where, basestring):
             return self.search(where, parameters=parameters, namespaces=namespaces, property_names=property_names)
 
-        if isinstance(where, uuid.UUID):
+        if isinstance(where, UUID):
             where = [where]
         elif isinstance(where, Struct):
             where = [where]
@@ -463,7 +463,7 @@ class Archive(object):
 
         products = []
         for term in where:
-            if isinstance(term, uuid.UUID):
+            if isinstance(term, UUID):
                 product_uuid = term
             elif isinstance(term, Struct):
                 product_uuid = term.core.uuid
@@ -892,7 +892,7 @@ class Archive(object):
                 exported_path = self._retrieve(product, target_path, False)
                 result.append(exported_path)
 
-        if isinstance(where, uuid.UUID):
+        if isinstance(where, UUID):
             return result[0]
         else:
             return result
@@ -904,7 +904,7 @@ class Archive(object):
     @staticmethod
     def generate_uuid():
         """Return a new generated UUID that can be used as UUID for a product metadata record"""
-        return uuid.uuid4()
+        return uuid4()
 
     def identify(self, paths):
         """Determine the product type of the product (specified as a single path, or a list of paths if it is a
@@ -1108,17 +1108,17 @@ class Archive(object):
                 else:
                     hook_method(self, properties)
 
-    def link(self, uuid_, source_uuids):
+    def link(self, uuid, source_uuids):
         """Link a product to one or more source products.
 
         Arguments:
         uuid         -- Product UUID
         source_uuids -- Source UUIDs
         """
-        if isinstance(source_uuids, uuid.UUID):
+        if isinstance(source_uuids, UUID):
             source_uuids = [source_uuids]
 
-        self._database.link(uuid_, source_uuids)
+        self._database.link(uuid, source_uuids)
 
     def prepare(self, force=False):
         """Prepare the archive for (first) use.
@@ -1157,7 +1157,7 @@ class Archive(object):
             product = uuid_or_properties
         else:
             property_names = ['archive_path', 'physical_name']
-            if isinstance(uuid_or_properties, uuid.UUID):
+            if isinstance(uuid_or_properties, UUID):
                 product = self._get_product(uuid_or_properties,
                                             property_names=property_names)
             else:
@@ -1420,7 +1420,7 @@ class Archive(object):
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
             result.append(self._retrieve(product, target_path, use_symlinks))
 
-        if isinstance(where, uuid.UUID):
+        if isinstance(where, UUID):
             return result[0]
         else:
             return result
@@ -1547,7 +1547,7 @@ class Archive(object):
             if not isinstance(tag, basestring):
                 raise Error('tag must be a string')
 
-        if isinstance(where, uuid.UUID):
+        if isinstance(where, UUID):
             self._database.tag(where, tags)
         else:
             products = self._get_products(where, parameters, property_names=['uuid'])
@@ -1562,17 +1562,17 @@ class Archive(object):
         """
         return self._database.tags(uuid)
 
-    def unlink(self, uuid_, source_uuids=None):
+    def unlink(self, uuid, source_uuids=None):
         """Remove the link between a product and one or more of its source products.
 
         Arguments:
         uuid         -- Product UUID
         source_uuids -- Source product UUIDs
         """
-        if isinstance(source_uuids, uuid.UUID):
+        if isinstance(source_uuids, UUID):
             source_uuids = [source_uuids]
 
-        self._database.unlink(uuid_, source_uuids)
+        self._database.unlink(uuid, source_uuids)
 
     def untag(self, where=None, tags=None, parameters={}):
         """Remove one or more tags from one or more product(s).
@@ -1585,7 +1585,7 @@ class Archive(object):
         if isinstance(tags, basestring):
             tags = [tags]
 
-        if isinstance(where, uuid.UUID):
+        if isinstance(where, UUID):
             self._database.untag(where, tags)
         else:
             products = self._get_products(where, parameters, property_names=['uuid'])
