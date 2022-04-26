@@ -44,8 +44,6 @@ class StorageBackend(object):
         # Product path within storage
         raise NotImplementedError()
 
-    # TODO lower-granularity put/get/delete?
-
     def put(self, paths, properties, use_enclosing_directory, use_symlinks=None,
             retrieve_files=None, run_for_product=None):  # pragma: no cover
         # Place product file(s) into storage

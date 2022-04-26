@@ -15,7 +15,7 @@ class TagProcessor(Processor):
         self.args = args
 
     def perform_operation(self, archive, product):
-        archive.tag(product.core.uuid, self.args.tag)  # TODO should be tag_by_uuid?
+        archive.tag(product.core.uuid, self.args.tag)
         return 1
 
 

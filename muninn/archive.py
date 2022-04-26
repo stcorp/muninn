@@ -774,7 +774,7 @@ class Archive(object):
             plugin = self.product_type_plugin(properties.core.product_type)
             self._run_hooks('post_create_hook', plugin, properties)
 
-    def delete_properties(self, where="", parameters={}):  # TODO default delete-all??
+    def delete_properties(self, where="", parameters={}):
         """Remove properties for one or more products from the catalogue.
 
         This function will _not_ remove any product files from storage and

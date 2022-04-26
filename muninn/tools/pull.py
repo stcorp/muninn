@@ -19,9 +19,8 @@ class PullProcessor(Processor):
         self.verify_hash_download = True if args.verify_hash_download else False
 
     def perform_operation(self, archive, product):
-        archive.pull(  # TODO pull_by_uuid?
-            'uuid == @uuid',
-            {'uuid': product.core.uuid},
+        archive.pull(
+            product.core.uuid,
             verify_hash=self.verify_hash,
             verify_hash_download=self.verify_hash_download
         )

@@ -16,7 +16,7 @@ class UntagProcessor(Processor):
 
     def perform_operation(self, archive, product):
         tags = None if self.args.all else self.args.tag
-        archive.untag(product.core.uuid, tags)  # TODO should be untag_by_uuid?
+        archive.untag(product.core.uuid, tags)
         return 1
 
 
