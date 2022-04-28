@@ -1402,10 +1402,25 @@ class TestTools:  # TODO more result checking, preferrably using tools
         output = self._run('search', '""')
         assert len(output) == 2 # header
         output = self._run('ingest', 'data/pi.txt')
-        output = self._run('search', '""')
+        output = self._run('search', '"" -p \\*')
         assert len(output) == 3
         output = self._run('search', '"" -c')
         assert output == ['1']
+        output = self._run('search', '"" --uuid')
+        assert len(output) == 1
+        uuid.UUID(output[0])
+        output = self._run('search', '"" --paths')
+        assert len(output) == 1
+        assert 'pi.txt' in output[0]
+        output = self._run('search', '"" -f psv -p archive_date -p core.physical_name -o +size')
+        assert len(output) == 2
+        assert output[1].count('|') == 3
+        output = self._run('search', '"" -f csv -p archive_path -p size -o physical_name')
+        assert len(output) == 2
+        assert output[1].count(',') == 1
+        output = self._run('ingest', 'data/a.txt')
+        output = self._run('search', '"" -l 1')
+        assert len(output) == 3
 
     def test_ingest(self, archive):
         output = self._run('ingest', 'data/pi.txt')
