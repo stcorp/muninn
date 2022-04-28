@@ -1375,6 +1375,28 @@ class TestQuery:
             s = archive.search('intersects(core.footprint, POLYGON EMPTY)')
             assert len(s) == 0
 
+    def test_errors(self, archive):
+        self._prep_data(archive)
+
+        with pytest.raises(muninn.exceptions.Error) as excinfo:
+            s = archive.search('size in [1015')
+        assert 'char 14: unexpected end of input' in str(excinfo)
+
+        with pytest.raises(muninn.exceptions.Error) as excinfo:
+            s = archive.search('size in [1015[')
+        assert 'char 14: expected "]", got "["' in str(excinfo)
+
+        with pytest.raises(muninn.exceptions.Error) as excinfo:
+            s = archive.search('size in @missing')
+        assert 'no value for parameter: "missing"' in str(excinfo)
+
+        with pytest.raises(muninn.exceptions.Error) as excinfo:
+            s = archive.search('size in')
+        assert 'unexpected end of input' in str(excinfo)
+
+        with pytest.raises(muninn.exceptions.Error) as excinfo:
+            s = archive.search('size in [] xyz')
+        assert 'extra characters after expression' in str(excinfo)
 
 class TestTools:  # TODO more result checking, preferrably using tools
     def _run(self, tool, args='', action=''):
