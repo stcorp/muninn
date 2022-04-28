@@ -1088,13 +1088,6 @@ class Archive(object):
 
         return properties
 
-    def _hook_exists(self, hook_name, plugin):
-        plugins = [plugin] + list(self._hook_extensions.values())
-        for plugin in plugins:
-            if hasattr(plugin, hook_name):
-                return True
-        return False
-
     def _run_hooks(self, hook_name, plugin, properties, reverse=False, paths=None):
         plugins = [plugin] + list(self._hook_extensions.values())
         if reverse:
