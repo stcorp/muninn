@@ -1059,7 +1059,7 @@ class TestArchive:
         assert data == [(2,)] or data == [[2]]  # TODO pg8000 gives list per row??
 
         # aggregate size.sum
-        data, headers = archive.summary(aggregates=['core.size.sum'])  # TODO doesn't work without core prefix
+        data, headers = archive.summary('size > 0', aggregates=['core.size.sum'])  # TODO doesn't work without core prefix
         assert headers == ['count', 'core.size.sum']
         assert data == [(2, 2030)] or data == [[2, 2030]]  # TODO pg8000
 
@@ -1521,6 +1521,8 @@ class TestTools:  # TODO more result checking, preferrably using tools
         output = self._run('summary', '"" -f csv -H')
         assert len(output) == 2
         assert output[1].split(',')[0] == '"1"'
+        output = self._run('summary', '"" -f psv')
+        assert len(output) == 2
 
     def test_retrieve(self, archive):  # TODO nprocesses setting & fixture?
         with muninn.util.TemporaryDirectory() as tmp_path:
