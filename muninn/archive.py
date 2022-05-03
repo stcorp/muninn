@@ -664,7 +664,7 @@ class Archive(object):
 
         # Find product in catalogue
         product = self._get_product(product_type=product_type, physical_name=physical_name,
-                                    namespaces=get(plugin, 'namespaces', []))
+                                    namespaces=getattr(plugin, 'namespaces', []))
 
         # Determine archive path
         if 'archive_path' in product.core:
