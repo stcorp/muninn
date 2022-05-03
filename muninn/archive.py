@@ -663,9 +663,8 @@ class Archive(object):
             raise Error("cannot determine physical name for multi-part product")
 
         # Find product in catalogue
-        product = self._get_product(product_type=product_type,
-                                    physical_name=physical_name,
-                                    namespaces=plugin.namespaces)
+        product = self._get_product(product_type=product_type, physical_name=physical_name,
+                                    namespaces=get(plugin, 'namespaces', []))
 
         # Determine archive path
         if 'archive_path' in product.core:
