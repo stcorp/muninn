@@ -435,13 +435,13 @@ class TestArchive:
             self._ingest_file(archive, use_symlinks=True, intra=True)
         archive.remove()
 
-        # post hook/hash verification failure: check that active=False
+        # post hook/hash verification failure: check that active=True
         with pytest.raises(ZeroDivisionError):  # hook raises exception for pi2.txt
             self._ingest_file(archive, name='pi2.txt')
         s = archive.search()
         assert len(s) == 1
         assert s[0].core.product_name == 'pi2.txt'
-        assert s[0].core.active is False
+        assert s[0].core.active is True
 
     def test_reingest(self, archive):
         if archive._params['storage'] == 'fs':
@@ -543,16 +543,16 @@ class TestArchive:
         archive.remove()
         properties = self._pull(archive, remote_backend, extract=True)
 
-        # failing hook should result in inactive product
+        # failing hook should result in product still being active
         archive.strip('')
         archive.update_properties(muninn.Struct({'mynamespace2': {'counter': 27}}), properties.core.uuid)
 
-        with pytest.raises(ZeroDivisionError):  # hook raises exception for counte==27
+        with pytest.raises(ZeroDivisionError):  # hook raises exception for counter==27
             archive.pull("", verify_hash=True, verify_hash_download=True)
         s = archive.search()
         assert len(s) == 1
         assert s[0].core.product_name == 'README'
-        assert s[0].core.active is False
+        assert s[0].core.active is True
 
     def test_strip(self, archive):
         path = os.path.join(archive._params['archive_path'], 'pi.txt')

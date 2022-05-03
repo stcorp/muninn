@@ -1058,8 +1058,10 @@ class Archive(object):
             else:
                 raise
 
-        # Update archive date.
+        # Update archive date and activate product
+        properties.core.active = True
         metadata = {
+            'active': properties.core.active,
             'archive_date': properties.core.archive_date,
         }
         self.update_properties(Struct({'core': metadata}), properties.core.uuid)
@@ -1077,13 +1079,6 @@ class Archive(object):
             self._run_hooks('post_create_hook', plugin, properties)
         else:
             self._run_hooks('post_ingest_hook', plugin, properties, paths=paths)
-
-        # Activate product.
-        properties.core.active = True
-        metadata = {
-            'active': properties.core.active,
-        }
-        self.update_properties(Struct({'core': metadata}), properties.core.uuid)
 
         return properties
 
@@ -1196,10 +1191,10 @@ class Archive(object):
             self.update_properties(Struct({'core': metadata}), product.core.uuid)
 
             def _pull(paths):
-                # update archive_date, size
+                # reactivate and update archive_date, size
                 product_path = self._product_path(product)
                 size = self._storage.size(product_path)
-                metadata = {'archive_date': self._database.server_time_utc(), 'size': size}
+                metadata = {'active': True, 'archive_date': self._database.server_time_utc(), 'size': size}
                 self.update_properties(Struct({'core': metadata}), product.core.uuid)
 
                 # verify product hash.
@@ -1225,10 +1220,6 @@ class Archive(object):
                     raise e.orig
                 else:
                     raise
-
-            # activate product
-            metadata = {'active': True}
-            self.update_properties(Struct({'core': metadata}), product.core.uuid)
 
         return len(products)
 

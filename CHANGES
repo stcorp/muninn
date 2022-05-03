@@ -9,6 +9,8 @@
 
 * Fixed issue in zip auto-extraction for muninn-pull.
 
+* Run hooks after core.active is set to True (regression introduced in 5.4).
+
 5.4 2022-02-22
 ~~~~~~~~~~~~~~
 
