@@ -8,6 +8,7 @@ import os
 import re
 import json
 import ftplib
+import tarfile
 import zipfile
 
 import muninn.util as util
@@ -118,13 +119,29 @@ class RemoteBackend(object):
     def auto_extract(self, file_path, product):
         dirname = os.path.dirname(file_path)
         filename = os.path.basename(file_path)
-        if filename == product.core.physical_name + ".zip" or filename == product.core.physical_name + ".ZIP":
-            with zipfile.ZipFile(file_path, 'r') as ziparchive:
-                ziparchive.extractall(dirname)
-                paths = set([path.split('/', 1)[0] for path in ziparchive.namelist()])
-                paths = [os.path.join(dirname, path) for path in sorted(paths)]
-            util.remove_path(file_path)
-            return paths
+
+        zip_extensions = [".zip"]
+        zip_extensions += [extension.upper() for extension in zip_extensions]
+        for extension in zip_extensions:
+            if filename == product.core.physical_name + extension:
+                with zipfile.ZipFile(file_path, 'r') as ziparchive:
+                    ziparchive.extractall(dirname)
+                    paths = set([path.split('/', 1)[0] for path in ziparchive.namelist()])
+                    paths = [os.path.join(dirname, path) for path in sorted(paths)]
+                util.remove_path(file_path)
+                return paths
+
+        tar_extensions = [".tar", ".tgz", ".tar.gz", ".txz", ".tar.xz", ".tbz", ".tb2", "tar.bz2"]
+        tar_extensions += [extension.upper() for extension in tar_extensions]
+        for extension in tar_extensions:
+            if filename == product.core.physical_name + extension:
+                with tarfile.open(file_path) as tararchive:
+                    tararchive.extractall(dirname)
+                    paths = set([path.split('/', 1)[0] for path in tararchive.getnames()])
+                    paths = [os.path.join(dirname, path) for path in sorted(paths)]
+                util.remove_path(file_path)
+                return paths
+
         return [file_path]
 
 
