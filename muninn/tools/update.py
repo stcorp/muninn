@@ -59,16 +59,19 @@ class UpdateProcessor(Processor):
 
 
 def update(args):
-    expression = "is_defined(core.archive_path)"
-    if args.expression:
-        expression += " and (%s)" % args.expression
-
+    filter = []
+    if args.action in ['ingest', 'pull']:
+        # only get products that are locally archived
+        filter.append("is_defined(core.archive_path)")
     if args.action == 'pull':
         # only get products with a remote_url
-        if expression:
-            expression = "is_defined(remote_url) and (%s)" % expression
+        filter.append("is_defined(remote_url)")
+    if args.expression:
+        if len(filter) == 0:
+            filter.append(args.expression)
         else:
-            expression = "is_defined(remote_url)"
+            filter.append("(%s)" % args.expression)
+    expression = " and ".join(filter)
 
     processor = UpdateProcessor(args)
     with muninn.open(args.archive) as archive:
