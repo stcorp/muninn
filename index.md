@@ -64,7 +64,7 @@ Archive id (usually name of configuration file)
 #### register\_namespace
 
 ```python
- | register_namespace(namespace, schema)
+register_namespace(namespace, schema)
 ```
 
 Register a namespace.
@@ -78,7 +78,7 @@ Register a namespace.
 #### namespace\_schema
 
 ```python
- | namespace_schema(namespace)
+namespace_schema(namespace)
 ```
 
 Return the schema definition of the specified namespace.
@@ -91,7 +91,7 @@ Return the schema definition of the specified namespace.
 #### namespaces
 
 ```python
- | namespaces()
+namespaces()
 ```
 
 Return a list of registered namespaces.
@@ -100,7 +100,7 @@ Return a list of registered namespaces.
 #### register\_product\_type
 
 ```python
- | register_product_type(product_type, plugin)
+register_product_type(product_type, plugin)
 ```
 
 Register a product type.
@@ -117,7 +117,7 @@ Register a product type.
 #### product\_type\_plugin
 
 ```python
- | product_type_plugin(product_type)
+product_type_plugin(product_type)
 ```
 
 Return a reference to the specified product type plugin.
@@ -128,7 +128,7 @@ product_type -- Product type name
 #### product\_types
 
 ```python
- | product_types()
+product_types()
 ```
 
 Return a list of registered product types.
@@ -137,7 +137,7 @@ Return a list of registered product types.
 #### register\_remote\_backend
 
 ```python
- | register_remote_backend(remote_backend, plugin)
+register_remote_backend(remote_backend, plugin)
 ```
 
 Register a remote backend
@@ -154,7 +154,7 @@ Register a remote backend
 #### remote\_backend
 
 ```python
- | remote_backend(remote_backend)
+remote_backend(remote_backend)
 ```
 
 Return a reference to the specified remote backend plugin
@@ -167,7 +167,7 @@ Return a reference to the specified remote backend plugin
 #### remote\_backends
 
 ```python
- | remote_backends()
+remote_backends()
 ```
 
 Return a list of supported remote backends.
@@ -176,7 +176,7 @@ Return a list of supported remote backends.
 #### register\_hook\_extension
 
 ```python
- | register_hook_extension(hook_extension, plugin)
+register_hook_extension(hook_extension, plugin)
 ```
 
 Register a hook extension.
@@ -191,7 +191,7 @@ Register a hook extension.
 #### hook\_extension
 
 ```python
- | hook_extension(hook_extension)
+hook_extension(hook_extension)
 ```
 
 Return the hook extension with the specified name.
@@ -204,7 +204,7 @@ Return the hook extension with the specified name.
 #### hook\_extensions
 
 ```python
- | hook_extensions()
+hook_extensions()
 ```
 
 Return a list of supported hook extensions.
@@ -213,7 +213,7 @@ Return a list of supported hook extensions.
 #### cleanup\_derived\_products
 
 ```python
- | cleanup_derived_products()
+cleanup_derived_products()
 ```
 
 Clean up all derived products for which the source products no
@@ -227,7 +227,7 @@ to configure cascade rules.
 #### attach
 
 ```python
- | attach(paths, product_type=None, use_symlinks=None, verify_hash=False, verify_hash_before=False, use_current_path=False, force=False)
+attach(paths, product_type=None, use_symlinks=None, verify_hash=False, verify_hash_before=False, use_current_path=False, force=False)
 ```
 
 Add a product to the archive using an existing metadata record in the database.
@@ -266,7 +266,7 @@ The existing metadata record is found by performing a search based on product_ty
 #### auth\_file
 
 ```python
- | auth_file()
+auth_file()
 ```
 
 Return the path of the authentication file to download from remote locations.
@@ -275,7 +275,7 @@ Return the path of the authentication file to download from remote locations.
 #### close
 
 ```python
- | close()
+close()
 ```
 
 Close the archive immediately instead of when (and if) the archive
@@ -287,7 +287,7 @@ Using the archive after calling this function results in undefined behavior.
 #### count
 
 ```python
- | count(where="", parameters={})
+count(where="", parameters={})
 ```
 
 Return the number of products matching the specified search expression.
@@ -301,7 +301,7 @@ Return the number of products matching the specified search expression.
 #### create\_properties
 
 ```python
- | create_properties(properties, disable_hooks=False)
+create_properties(properties, disable_hooks=False)
 ```
 
 Create a record for the given product in the product catalogue.
@@ -320,7 +320,7 @@ not unique within the product catalogue.
 #### delete\_properties
 
 ```python
- | delete_properties(where="", parameters={})
+delete_properties(where="", parameters={})
 ```
 
 Remove properties for one or more products from the catalogue.
@@ -342,7 +342,7 @@ will _not_ trigger any of the specific cascade rules.
 #### derived\_products
 
 ```python
- | derived_products(uuid)
+derived_products(uuid)
 ```
 
 Return the UUIDs of the products that are linked to the given
@@ -356,7 +356,7 @@ product as derived products.
 #### destroy
 
 ```python
- | destroy()
+destroy()
 ```
 
 Completely remove the archive, including both the products and the
@@ -370,7 +370,7 @@ into a useable state.
 #### destroy\_catalogue
 
 ```python
- | destroy_catalogue()
+destroy_catalogue()
 ```
 
 Completely remove the catalogue database, but leaving the datastore in storage untouched.
@@ -383,7 +383,7 @@ back into a useable state.
 #### export
 
 ```python
- | export(where="", parameters={}, target_path=os.path.curdir, format=None)
+export(where="", parameters={}, target_path=os.path.curdir, format=None)
 ```
 
 Export one or more products from the archive.
@@ -409,7 +409,7 @@ retrieve one or more derived products and bundle them together with the product 
 #### export\_formats
 
 ```python
- | export_formats()
+export_formats()
 ```
 
 Return a list of supported alternative export formats.
@@ -418,8 +418,8 @@ Return a list of supported alternative export formats.
 #### generate\_uuid
 
 ```python
- | @staticmethod
- | generate_uuid()
+@staticmethod
+generate_uuid()
 ```
 
 Return a new generated UUID that can be used as UUID for a product metadata record
@@ -428,7 +428,7 @@ Return a new generated UUID that can be used as UUID for a product metadata reco
 #### identify
 
 ```python
- | identify(paths)
+identify(paths)
 ```
 
 Determine the product type of the product (specified as a single path, or a list of paths if it is a
@@ -447,7 +447,7 @@ multi-part product).
 #### ingest
 
 ```python
- | ingest(paths, product_type=None, properties=None, ingest_product=True, use_symlinks=None, verify_hash=False, use_current_path=False, force=False)
+ingest(paths, product_type=None, properties=None, ingest_product=True, use_symlinks=None, verify_hash=False, use_current_path=False, force=False)
 ```
 
 Ingest a product into the archive. Multiple paths can be specified, but the set of files and/or directories
@@ -495,7 +495,7 @@ try to copy/symlink it.
 #### link
 
 ```python
- | link(uuid_, source_uuids)
+link(uuid, source_uuids)
 ```
 
 Link a product to one or more source products.
@@ -509,7 +509,7 @@ Link a product to one or more source products.
 #### prepare
 
 ```python
- | prepare(force=False)
+prepare(force=False)
 ```
 
 Prepare the archive for (first) use.
@@ -526,7 +526,7 @@ initialized such that the archive is ready for use.
 #### prepare\_catalogue
 
 ```python
- | prepare_catalogue(dry_run=False)
+prepare_catalogue(dry_run=False)
 ```
 
 Prepare the catalogue of the archive for (first) use.
@@ -535,7 +535,7 @@ Prepare the catalogue of the archive for (first) use.
 #### product\_path
 
 ```python
- | product_path(uuid_or_properties)
+product_path(uuid_or_properties)
 ```
 
 Return the path in storage to the specified product.
@@ -548,7 +548,7 @@ Return the path in storage to the specified product.
 #### pull
 
 ```python
- | pull(where="", parameters={}, verify_hash=False, verify_hash_download=False)
+pull(where="", parameters={}, verify_hash=False, verify_hash_download=False)
 ```
 
 Pull one or more remote products into the archive.
@@ -574,7 +574,7 @@ archive (i.e. the archive_path core metadata field should not be set).
 #### rebuild\_properties
 
 ```python
- | rebuild_properties(uuid, disable_hooks=False, use_current_path=False)
+rebuild_properties(uuid, disable_hooks=False, use_current_path=False)
 ```
 
 Rebuild product properties by re-extracting these properties (using product type plug-ins) from the
@@ -593,7 +593,7 @@ tags will remain as they were.
 #### rebuild\_pull\_properties
 
 ```python
- | rebuild_pull_properties(uuid, verify_hash=False, disable_hooks=False, use_current_path=False)
+rebuild_pull_properties(uuid, verify_hash=False, disable_hooks=False, use_current_path=False)
 ```
 
 Refresh products by re-running the pull, but using the existing products stored in the archive.
@@ -611,7 +611,7 @@ Refresh products by re-running the pull, but using the existing products stored 
 #### remove
 
 ```python
- | remove(where="", parameters={}, force=False, cascade=True)
+remove(where="", parameters={}, force=False, cascade=True)
 ```
 
 Remove one or more products from the archive, both from storage as well as from the product catalogue.
@@ -633,7 +633,7 @@ products being removed (or stripped) along with it. Such products are _not_ incl
 #### retrieve
 
 ```python
- | retrieve(where="", parameters={}, target_path=os.path.curdir, use_symlinks=False)
+retrieve(where="", parameters={}, target_path=os.path.curdir, use_symlinks=False)
 ```
 
 Retrieve one or more products from the archive.
@@ -657,7 +657,7 @@ Retrieve one or more products from the archive.
 #### retrieve\_properties
 
 ```python
- | retrieve_properties(uuid, namespaces=[], property_names=[])
+retrieve_properties(uuid, namespaces=[], property_names=[])
 ```
 
 Return properties for the specified product.
@@ -672,7 +672,7 @@ Return properties for the specified product.
 #### root
 
 ```python
- | root()
+root()
 ```
 
 Return the archive root path.
@@ -681,7 +681,7 @@ Return the archive root path.
 #### search
 
 ```python
- | search(where="", order_by=[], limit=None, parameters={}, namespaces=[], property_names=[])
+search(where="", order_by=[], limit=None, parameters={}, namespaces=[], property_names=[])
 ```
 
 Search the product catalogue for products matching the specified search expression.
@@ -714,7 +714,7 @@ Search the product catalogue for products matching the specified search expressi
 #### source\_products
 
 ```python
- | source_products(uuid)
+source_products(uuid)
 ```
 
 Return the UUIDs of the products that are linked to the given product as source products.
@@ -727,7 +727,7 @@ Return the UUIDs of the products that are linked to the given product as source 
 #### strip
 
 ```python
- | strip(where="", parameters={}, force=False, cascade=True)
+strip(where="", parameters={}, force=False, cascade=True)
 ```
 
 Remove one or more products from storage only (not from the product catalogue).
@@ -753,7 +753,7 @@ products being stripped (or removed) along with it.
 #### summary
 
 ```python
- | summary(where="", parameters=None, aggregates=None, group_by=None, group_by_tag=False, order_by=None)
+summary(where="", parameters=None, aggregates=None, group_by=None, group_by_tag=False, order_by=None)
 ```
 
 Return a summary of the products matching the specified search expression.
@@ -785,7 +785,7 @@ Return a summary of the products matching the specified search expression.
 #### tag
 
 ```python
- | tag(where=None, tags=None, parameters={})
+tag(where=None, tags=None, parameters={})
 ```
 
 Set one or more tags on one or more product(s).
@@ -800,7 +800,7 @@ Set one or more tags on one or more product(s).
 #### tags
 
 ```python
- | tags(uuid)
+tags(uuid)
 ```
 
 Return the tags of a product.
@@ -813,7 +813,7 @@ Return the tags of a product.
 #### unlink
 
 ```python
- | unlink(uuid_, source_uuids=None)
+unlink(uuid, source_uuids=None)
 ```
 
 Remove the link between a product and one or more of its source products.
@@ -827,7 +827,7 @@ Remove the link between a product and one or more of its source products.
 #### untag
 
 ```python
- | untag(where=None, tags=None, parameters={})
+untag(where=None, tags=None, parameters={})
 ```
 
 Remove one or more tags from one or more product(s).
@@ -842,7 +842,7 @@ Remove one or more tags from one or more product(s).
 #### update\_properties
 
 ```python
- | update_properties(properties, uuid=None, create_namespaces=False)
+update_properties(properties, uuid=None, create_namespaces=False)
 ```
 
 Update product properties in the product catalogue. The UUID of the product to update will be taken from the
@@ -865,7 +865,7 @@ create_namespaces  --  Test if all namespaces are already defined for the produc
 #### verify\_hash
 
 ```python
- | verify_hash(where="", parameters={})
+verify_hash(where="", parameters={})
 ```
 
 Verify the hash for one or more products in the archive.
