@@ -44,6 +44,8 @@ Update API documentation
 If the Python API documentation needs to be updated, commands
 similar to the following may be used: :::
 
-  pydoc-markdown -m muninn -m muninn.archive > api.md
-  python3 -m markdown --extension=extra api.md > api.html
-  sed -i -e 's/ | //g' api.html
+  pydoc-markdown -m muninn -m muninn.archive > index.md
+  sed -i -e 's/ | //g' index.md
+
+To update the online documentation, overwrite ``index.md`` in
+the ``gh-pages`` branch on github with the result.
