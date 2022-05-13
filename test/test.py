@@ -227,21 +227,21 @@ def remote_backend(request):
 
     elif request.param == 'http':
         proc = subprocess.Popen(
-                   'exec python3 -m http.server 8080',  # TODO port
+                   'exec python3 -m http.server 8081',  # TODO configurable port
                    shell=True,
                    stdout=subprocess.PIPE,
                    stderr=subprocess.PIPE,
                )
-        yield 'http://localhost:8080'
+        yield 'http://localhost:8081'
 
     elif request.param == 'ftp':
         proc = subprocess.Popen(
-                   'exec python3 -m pyftpdlib -p 21',  # TODO port
+                   'exec python3 -m pyftpdlib -p 8082',  # TODO configurable port
                    shell=True,
                    stdout=subprocess.PIPE,
                    stderr=subprocess.PIPE,
                )
-        yield 'ftp://localhost'
+        yield 'ftp://localhost:8082'
 
     else:
         assert False
