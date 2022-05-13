@@ -97,7 +97,7 @@ def download_ftp(url, target_dir, credentials=None, timeout=60):
     local_file = os.path.join(target_dir, os.path.basename(url.path))
     try:
         ftp = ftplib.FTP()
-        ftp.connect(url.hostname, url.port, timeout=timeout)
+        ftp.connect(url.hostname, url.port or 21, timeout=timeout)
         ftp.login(username, password)
         ftp.cwd(os.path.dirname(url.path))
         ftp.set_pasv(True)
