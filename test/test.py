@@ -38,7 +38,7 @@ CFG.read(u'test.cfg')
 
 STORAGE_BACKENDS = [s.strip() for s in CFG.get('DEFAULT', 'storage').split(',')]
 DATABASE_BACKENDS = [s.strip() for s in CFG.get('DEFAULT', 'database').split(',')]
-REMOTE_BACKENDS = ['file', 'http', 'ftp']
+REMOTE_BACKENDS = ['file', 'http', 'ftp', 'sftp']
 ARCHIVE_PATHS = [s.strip() for s in CFG.get('DEFAULT', 'archive_path').split(',')]
 USE_ENCLOSING_DIR = [s.strip() == 'true' for s in CFG.get('DEFAULT', 'use_enclosing_dir').split(',')]
 
@@ -243,6 +243,14 @@ def remote_backend(request):
                )
         yield 'ftp://localhost:8082'
 
+    elif request.param == 'sftp':
+        proc = subprocess.Popen(
+                   'exec sftpserver -p 8083 -k ./sftp_server_rsa.key',  # TODO configurable port
+                   shell=True,
+                   stdout=subprocess.PIPE,
+                   stderr=subprocess.PIPE,
+               )
+        yield 'sftp://someuser:somepassword@localhost:8083'
     else:
         assert False
 

@@ -108,6 +108,31 @@ def download_ftp(url, target_dir, credentials=None, timeout=60):
     return local_file
 
 
+def download_sftp(url, target_dir, credentials=None, timeout=60):
+    import paramiko
+    url = urlparse(url)
+    if url.username:
+        username = url.username
+        password = url.password
+    elif credentials is not None:
+        username = credentials['username']
+        password = credentials['password']
+    else:
+        username = 'anonymous'
+        password = 'guest'
+    local_file = os.path.join(target_dir, os.path.basename(url.path))
+    try:
+        transport = paramiko.Transport(('localhost', url.port or 22))
+        transport.connect(username=username, password=password)
+        sftp = paramiko.SFTPClient.from_transport(transport)
+        sftp.get(url.path, local_file)
+        sftp.close()
+        transport.close()
+    except Exception as e:
+        raise DownloadError('Error downloading %s (Reason: %s)' % (url.geturl(), e))
+    return local_file
+
+
 class RemoteBackend(object):
     def __init__(self, prefix):
         self.prefix = prefix
@@ -172,11 +197,19 @@ class FTPBackend(RemoteBackend):
         return self.auto_extract(file_path, product)
 
 
+class SFTPBackend(RemoteBackend):
+    def pull(self, archive, product, target_dir):
+        credentials = get_credentials(archive, product.core.remote_url)
+        file_path = download_sftp(product.core.remote_url, target_dir, credentials=credentials)
+        return self.auto_extract(file_path, product)
+
+
 REMOTE_BACKENDS = {
     'http': HTTPBackend(prefix='http://'),
     'https': HTTPBackend(prefix='https://'),
     'file': FileBackend(prefix='file://'),
     'ftp': FTPBackend(prefix='ftp://'),
+    'sftp': SFTPBackend(prefix='sftp://'),
 }
 
 

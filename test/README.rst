@@ -11,6 +11,8 @@ Steps to run the Muninn tests:
   - psycopg2
   - pg8000
   - pyftpdlib
+  - sftpserver
+  - paramiko
 - Configure the following:
   - A Postgresql server
   - an S3 server (e.g., Minio)
@@ -18,7 +20,7 @@ Steps to run the Muninn tests:
 - Update settings in test.cfg (DEFAULT section: desired combinations for which to run all tests)
 - Run:
 
-$ python -m pytest test.py
+$ pytest test.py
 
 
 Quick setup
@@ -34,11 +36,12 @@ $ docker run -d -p 12345:8080 -e SWIFT_USERNAME=test:tester -e SWIFT_KEY=testing
 Create a conda environment for muninn and dependencies (requires mininconda/anaconda to be installed):
 $ conda create -n muninntest
 $ conda activate muninntest
-$ conda install -c conda-forge request tabulate tqdm pytest psycopg2 libspatialite boto3 python-swiftclient pg8000 pyftpdlib
+$ conda install -c conda-forge request tabulate tqdm pytest psycopg2 libspatialite boto3 python-swiftclient pg8000 pyftpdlib paramiko sftpserver
 Update the path to mod_spatialite in the test.cfg file to point to the version in the conda environment
-$ python -m pytest test.py
 
-The current test setup runs an HTTP server on port 8081, and an FTP server on port 8082, so for now conflicts need to manually avoided.
+$ pytest test.py
+
+The current test setup runs an HTTP server on port 8081, an FTP server on port 8082 and an SFTP server on port 8083, so for now conflicts need to manually avoided.
 
 
 

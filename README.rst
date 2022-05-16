@@ -52,7 +52,7 @@ Optional dependencies:
     authentication
   - tabulate: provides more output format options for muninn-search
   - tqdm: to show a progress bar for muninn-update
-  - pytest: to run the tests
+  - paramiko: to enable the SFTP remote backend
 
 
 Muninn is distributed as a source distribution created using setuptools.
