@@ -39,10 +39,9 @@ $ conda activate muninntest
 $ conda install -c conda-forge request tabulate tqdm pytest psycopg2 libspatialite boto3 python-swiftclient pg8000 pyftpdlib paramiko sftpserver
 Update the path to mod_spatialite in the test.cfg file to point to the version in the conda environment
 
+Update settings in test.cfg (DEFAULT section: desired combinations for which to run all tests).
+
 $ pytest test.py
-
-The current test setup runs an HTTP server on port 8081, an FTP server on port 8082 and an SFTP server on port 8083, so for now conflicts need to manually avoided.
-
 
 
 Steps to check test coverage:

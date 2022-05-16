@@ -38,7 +38,7 @@ CFG.read(u'test.cfg')
 
 STORAGE_BACKENDS = [s.strip() for s in CFG.get('DEFAULT', 'storage').split(',')]
 DATABASE_BACKENDS = [s.strip() for s in CFG.get('DEFAULT', 'database').split(',')]
-REMOTE_BACKENDS = ['file', 'http', 'ftp', 'sftp']
+REMOTE_BACKENDS = [s.strip() for s in CFG.get('DEFAULT', 'remote_backends').split(',')]
 ARCHIVE_PATHS = [s.strip() for s in CFG.get('DEFAULT', 'archive_path').split(',')]
 USE_ENCLOSING_DIR = [s.strip() == 'true' for s in CFG.get('DEFAULT', 'use_enclosing_dir').split(',')]
 
@@ -174,7 +174,7 @@ def archive(database, storage, use_enclosing_directory, archive_path):
             elif '=' in line and section in ('[sqlite]', '[postgresql]') and database_options:
                 key, _, value = line.partition('=')
                 key, value = key.strip(), value.strip()
-                for option in database_options.split(','):
+                for option in database_options.split(';'):
                     opt_key, opt_value = option.split('=')
                     if opt_key == key:
                         line = '%s = %s\n' % (opt_key, opt_value)
@@ -222,35 +222,44 @@ def archive(database, storage, use_enclosing_directory, archive_path):
 def remote_backend(request):
     proc = None
 
-    if request.param == 'file':
+    if ':' in request.param:
+        param, _, options = request.param.partition(':')
+        for option in options.split(';'):
+            opt_key, opt_value = option.split('=')
+            if opt_key == 'port':
+                port = int(opt_value)
+    else:
+        param = request.param
+
+    if param == 'file':
         yield 'file://' + os.path.realpath('.')
 
-    elif request.param == 'http':
+    elif param == 'http':
         proc = subprocess.Popen(
-                   'exec python3 -m http.server 8081',  # TODO configurable port
+                   'exec python3 -m http.server %d' % port,
                    shell=True,
                    stdout=subprocess.PIPE,
                    stderr=subprocess.PIPE,
                )
-        yield 'http://localhost:8081'
+        yield 'http://localhost:%d' % port
 
-    elif request.param == 'ftp':
+    elif param == 'ftp':
         proc = subprocess.Popen(
-                   'exec python3 -m pyftpdlib -p 8082',  # TODO configurable port
+                   'exec python3 -m pyftpdlib -p %d' % port,
                    shell=True,
                    stdout=subprocess.PIPE,
                    stderr=subprocess.PIPE,
                )
-        yield 'ftp://localhost:8082'
+        yield 'ftp://localhost:%d' % port
 
-    elif request.param == 'sftp':
+    elif param == 'sftp':
         proc = subprocess.Popen(
-                   'exec sftpserver -p 8083 -k ./sftp_server_rsa.key',  # TODO configurable port
+                   'exec sftpserver -p %d -k ./sftp_server_rsa.key' % port,
                    shell=True,
                    stdout=subprocess.PIPE,
                    stderr=subprocess.PIPE,
                )
-        yield 'sftp://someuser:somepassword@localhost:8083'
+        yield 'sftp://someuser:somepassword@localhost:%d' % port
     else:
         assert False
 
