@@ -27,6 +27,7 @@ setup(
         "muninn-attach = muninn.tools.attach:main",
         "muninn-destroy = muninn.tools.destroy:main",
         "muninn-export = muninn.tools.export:main",
+        "muninn-hash = muninn.tools.hash:main",
         "muninn-info = muninn.tools.info:main",
         "muninn-ingest = muninn.tools.ingest:main",
         "muninn-list-tags = muninn.tools.list_tags:main",

@@ -1656,7 +1656,7 @@ class Archive(object):
             if not self._verify_hash(product):
                 failed_products.append(product.core.uuid)
 
-        return failed_products
+        return failed_products  # TODO different type of return value when single product passed?
 
     def __enter__(self):
         return self

@@ -1416,11 +1416,10 @@ class TestQuery:
         assert 'extra characters after expression' in str(excinfo)
 
 class TestTools:  # TODO more result checking, preferrably using tools
-    def _run(self, tool, args='', action=''):
+    def _run(self, tool, args='', action='', archive='my_arch', should_fail=False):
         python_path = 'PYTHONPATH=%s:$PYTHONPATH' % PARENT_DIR
-        cmd = '%s python%s ../muninn/tools/%s.py %s my_arch %s 2>&1' % \
-              (python_path, '3' if PY3 else '', tool, action, args)
-
+        cmd = '%s python%s ../muninn/tools/%s.py %s %s %s 2>&1' % \
+              (python_path, '3' if PY3 else '', tool, action, archive, args)
         proc = subprocess.Popen(
             cmd,
             shell=True,
@@ -1433,8 +1432,11 @@ class TestTools:  # TODO more result checking, preferrably using tools
                 print(line)
             for line in errs.decode().splitlines():
                 print(line)
-        assert proc.returncode == 0
-        assert not errs
+        if should_fail:
+            assert proc.returncode != 0
+        else:
+            assert proc.returncode == 0
+            assert not errs
         return output.decode().splitlines()
 
     def test_search(self, archive):
@@ -1600,6 +1602,30 @@ class TestTools:  # TODO more result checking, preferrably using tools
         output = self._run('update', '""', 'ingest')
         output = self._run('update', '""', 'pull')
         output = self._run('update', '"" prodtype', 'retype')
+
+    def test_hash(self, archive):  # TODO parallel?
+        output = self._run('ingest', 'data/a.txt')
+        output = self._run('ingest', 'data/b.txt')
+
+        # verify: 2 correct products
+        output = self._run('hash', '""', 'verify')
+        assert len(output) == 1 and output[0] == 'verified hash for 2 products'
+
+        # verify: 1 failing products
+        product = archive.search()[0]
+        product.core.hash = 'broken'
+        archive.update_properties(product)
+        output = self._run('hash', '""', 'verify', should_fail=True)
+        assert len(output) == 2 and output[-1] == '1 out of 2 products failed'
+
+        # calc
+        output = self._run('hash', 'calc data/a.txt data/b.txt', archive='')
+        assert len(output) == 2
+        assert 'sha1:' in output[0]
+
+        output = self._run('hash', 'calc data/a.txt data/b.txt --hash-type=md5', archive='')
+        assert len(output) == 2
+        assert 'md5:' in output[1]
 
     def test_export(self, archive):
         output = self._run('ingest', 'data/pi.txt')
