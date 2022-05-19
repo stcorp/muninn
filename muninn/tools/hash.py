@@ -9,7 +9,7 @@ import sys
 import muninn
 
 from muninn.tools.utils import create_parser, parse_args_and_run
-from muninn.tools.ingest import CheckProductListAction  # TODO to utils
+from muninn.tools.ingest import CheckProductListAction, expand_stem  # TODO to utils
 from muninn.util import product_hash
 
 
@@ -19,7 +19,11 @@ def calc(args):
     else:
         paths = args.path
     for path in paths:
-        print(path, product_hash([path], hash_type=args.hash_type))
+        if args.path_is_stem:
+            root_paths = expand_stem(path)
+        else:
+            root_paths = [path]
+        print(path, product_hash(root_paths, hash_type=args.hash_type))
 
 
 def verify(args):
@@ -54,6 +58,9 @@ def main():
     calc.add_argument("path", metavar="PATH", nargs="+", action=CheckProductListAction,
                       help="list of paths, or \"-\" to read the list of paths from standard input")
     calc.add_argument("--hash-type", default='sha1', help="hash algorithm to use (default sha1)")
+    calc.add_argument("-s", "--path-is-stem", action="store_true", help="each product path is interpreted as a "
+                      "stem; any file or directory of which the name starts with this stem is considered to be part "
+                      "of the product")
 
     # verify
     verify = sub_parsers.add_parser('verify', help='verify hash for given products')

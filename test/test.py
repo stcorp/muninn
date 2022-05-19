@@ -1627,6 +1627,9 @@ class TestTools:  # TODO more result checking, preferrably using tools
         assert len(output) == 2
         assert 'md5:' in output[1]
 
+        output = self._run('hash', 'calc -s data/pi', archive='')
+        assert len(output) == 1
+
     def test_export(self, archive):
         output = self._run('ingest', 'data/pi.txt')
         with muninn.util.TemporaryDirectory() as tmp_path:
