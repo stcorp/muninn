@@ -1603,20 +1603,22 @@ class TestTools:  # TODO more result checking, preferrably using tools
         output = self._run('update', '""', 'pull')
         output = self._run('update', '"" prodtype', 'retype')
 
-    def test_hash(self, archive):  # TODO parallel?
+    def test_hash(self, archive):
         output = self._run('ingest', 'data/a.txt')
         output = self._run('ingest', 'data/b.txt')
 
         # verify: 2 correct products
         output = self._run('hash', '""', 'verify')
-        assert len(output) == 1 and output[0] == 'verified hash for 2 products'
+
+        # verify: --parallel
+        output = self._run('hash', '""', 'verify --parallel')
 
         # verify: 1 failing products
         product = archive.search()[0]
         product.core.hash = 'broken'
         archive.update_properties(product)
         output = self._run('hash', '""', 'verify', should_fail=True)
-        assert len(output) == 2 and output[-1] == '1 out of 2 products failed'
+        assert [line for line in output if 'failed hash verification' in line]  # TODO just get stderr?
 
         # calc
         output = self._run('hash', 'calc data/a.txt data/b.txt', archive='')
@@ -1629,6 +1631,7 @@ class TestTools:  # TODO more result checking, preferrably using tools
 
         output = self._run('hash', 'calc -s data/pi', archive='')
         assert len(output) == 1
+
 
     def test_export(self, archive):
         output = self._run('ingest', 'data/pi.txt')

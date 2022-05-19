@@ -4,13 +4,28 @@
 
 from __future__ import absolute_import, division, print_function
 
+import logging
+import os
 import sys
 
 import muninn
 
-from muninn.tools.utils import create_parser, parse_args_and_run
+from muninn.tools.utils import Processor, create_parser, parse_args_and_run
 from muninn.tools.ingest import CheckProductListAction, expand_stem  # TODO to utils
 from muninn.util import product_hash
+
+
+class VerifyProcessor(Processor):
+    def __init__(self, args):
+        super(VerifyProcessor, self).__init__(args.archive)
+        self.args = args
+
+    def perform_operation(self, archive, product):
+        if len(archive.verify_hash(product)) == 0:
+            return 1
+        else:
+            logging.error("%s: failed hash verification" % product.core.uuid)
+            return 0
 
 
 def calc(args):
@@ -27,19 +42,12 @@ def calc(args):
 
 
 def verify(args):
-    total = 0
-    failed = []
+    processor = VerifyProcessor(args)
     with muninn.open(args.archive) as archive:
-        for product in archive.search(args.expression):
-            total += 1
-            if len(archive.verify_hash(product)) > 0:
-                failed.append(product)
-                print(product.core.uuid, file=sys.stderr)
-    if failed:
-        print('%d out of %d products failed' % (len(failed), total), file=sys.stderr)
-        sys.exit(1)
-    else:
-        print('verified hash for %d products' % total)
+        products = archive.search(where=args.expression, property_names=['uuid'])
+        error = processor.process(archive, args, products)
+        if error != 0:
+            sys.exit(1)
 
 
 def command(args):
@@ -66,6 +74,8 @@ def main():
     verify = sub_parsers.add_parser('verify', help='verify hash for given products')
     verify.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
     verify.add_argument("expression", metavar="EXPRESSION", default="", help="expression to select products")
+    verify.add_argument("--parallel", action="store_true", help="use multi-processing to perform operation")
+    verify.add_argument("--processes", type=int, help="use a specific amount of processes for --parallel")
 
     return parse_args_and_run(parser, command)
 
