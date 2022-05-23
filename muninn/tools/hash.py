@@ -60,6 +60,7 @@ def command(args):
 def main():
     parser = create_parser(description="Muninn product hashing utilities")
     sub_parsers = parser.add_subparsers(dest='command', help='sub-command help')
+    sub_parsers.required = True
 
     # calc
     calc = sub_parsers.add_parser('calc', help='calculate hash for local products')
