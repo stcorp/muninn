@@ -1,3 +1,5 @@
+* TOC {:toc}
+
 <a name="muninn"></a>
 # muninn
 
