@@ -47,5 +47,10 @@ similar to the following may be used: :::
   pydoc-markdown -m muninn -m muninn.archive > index.md
   sed -i -e 's/ | //g' index.md
 
+Now add the following to the top of ``index.md``:
+
+* toc
+{:toc}
+
 To update the online documentation, overwrite ``index.md`` in
 the ``gh-pages`` branch on github with the result.
