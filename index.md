@@ -1,4 +1,5 @@
-* Table of Contents <newline> {:toc}
+* toc
+{:toc}
 
 <a name="muninn"></a>
 # muninn
