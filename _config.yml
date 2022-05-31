@@ -1,7 +1,7 @@
 title: Muninn Home
 author: "S&T Corp"
 
-theme: minima
+theme: slate
 
 base_url: /muninn
 
@@ -12,9 +12,8 @@ rss: rss
 
 show_excerpts: true
 
-minima:
+slate:
   date_format: "%Y-%m-%d"
-  skin: solarized
 
 header_pages:
   - _pages/frontpage.md
