@@ -1,5 +1,4 @@
-title: Muninn Community Site
-description: Muninn Community Site
+title: Muninn Home
 author: "S&T Corp"
 
 theme: minima
@@ -15,6 +14,7 @@ show_excerpts: true
 
 minima:
   date_format: "%Y-%m-%d"
+  skin: solarized
 
 header_pages:
   - _pages/frontpage.md
@@ -31,5 +31,3 @@ exclude:
     - Gemfile.lock
     - LICENSE
     - README.md
-
-page_width: 800px

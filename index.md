@@ -5,8 +5,6 @@
 layout: home
 ---
 
-# Welcome to the Muninn community site!
-
 Muninn is a library and a set of command-line tools to create and manage
 data product catalogues and archives. [More information](about)
 
