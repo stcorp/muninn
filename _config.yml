@@ -43,6 +43,8 @@ destination:      ./_site
 incremental:      false
 regenerate:       true
 
+theme: minima
+
 plugins:
   - jekyll-feed
   - jemoji
