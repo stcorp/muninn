@@ -1,7 +1,7 @@
 title: Muninn Home
 author: "S&T Corp"
 
-remote_theme: pages-themes/slate@v0.2.0
+theme: minima
 
 plugins:
   - jekyll-remote-theme
@@ -15,7 +15,7 @@ rss: rss
 
 show_excerpts: true
 
-slate:
+minima:
   date_format: "%Y-%m-%d"
 
 header_pages:
