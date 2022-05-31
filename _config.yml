@@ -31,3 +31,5 @@ exclude:
     - Gemfile.lock
     - LICENSE
     - README.md
+
+page_width: 800px
