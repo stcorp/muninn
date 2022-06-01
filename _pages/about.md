@@ -1,6 +1,6 @@
 ---
 layout: page
-title: About Muninn
+title: About
 permalink: /about/
 ---
 
