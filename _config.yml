@@ -3,20 +3,9 @@ author: "S&T Corp"
 
 theme: minima
 
-plugins:
-  - jekyll-remote-theme
-
 base_url: /muninn
 
-twitter_username: stcorp
 github_username: stcorp
-linkedin_username: stcorp
-rss: rss
-
-show_excerpts: true
-
-minima:
-  date_format: "%Y-%m-%d"
 
 header_pages:
   - _pages/frontpage.md
