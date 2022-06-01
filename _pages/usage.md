@@ -1,8 +1,7 @@
 ---
 layout: page
 title: Usage
-permalink: /docs/usage/
-menu: docs
+permalink: /usage/
 ---
 
 # Using muninn

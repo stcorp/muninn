@@ -8,4 +8,31 @@ layout: home
 Muninn is a library and a set of command-line tools to create and manage
 data product catalogues and archives. [More information](about)
 
-Please contact us below if anything on this site is unclear or outdated.
+# User documentation:
+
+[Installation](install)
+
+[Upgrading](upgrade)
+
+[Usage](usage)
+
+[Configuration](config)
+
+[Extensions](extensions)
+
+[Namespaces](namespaces)
+
+[Links](links)
+
+[Data Types](datatypes)
+
+[Expression Language](expr)
+
+
+# Developer documentation:
+
+[Extensions](extensions_dev)
+
+[Python API Reference](api)
+
+Please contact us below if anything in the documentation is unclear or outdated.

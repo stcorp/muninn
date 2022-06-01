@@ -1,8 +1,7 @@
 ---
 layout: page
 title: Python API
-permalink: /docs/api/
-menu: docs
+permalink: /api/
 ---
 
 * toc

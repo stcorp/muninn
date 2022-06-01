@@ -1,8 +1,7 @@
 ---
 layout: page
 title: Upgrading
-permalink: /docs/upgrade/
-menu: docs
+permalink: /upgrade/
 ---
 
 # Upgrading to version 5.4

@@ -1,8 +1,7 @@
 ---
 layout: page
 title: Installation
-permalink: /docs/install/
-menu: docs
+permalink: /install/
 ---
 
 # Installation instructions

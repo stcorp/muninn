@@ -1,102 +1,51 @@
 ---
 layout: page
 title: Extensions
-permalink: /docs/extensions/
-menu: docs
+permalink: /extensions/
 ---
 
-# Muninn extension developer documentation
+# Extensions
 
-This document is intended for muninn extension developers. Muninn is a generic
-archiving framework. To be able to use it to archive specific (types of)
-products, it is necessary to install (or implement) one or more extensions.
-
-Readers of this document are assumed to be familiar with the content of the
-muninn README.rst file, in particular the sections "Extensions", "Data types",
-"Namespaces", and "Links".
+Muninn is a generic archiving framework. To be able to use it to archive
+specific (types of) products, it is necessary to install one or more
+extensions.
 
 A muninn extension is a Python module or package that implements the muninn
-extension interface. Muninn defines three types of extensions: namespace
+extension interface. Muninn defines three main types of extensions: namespace
 extensions (that contain namespace definitions), product type extensions
-(that contain product type plug-ins) and remote backend extensions (that
-contain remote backend plug-ins).
+(that contain product type plug-ins) and finally hook extensions (allowing
+functions to be executed at certain times, e.g. product creation/removal).
 
-A namespace is a set of related properties, i.e. a set of (key, value) pairs.
-The namespace definition specifies the keys (field names) available within the
-namespace, their type, and whether or not they are optional.
+A namespace is a named set of product properties (see section "Namespaces"_).
+Muninn defines a namespace called ``core`` that contains a small set of
+properties that muninn needs to archive a product. For example, it contains the
+name of the product, its hash, UUID, and archive date.
+The core namespace also contains several optional common properties for
+spatiotemporal data such as time stamps and geolocation footprint.
 
-For example, this is the definition of the ``core`` namespace of muninn (see
-also the file ``core.py`` included in the muninn source distribution):
+Namespace extensions contain additional namespace definitions to allow storage
+of other product properties of interest. For example, an extension for
+archiving satellite products could define a namespace that contains properties
+such as satellite instrument, measurement mode, orbit number, file version,
+and so on. An extension for archiving music could define a namespace that
+contains properties such as artist, genre, duration, and so forth.
 
-```
-  from muninn.schema import *
+A product type plug-in is an instance of a class that implements the muninn
+product type plug-in interface. The main responsibility of a product type plug-
+in is to extract product properties and tags from products of its supported
+product type(s). At the minimum, this involves extracting all the required
+properties defined in the "core" namespace. Without this information, muninn
+cannot archive the product.
 
-  class Core(Mapping):
-    uuid = UUID()
-    active = Boolean(index=True)
-    hash = Text(optional=True, index=True)
-    size = Long(optional=True, index=True)
-    metadata_date = Timestamp(index=True)
-    archive_date = Timestamp(optional=True, index=True)
-    archive_path = ArchivePath(optional=True)
-    product_type = Text(index=True)
-    product_name = Text(index=True)
-    physical_name = Basename(index=True)
-    validity_start = Timestamp(optional=True, index=True)
-    validity_stop = Timestamp(optional=True, index=True)
-    creation_date = Timestamp(optional=True, index=True)
-    footprint = Geometry(optional=True)
-    remote_url = Remote(optional=True)
-```
+Product type plug-ins can also be used to tailor certain aspects of muninn. For
+example, the plug-in controls what happens to a product (of the type it
+supports) when all of the products it is linked to (see section "Links"_) have
+been removed from the archive.
 
-By default, properties are required. As can be seen in the example, this can be
-changed by specifying ``optional=True``. By default, properties are also not
-indexed in the database backend. This can be changed by specifying
-``index=True``.
+A fourth type of extension is the remote backend extension. This type of
+extension is specifically for muninn-pull and can introduce support for
+retrieving data using protocols other than the built-in support that muninn
+already has for http/https/ftp/file.
 
-The uuid of the core schema is a primary key and therefore does not require
-an explicit index setting. All other namespaces will automatically have an
-implicit primary key called ``uuid`` added that will act as a foreign key to
-``core.uuid``. This ``uuid`` field should not be explicitly defined in
-namespace extensions.
-
-A product type plug-in is an instance of a class that handles all product type
-specific details. The most important function of a product type plug-in is to
-extract properties from a product and return them in a form the archiving
-framework understands.
-
-To represent product properties, a class called ``muninn.Struct`` is used,
-which is essentially an empty class derived from object. Product properties are
-added to this class via injection. Think of it as a dictionary, except that you
-can also use ``.`` to access the value bound to a specific product property.
-A ``muninn.Struct`` can be initialized with a python dictionary. This will also
-convert all members that are dictionaries into ``muninn.Struct`` objects.
-
-By convention, product properties are named <namespace name>.<property name>.
-This means you usually have a single top-level Struct instance, that contains a
-separate Struct instance for each namespace. For example:
-
-```
-  from muninn import Struct
-
-  properties = Struct()
-  properties.core = Struct()
-  properties.core.product_type = "ABCD"
-  properties.core.creation_date = datetime.datetime.utcnow()
-  ... more of the same ...
-
-  properties.xml_pi = Struct()
-  properties.xml_pi.startTime = datetime.datetime.utcnow()
-  ... more of the same ...
-```
-
-A hook extension is an instance of a class that defines methods to be
-executed at certain times, such as product ingestion or removal. When multiple
-extensions or product type plug-ins define the same hooks, they are run for any
-plug-in first, then in the order of the extensions as they are listed in the
-configuration file. For the post_remove_hook hook, they are run in reverse
-order.
-
-A remote backend plug-in adds the ability of an archive to pull products
-from remote sources using a protocol beyond the basic file/ftp/http/https
-protocols.
+Details concerning the actual implementation of extensions can be found in a
+separate EXTENSIONS document.

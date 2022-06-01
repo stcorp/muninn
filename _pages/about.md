@@ -2,7 +2,6 @@
 layout: page
 title: About
 permalink: /about/
-menu: main
 ---
 
 Muninn is a library and a set of command-line tools to create and manage
