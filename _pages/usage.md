@@ -52,8 +52,8 @@ Depending on your PostgreSQL installation, creating a database could be as
 simple as:
 
 ```
-  $ createdb [database name]
-  $ psql -d [database name] -c "CREATE EXTENSION postgis;"
+$ createdb [database name]
+$ psql -d [database name] -c "CREATE EXTENSION postgis;"
 ```
 
 For Sqlite, muninn will automatically create the database file when it is first
@@ -70,7 +70,7 @@ The final step is to run the ``muninn-prepare`` command-line tool to initialize
 the archive for use:
 
 ```
-  $ muninn-prepare [archive id]
+$ muninn-prepare [archive id]
 ```
 
 You should now be able to ingest, search for, retrieve, export, and remove
@@ -88,7 +88,7 @@ The first step is to run the "muninn-destroy" command-line tool to remove all
 products and product properties contained in the archive:
 
 ```
-  $ muninn-destroy [archive id]
+$ muninn-destroy [archive id]
 ```
 
 Next, you can optionally remove the archive configuration file.
@@ -97,5 +97,5 @@ If no other archives share the PostgreSQL database used by the archive you just
 removed, you can proceed to remove the database: ::
 
 ```
-  $ dropdb [database name]
+$ dropdb [database name]
 ```

@@ -45,15 +45,15 @@ often require super user privileges.
 Using pip:
 
 ```
-  $ pip install muninn-5.4.tar.gz
+$ pip install muninn-5.4.tar.gz
 ```
 
 Using setup.py:
 
 ```
-  $ tar xvfz muninn-5.4.tar.gz
-  $ cd muninn-5.4
-  $ python setup.py install
+$ tar xvfz muninn-5.4.tar.gz
+$ cd muninn-5.4
+$ python setup.py install
 ```
 
 The muninn distribution contains a generic archiving framework that cannot be

@@ -16,22 +16,22 @@ warnings. For each archive configuration file you should start migrating to
 the new approach. For example, if you had:
 
 ```
-   [archive]
-   root = /home/alice/archives/foo
-   backend = postgresql
-   use_symlinks = true
+[archive]
+root = /home/alice/archives/foo
+backend = postgresql
+use_symlinks = true
 ```
 
 then you should change this to:
 
 ```
-   [archive]
-   database = postgresql
-   storage = fs
+[archive]
+database = postgresql
+storage = fs
 
-   [fs]
-   root = /home/alice/archives/foo
-   use_symlinks = true
+[fs]
+root = /home/alice/archives/foo
+use_symlinks = true
 ```
 
 # Upgrading to version 4.0
@@ -47,19 +47,19 @@ For each existing archive, please perform the following steps:
 2. Execute the following SQL statements.
 
 ```
-     BEGIN;
-     ALTER TABLE core ALTER COLUMN archive_date DROP NOT NULL;
-     ALTER TABLE core ADD COLUMN metadata_date timestamp NOT NULL DEFAULT now();
-     ALTER TABLE core ALTER COLUMN metadata_date DROP DEFAULT;
-     ALTER TABLE core ADD COLUMN remote_url text;
-     COMMIT;
+BEGIN;
+ALTER TABLE core ALTER COLUMN archive_date DROP NOT NULL;
+ALTER TABLE core ADD COLUMN metadata_date timestamp NOT NULL DEFAULT now();
+ALTER TABLE core ALTER COLUMN metadata_date DROP DEFAULT;
+ALTER TABLE core ADD COLUMN remote_url text;
+COMMIT;
 ```
 
-   You might also want to create indices for the new fields:
+You might also want to create indices for the new fields:
 
 ```
-     CREATE INDEX idx_core_metadata_date ON core (metadata_date);
-     CREATE INDEX idx_core_remote_url ON core (remote_url);
+CREATE INDEX idx_core_metadata_date ON core (metadata_date);
+CREATE INDEX idx_core_remote_url ON core (remote_url);
 ```
 
 # Upgrading to version 2.0
@@ -108,12 +108,14 @@ For each existing archive, please perform the following steps:
 
 3. Execute the following SQL statements.
 
-     BEGIN;
-     ALTER TABLE <schema name>.core ADD COLUMN size bigint;
-     ALTER TABLE <schema name>.core RENAME COLUMN logical_name TO product_name;
-     ALTER TABLE <schema name>.core ADD CONSTRAINT core_product_name_uniq
-         UNIQUE (product_type, product_name);
-     COMMIT;
+```
+BEGIN;
+ALTER TABLE <schema name>.core ADD COLUMN size bigint;
+ALTER TABLE <schema name>.core RENAME COLUMN logical_name TO product_name;
+ALTER TABLE <schema name>.core ADD CONSTRAINT core_product_name_uniq
+    UNIQUE (product_type, product_name);
+COMMIT;
+```
 
 4. Update product type plug-ins to use ``core.product_name`` instead of
    ``core.logical_name``. Split extensions that contain both namespace
@@ -143,10 +145,11 @@ For each existing archive, please perform the following steps:
 
 2. Execute the following SQL statements.
 
-     BEGIN;
-     CREATE TABLE <schema name>.tag (uuid UUID, tag TEXT);
-     ALTER TABLE <schema name>.tag ADD PRIMARY KEY (uuid, tag);
-     ALTER TABLE <schema name>.tag ADD CONSTRAINT tag_uuid_fkey FOREIGN KEY
-         (uuid) REFERENCES <schema name>.core (uuid) ON DELETE CASCADE;
-     COMMIT;
-
+```
+BEGIN;
+CREATE TABLE <schema name>.tag (uuid UUID, tag TEXT);
+ALTER TABLE <schema name>.tag ADD PRIMARY KEY (uuid, tag);
+ALTER TABLE <schema name>.tag ADD CONSTRAINT tag_uuid_fkey FOREIGN KEY
+    (uuid) REFERENCES <schema name>.core (uuid) ON DELETE CASCADE;
+COMMIT;
+```
