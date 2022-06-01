@@ -55,7 +55,7 @@ For each existing archive, please perform the following steps:
     COMMIT;
 ```
 
-You might also want to create indices for the new fields:
+    You might also want to create indices for the new fields:
 
 ```
     CREATE INDEX idx_core_metadata_date ON core (metadata_date);
