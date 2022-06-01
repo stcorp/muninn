@@ -1,0 +1,24 @@
+title: Muninn Documentation
+author: "S&T Corp"
+
+theme: minima
+
+base_url: /muninn
+
+github_username: stcorp
+
+header_pages:
+  - _pages/frontpage.md
+  - _pages/about.md
+  - _pages/quick.md
+
+include:
+    - _pages
+
+exclude:
+    - .gitignore
+    - docker-compose.yml
+    - Gemfile
+    - Gemfile.lock
+    - LICENSE
+    - README.md
