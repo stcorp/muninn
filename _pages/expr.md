@@ -91,21 +91,12 @@ preceded and followed by a percent sign.
 
 Some examples of the ``~=`` operator:
 
-  ``"foobarbaz" ~= "foobarbaz"``
-
-  true
-
-  ``"foobarbaz" ~= "foo"``
-
-  false
-
-  ``"foobarbaz" ~= "%bar%"``
-
-  true
-
-  ``"foobarbaz" ~= "%ba_"``
-
-  true
+```
+"foobarbaz" ~= "foobarbaz" (true)
+"foobarbaz" ~= "foo" (false)
+"foobarbaz" ~= "%bar%" (true)
+"foobarbaz" ~= "%ba_" (true)
+```
 
 The unary and binary arithmetic operators ``+`` and ``-`` are supported for all
 numeric types. Furthermore, the binary operator ``-`` applied to a pair of
