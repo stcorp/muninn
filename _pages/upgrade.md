@@ -108,14 +108,14 @@ For each existing archive, please perform the following steps:
 
 3. Execute the following SQL statements.
 
-```
+    ```
     BEGIN;
     ALTER TABLE <schema name>.core ADD COLUMN size bigint;
     ALTER TABLE <schema name>.core RENAME COLUMN logical_name TO product_name;
     ALTER TABLE <schema name>.core ADD CONSTRAINT core_product_name_uniq
         UNIQUE (product_type, product_name);
     COMMIT;
-```
+    ```
 
 4. Update product type plug-ins to use ``core.product_name`` instead of
    ``core.logical_name``. Split extensions that contain both namespace
