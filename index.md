@@ -34,5 +34,3 @@ data product catalogues and archives. [More information](about)
 [Extensions](extensions_dev)
 
 [Python API](api)
-
-Please contact us below if anything in the documentation is unclear or outdated.
