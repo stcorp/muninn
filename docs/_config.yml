@@ -8,9 +8,9 @@ base_url: /muninn
 github_username: stcorp
 
 header_pages:
-  - _pages/frontpage.md
-  - _pages/about.md
-  - _pages/quick.md
+  - frontpage.md
+  - about.md
+  - quick.md
 
 include:
     - _pages
