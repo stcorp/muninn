@@ -34,7 +34,7 @@ Running any of these tools with the "-h" or "--help" option provides detailed
 information on its purpose and usage.
 
 For an overview of the expression language used by most of these tools to
-select the products to operate on, see the section "Expression language".
+select the products to operate on, see [Expression Language](../expr).
 
 # Creating an archive
 
@@ -59,11 +59,11 @@ $ psql -d [database name] -c "CREATE EXTENSION postgis;"
 For Sqlite, muninn will automatically create the database file when it is first
 accessed.
 
-Next, you need to create a configuration file for the archive. See the section
-"Archive configuration files"_ for details on the configuration file format.
+Next, you need to create a configuration file for the archive. See
+[Configuration](../config) for details on the configuration file format.
 
 Make sure the configuration file is stored somewhere on the configuration
-search path (see section "Installation instructions"_). Move the file or update
+search path (see [Installation](../install)). Move the file or update
 the search path if this is not the case.
 
 The final step is to run the ``muninn-prepare`` command-line tool to initialize

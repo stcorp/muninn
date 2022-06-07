@@ -16,7 +16,8 @@ extensions (that contain namespace definitions), product type extensions
 (that contain product type plug-ins) and finally hook extensions (allowing
 functions to be executed at certain times, e.g. product creation/removal).
 
-A namespace is a named set of product properties (see section "Namespaces"_).
+A namespace is a named set of product properties (see
+[Namespaces](../namespaces)).
 Muninn defines a namespace called ``core`` that contains a small set of
 properties that muninn needs to archive a product. For example, it contains the
 name of the product, its hash, UUID, and archive date.
@@ -39,7 +40,7 @@ cannot archive the product.
 
 Product type plug-ins can also be used to tailor certain aspects of muninn. For
 example, the plug-in controls what happens to a product (of the type it
-supports) when all of the products it is linked to (see section "Links"_) have
+supports) when all of the products it is linked to (see [Links](../links)) have
 been removed from the archive.
 
 A fourth type of extension is the remote backend extension. This type of

@@ -13,8 +13,9 @@ clause in an SQL SELECT statement.
 When a muninn extension includes namespace definitions, all product properties
 defined in these namespaces can be used in expressions.
 
-The details of the expression language are described below. See the section
-"Data types"_ for more information about the data types supported by muninn.
+The details of the expression language are described below. See
+[Data Types](../datatypes) for more information about the data types supported
+by muninn.
 
 # Property references
 

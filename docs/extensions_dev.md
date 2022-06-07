@@ -13,9 +13,9 @@ This document is intended for muninn extension developers. Muninn is a generic
 archiving framework. To be able to use it to archive specific (types of)
 products, it is necessary to install (or implement) one or more extensions.
 
-Readers of this document are assumed to be familiar with the content of the
-muninn README.rst file, in particular the sections "Extensions", "Data types",
-"Namespaces", and "Links".
+Readers of this document are assumed to be familiar with
+[Extensions](../extensions), [Data Types](../datatypes),
+[Namespaces](../namespaces) and [Links](../links).
 
 A muninn extension is a Python module or package that implements the muninn
 extension interface. Muninn defines three types of extensions: namespace

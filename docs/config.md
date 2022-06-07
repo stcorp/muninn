@@ -31,20 +31,20 @@ settings:
   algorithm. The default is 25.
 
 - ``namespace_extensions``: White space separated list of names of Python
-  packages or modules that contain namespace definitions (see section
-  "Extensions"_). The default is the empty list.
+  packages or modules that contain namespace definitions (see
+  [Extensions](../extensions). The default is the empty list.
 
 - ``product_type_extensions``: White space separated list of names of Python
-  modules or packages that contain product type plug-ins (see section
-  "Extensions"_). The default is the empty list.
+  modules or packages that contain product type plug-ins (see
+  [Extensions](../extensions). The default is the empty list.
 
 - ``hook_extensions``: White space separated list of names of Python
-  modules or packages that contain hook extensions (see section
-  "Extensions"_). The default is the empty list.
+  modules or packages that contain hook extensions (see
+  [Extensions](../extensions). The default is the empty list.
 
 - ``remote_backend_extensions``: White space separated list of names of Python
-  modules or packages that contain remote backend plug-ins (see section
-  "Extensions"_). The default is the empty list.
+  modules or packages that contain remote backend plug-ins (see
+  [Extensions](../extensions)). The default is the empty list.
 
 - ``auth_file``: [Optional] JSON file containing the credentials to download
   using muninn-pull

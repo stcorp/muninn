@@ -80,8 +80,8 @@ For each existing archive, please perform the following steps:
 
 1. Login to the database used by the archive to be upgraded (e.g. using the
    psql command line tool included with Postgres). The connection details can
-   be found in the archive configuration file (see section "Archive
-   configuration files"_ if you are unfamiliar with these files).
+   be found in the archive configuration file (see [Configuration](../config)
+   if you are unfamiliar with these files).
 
    NB. Any occurence of "<schema name>" in any SQL statements found in this
    section should be substituted by the name schema name found in the archive
@@ -124,8 +124,8 @@ For each existing archive, please perform the following steps:
    extension to the latest version.
 
 5. Update the archive configuration file by adding the ``namespace_extensions``
-   and ``product_type_extensions`` configuration options (see section
-   "Archive configuration files"_).
+   and ``product_type_extensions`` configuration options (see
+   [Configuration](../config)).
 
 # Upgrading to version 1.3
 
@@ -133,8 +133,8 @@ For each existing archive, please perform the following steps:
 
 1. Login to the database used by the archive to be upgraded (e.g. using the
    psql command line tool included with Postgres). The connection details can
-   be found in the archive configuration file (see section "Archive
-   configuration file" if you are unfamiliar with these files).
+   be found in the archive configuration file (see
+   [Configuration](../config) if you are unfamiliar with these files).
 
    NB. Any occurence of "<schema name>" in any SQL statements found in this
    section should be substituted by the name schema name found in the archive

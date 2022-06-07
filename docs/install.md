@@ -59,10 +59,10 @@ $ python setup.py install
 The muninn distribution contains a generic archiving framework that cannot be
 used in a meaningful way without product type plug-ins. Therefore, after
 installing muninn, you will need to install (or implement) one or more muninn
-extensions (see section "Extensions"_).
+extensions (see [Extensions](../extensions)).
 
 The extensions required by each archive should be added to the corresponding
-archive configuration file (see section "Archive configuration files"_). If you
+archive configuration file (see [Configuration](../config)). If you
 install extensions in a custom location, please update the ``PYTHONPATH``
 environment variable accordingly.
 
@@ -74,7 +74,7 @@ configuration files.
 
 All muninn command-line tools, as well as the muninn.open() library function,
 refer to an archive using its "archive id". This is a name that corresponds to
-an archive configuration file (see section "Archive configuration files"_)
+an archive configuration file (see [Configuration](../config))
 located in one of the directories on the muninn configuration search path.
 
 For example, given an archive id ``foo``, muninn expects to find a
