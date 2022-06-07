@@ -1,10 +1,9 @@
-Developer Documentation
-=======================
+# Developer Documentation
 
 This document contains specific instructions for muninn developers.
 
-General
--------
+##General
+
 The muninn distribution consists of a single setuptools package.
 
 The version numbering scheme for muninn is ``x.y.z`` (``.z`` is optional):
@@ -16,41 +15,44 @@ The version numbering scheme for muninn is ``x.y.z`` (``.z`` is optional):
 - Increase the revision number ``z`` for bug fixes.
 
 
-Release procedure
------------------
+## Release procedure
+
 For the muninn package:
 
 - Update version number in ``muninn/__init__.py``
 - Update version number in ``setup.py``
-- Update version number in ``README.rst`` (3x)
-- Check the list of dependencies in the ``README.rst``
-- Check the upgrade instructions in ``README.rst``
+- Update version number in ``docs/install.md``
+- Check the list of dependencies in the ``docs/install.md``
+- Check the upgrade instructions in ``docs/upgrade.md``
 - Add change history entry in ``CHANGES``
-- Check that the content of ``EXTENSIONS.rst`` is up to date
+- Check that the content of ``docs/extensions.md`` is up to date
   (any API changes?).
 - Check copyright header (year range) in all files.
 - Check that creation of the muninn package using ``python setup.py sdist``
   runs without errors.
 
-To create the muninn package: ::
+To create the muninn package:
 
-  $ python setup.py sdist
+    $ python setup.py sdist
 
 The package is now available in the ``dist`` directory.
 
 
-Update API documentation
-------------------------
+## Update API documentation
+
 If the Python API documentation needs to be updated, commands
-similar to the following may be used: :::
+similar to the following may be used:
 
-  pydoc-markdown -m muninn -m muninn.archive > index.md
-  sed -i -e 's/ | //g' index.md
+    pydoc-markdown -m muninn -m muninn.archive > docs/api.md
+    sed -i -e 's/ | //g' docs/api.md
 
-Now add the following to the top of ``index.md``:
+Now add the following to the top of ``api.md``:
 
-* toc
-{:toc}
+    ---
+    layout: page
+    title: Python API
+    permalink: /api/
+    ---
 
-To update the online documentation, overwrite ``index.md`` in
-the ``gh-pages`` branch on github with the result.
+    * toc
+    {:toc}
