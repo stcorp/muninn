@@ -28,7 +28,8 @@ def untag(args):
 
 
 def main():
-    parser = create_parser(description="Remove one or more tags from products contained in a muninn archive", parallel=True)
+    parser = create_parser(description="Remove one or more tags from products contained in a muninn archive",
+                           parallel=True)
     parser.add_argument("-a", "--all", action="store_true",
                         help="ignore tags supplied on the command line; instead remove all tags")
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")

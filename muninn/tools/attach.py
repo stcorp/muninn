@@ -96,5 +96,6 @@ def main():
                         help="products to attach, or \"-\" to read the list of products from standard input")
     return parse_args_and_run(parser, attach)
 
+
 if __name__ == '__main__':
     main()

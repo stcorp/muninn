@@ -458,7 +458,7 @@ class Archive(object):
         else:
             try:
                 where = list(where)
-            except:
+            except Exception:
                 raise Error('Invalid product selection')
 
         products = []
@@ -1476,7 +1476,7 @@ class Archive(object):
         products = self._get_products(where, parameters, property_names=_CORE_PROP_NAMES)
 
         for product in products:
-            if not 'archive_path' in product.core:
+            if 'archive_path' not in product.core:
                 continue
             if not product.core.active and not force:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))

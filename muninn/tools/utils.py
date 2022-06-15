@@ -18,6 +18,7 @@ except ImportError:
 
 import muninn
 
+
 # This is a base class for operations on a list of items that can be performed in parallel using multiprocessing.
 # If you use the processor object as a callable then it is assumed that the operation is performed using subprocesses.
 # It will then create its own muninn archive instance per sub-process and prevents KeyboardInterrupt handling.
