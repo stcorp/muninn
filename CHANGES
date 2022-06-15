@@ -1,3 +1,6 @@
+* S3 backend 'host' configuration parameter can now be a full endpoint url and
+  'port' parameter is now optional.
+
 * Added --force and --verify-hash-before options to muninn-attach and added
   additional improvements to keep hash and size in line with attached product.
 

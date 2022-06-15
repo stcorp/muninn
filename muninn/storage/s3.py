@@ -20,7 +20,7 @@ class _S3Config(Mapping):
     _alias = "s3"
 
     host = Text()
-    port = Integer()
+    port = Integer(optional=True)
     bucket = Text()
     access_key = Text()
     secret_access_key = Text()
@@ -40,7 +40,7 @@ def create(configuration):
 
 
 class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate directory, 'dir/' with contents?
-    def __init__(self, bucket, host, port, access_key, secret_access_key, region=None, prefix='', tmp_root=None,
+    def __init__(self, bucket, host, access_key, secret_access_key, port=None, region=None, prefix='', tmp_root=None,
                  download_args=None, upload_args=None, copy_args=None, transfer_config=None):
         super(S3StorageBackend, self).__init__()
 
@@ -49,11 +49,17 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             prefix += '/'
         self._prefix = prefix
 
-        if port == 80:
-            export_port = ''
-        else:
-            export_port = ':%d' % port
-        self.global_prefix = os.path.join('http://%s%s/%s' % (host, export_port, bucket), prefix)
+        endpoint_url = host
+        if ':' not in host:
+            if port == 443:
+                endpoint_url = 'https://' + endpoint_url
+            else:
+                endpoint_url = 'http://' + endpoint_url
+                if port is not None and port != 80:
+                    endpoint_url += ':%d' % port
+        elif port is not None:
+            endpoint_url += ':%d' % port
+        self.global_prefix = os.path.join(endpoint_url, bucket, prefix)
 
         self._root = bucket
         if tmp_root:
@@ -66,7 +72,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             region_name=region,
             aws_access_key_id=access_key,
             aws_secret_access_key=secret_access_key,
-            endpoint_url='http://%s:%s' % (host, port),
+            endpoint_url=endpoint_url,
         )
 
         self._download_args = None

@@ -78,15 +78,26 @@ class S3Checker(BaseChecker):
 
         self.bucket = self.parser.get('s3', 'bucket')
         host = self.parser.get('s3', 'host')
-        port = self.parser.get('s3', 'port')
+        port = self.parser.get('s3', 'port', fallback=None)
         access_key = self.parser.get('s3', 'access_key')
         secret_access_key = self.parser.get('s3', 'secret_access_key')
+
+        endpoint_url = host
+        if ':' not in host:
+            if port == 443:
+                endpoint_url = 'https://' + endpoint_url
+            else:
+                endpoint_url = 'http://' + endpoint_url
+                if port is not None and port != 80:
+                    endpoint_url += ':' + port
+        elif port is not None:
+            endpoint_url += ':' + port
 
         self._resource = boto3.resource(
             service_name='s3',
             aws_access_key_id=access_key,
             aws_secret_access_key=secret_access_key,
-            endpoint_url='http://%s:%s' % (host, port),
+            endpoint_url=endpoint_url,
         )
 
     def exists(self, path, size=None):
