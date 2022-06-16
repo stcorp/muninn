@@ -110,6 +110,7 @@ def download_ftp(url, target_dir, credentials=None, timeout=60):
 
 def download_sftp(url, target_dir, credentials=None, timeout=60):
     import paramiko
+    logging.getLogger("paramiko").setLevel(logging.WARNING)
     url = urlparse(url)
     if url.username:
         username = url.username
@@ -122,7 +123,7 @@ def download_sftp(url, target_dir, credentials=None, timeout=60):
         password = 'guest'
     local_file = os.path.join(target_dir, os.path.basename(url.path))
     try:
-        transport = paramiko.Transport(('localhost', url.port or 22))
+        transport = paramiko.Transport((url.netloc, url.port or 22))
         transport.connect(username=username, password=password)
         sftp = paramiko.SFTPClient.from_transport(transport)
         sftp.get(url.path, local_file)
