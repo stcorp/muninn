@@ -66,6 +66,7 @@ setup(
 # extension.
 
 # For muninn-pull using http requests you will need 'requests' 2.13.0 or higher
+# For muninn-pull using sftp requests you will need 'paramiko'
 # For muninn-pull with oauth2 authentication you weel need 'requests-oauthlib'
 # and 'oauthlib'
 
