@@ -1403,6 +1403,20 @@ class TestQuery:
             s = archive.search('intersects(core.footprint, POLYGON EMPTY)')
             assert len(s) == 0
 
+    def test_alt_number_bases(self, archive):
+        self._prep_data(archive)
+        s = archive.search('size == %s' % hex(1015))
+        assert len(s) == 3
+
+        s = archive.search('size == %s' % oct(1015))
+        assert len(s) == 3
+
+        s = archive.search('size == %s' % bin(1015))
+        assert len(s) == 3
+
+        s = archive.search('size == %s' % hex(1014))
+        assert len(s) == 0
+
     def test_errors(self, archive):
         self._prep_data(archive)
 

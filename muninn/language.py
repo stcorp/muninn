@@ -218,7 +218,7 @@ class TokenStream(object):
             r"""\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d{0,6})?)?""",   # Timestamp literals
             r"""[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}""",  # UUID literals
             r"""\d+(?:\.\d*(?:[eE][+-]?\d+)?|[eE][+-]?\d+)""",               # Real literals
-            r"""\d+""",                                                      # Integer literals
+            r"""0x[0-9a-fA-F]+|0o[0-7]\d+|0b[0-1]+|\d+""",                   # Integer literals
             r"""<=|>=|==|!=|~=|not in|[*<>@()\[\],.+-/]""",                  # Operators and delimiters
             r"""[a-zA-Z]\w*""",                                              # Names (incl. true, false, in)
         )
@@ -331,7 +331,15 @@ class TokenStream(object):
             return Token(TokenType.REAL, float(real))
 
         if integer is not None:
-            return Token(TokenType.INTEGER, int(integer))
+            if integer.startswith('0x'):
+                base = 16
+            elif integer.startswith('0o'):
+                base = 8
+            elif integer.startswith('0b'):
+                base = 2
+            else:
+                base = 10
+            return Token(TokenType.INTEGER, int(integer, base))
 
         if operator is not None:
             return Token(TokenType.OPERATOR, operator)
