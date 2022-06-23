@@ -1476,10 +1476,14 @@ class Archive(object):
         products = self._get_products(where, parameters, property_names=_CORE_PROP_NAMES)
 
         for product in products:
-            if 'archive_path' not in product.core:
-                continue
-            if not product.core.active and not force:
-                raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
+            if force:
+                if product.core.active and 'archive_path' not in product.core and 'archive_date' not in product.core:
+                    continue
+            else:
+                if 'archive_path' not in product.core:
+                    continue
+                if not product.core.active:
+                    raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
 
             self._strip(product)
 
