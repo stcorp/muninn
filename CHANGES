@@ -7,6 +7,9 @@
 * Improved (re)setting metadata state after storage failure for attach, pull,
   and ingest.
 
+* Allow 'muninn-strip --force' to reactive a product even if archive_path is
+  empty.
+
 * Removed muninn-update post_ingest and post_pull commands since these were no
   longer working with generic hooks and the S3/Swift storage backends.
 
