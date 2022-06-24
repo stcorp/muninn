@@ -123,7 +123,7 @@ def download_sftp(url, target_dir, credentials=None, timeout=60):
         password = 'guest'
     local_file = os.path.join(target_dir, os.path.basename(url.path))
     try:
-        transport = paramiko.Transport((url.netloc, url.port or 22))
+        transport = paramiko.Transport((url.hostname, url.port or 22))
         transport.connect(username=username, password=password)
         sftp = paramiko.SFTPClient.from_transport(transport)
         sftp.get(url.path, local_file)
