@@ -691,6 +691,11 @@ class TestArchive:
         assert 'invalid timestamp' in str(excinfo)
 
         # 'covers' search on datetime field
+        s = archive.search('covers(%s, %s, core.archive_date, core.archive_date)' %
+                           ((datetime.datetime.now() - datetime.timedelta(hours=24)).isoformat(),
+                            datetime.datetime.now().isoformat()))
+        assert len(s) == 1
+
         s = archive.search('covers(@start, @stop, core.archive_date, core.archive_date)',
                            parameters={'start': datetime.datetime.now() - datetime.timedelta(hours=24),
                                        'stop': datetime.datetime.now()})
