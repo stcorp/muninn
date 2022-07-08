@@ -499,8 +499,7 @@ class Archive(object):
         self._remove(product)
 
         # Run the post remove hook (if defined by the product type plug-in or hook extensions).
-        plugin = self.product_type_plugin(product.core.product_type)
-        self._run_hooks('post_remove_hook', plugin, product, reverse=True)
+        self._run_hooks('post_remove_hook', product, reverse=True)
 
     def _relocate(self, product, properties=None, paths=None):
         """Relocate a product to the archive_path reported by the product type plugin.
@@ -780,8 +779,7 @@ class Archive(object):
 
         # Run the post create hook (if defined by the product type plug-in or hook extensions).
         if not disable_hooks:
-            plugin = self.product_type_plugin(properties.core.product_type)
-            self._run_hooks('post_create_hook', plugin, properties)
+            self._run_hooks('post_create_hook', properties)
 
     def delete_properties(self, where="", parameters={}):
         """Remove properties for one or more products from the catalogue.
@@ -1076,14 +1074,18 @@ class Archive(object):
 
         # Run post create/ingest hooks (if defined by the product type plug-in or hook extensions).
         if not ingest_product:
-            self._run_hooks('post_create_hook', plugin, properties)
+            self._run_hooks('post_create_hook', properties)
         else:
-            self._run_hooks('post_ingest_hook', plugin, properties, paths=paths)
+            self._run_hooks('post_ingest_hook', properties, paths=paths)
 
         return properties
 
-    def _run_hooks(self, hook_name, plugin, properties, reverse=False, paths=None):
-        plugins = [plugin] + list(self._hook_extensions.values())
+    def _run_hooks(self, hook_name, properties, reverse=False, paths=None):
+        plugins = list(self._hook_extensions.values())
+        plugin = self._product_type_plugins.get(properties.core.product_type)
+        if plugin is not None:
+            plugins.insert(0, plugin)
+
         if reverse:
             plugins = reversed(plugins)
 
@@ -1204,7 +1206,7 @@ class Archive(object):
                                     (product.core.product_name, product.core.uuid))
 
                 # Run the post pull hook (if defined by the product type plug-in or hook extensions).
-                self._run_hooks('post_pull_hook', plugin, product, paths=paths)
+                self._run_hooks('post_pull_hook', product, paths=paths)
 
             # pull product
             try:
@@ -1302,7 +1304,7 @@ class Archive(object):
                 product.update(properties)
                 if 'hash' not in product.core:
                     product.core.hash = None
-                self._run_hooks('post_ingest_hook', plugin, product, paths=paths)
+                self._run_hooks('post_ingest_hook', product, paths=paths)
 
         self._storage.run_for_product(product, _rebuild_properties, use_enclosing_directory)
 
@@ -1347,7 +1349,7 @@ class Archive(object):
 
             # Run the post pull hook (if defined by the product type plug-in or hook extensions).
             if not disable_hooks:
-                self._run_hooks('post_pull_hook', plugin, product, paths=paths)
+                self._run_hooks('post_pull_hook', product, paths=paths)
 
         self._storage.run_for_product(product, _rebuild_pull_properties, use_enclosing_directory)
 

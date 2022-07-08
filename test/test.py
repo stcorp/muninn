@@ -1141,6 +1141,17 @@ class TestArchive:
             s1 += 60
         assert s1 > s2
 
+    def test_broken_plugin(self, archive):
+        product = self._ingest_file(archive)
+        product.core.product_type = 'broken'
+        archive.update_properties(product)
+
+        archive.remove(product)
+        assert len(archive.search()) == 0
+
+        archive.create_properties(product)
+        assert len(archive.search()) == 1
+
 
 class TestQuery:
     def _prep_data(self, archive):
