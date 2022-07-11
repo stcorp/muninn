@@ -46,6 +46,13 @@ PY3 = sys.version_info[0] == 3
 MY_DIR = os.path.dirname(__file__)
 PARENT_DIR = os.path.dirname(MY_DIR)
 
+# ignore warnings over which we have no control
+pytestmark = pytest.mark.filterwarnings(
+    'ignore:using or importing the ABCs:DeprecationWarning:paramiko',
+    'ignore:encode_point has been deprecated:cryptography.utils.CryptographyDeprecationWarning',
+    'ignore:support for unsafe:cryptography.utils.CryptographyDeprecationWarning',
+)
+
 
 class BaseChecker(object):
     def __init__(self, storage):
