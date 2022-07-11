@@ -9,6 +9,7 @@ import os
 import re
 import datetime
 import functools
+import json
 import uuid
 
 # Select a version of dbapi2 that's available.
@@ -434,6 +435,8 @@ class SQLiteBackend(object):
             fields.append("uuid")
             parameters.append(uuid)
 
+        parameters = [json.dumps(p) if isinstance(p, dict) else p for p in parameters]
+
         # Build and execute INSERT query.
         query = "INSERT INTO %s (%s) VALUES (%s)" % (self._table_name(name), ", ".join(fields),
                                                      ", ".join([self._placeholder()] * len(fields)))
@@ -630,6 +633,7 @@ class SQLiteBackend(object):
         type_map[Timestamp] = "TIMESTAMP"
         type_map[UUID] = "UUID"
         type_map[Geometry] = "GEOMETRY"
+        type_map[JSON] = "TEXT"
 
         return type_map
 
@@ -681,6 +685,8 @@ class SQLiteBackend(object):
         schema = self._namespace_schema(namespace)
         for identifier, value in zip(description, values):
             if value is not None or not schema.is_optional(identifier):
+                if issubclass(schema[identifier], JSON):
+                    value = json.loads(value)
                 unpacked_properties[identifier] = value
         return unpacked_properties
 
@@ -723,6 +729,8 @@ class SQLiteBackend(object):
 
         # Append the uuid (value) at the end of the list of parameters (will be used in the WHERE clause).
         parameters.append(uuid)
+
+        parameters = [json.dumps(p) if isinstance(p, dict) else p for p in parameters]
 
         # Build and execute UPDATE query.
         set_clause = ", ".join(["%s = %s" % (field, self._placeholder()) for field in fields])

@@ -1063,6 +1063,20 @@ class TestArchive:
         finally:
             plugin.hash_type = 'md5'
 
+    def test_update_properties(self, archive):
+        product = self._ingest_file(archive)
+
+        for create_namespaces in (True, False):
+            props = muninn.Struct({'mynamespace': {'myjson': {'bla': 14, 'mylist': [1,2,3]}}})
+            archive.update_properties(props, product.core.uuid, create_namespaces)
+
+            props = archive.retrieve_properties(uuid=product.core.uuid, namespaces=['mynamespace'])
+            myjson = props.mynamespace.myjson
+
+            assert isinstance(myjson, dict)
+            assert myjson['bla'] == 14
+            assert myjson['mylist'] == [1,2,3]
+
     def test_verify_hash(self, archive):
         product = self._ingest_file(archive)
 

@@ -9,7 +9,7 @@ from muninn._compat import long
 from muninn._compat import string_types as basestring
 import uuid
 
-import muninn.geometry as geometry
+from muninn import geometry
 
 
 def prefix_message_with_path(path, message):
@@ -90,6 +90,13 @@ class Timestamp(Type):
     @classmethod
     def validate(cls, value):
         if type(value) is not datetime.datetime:
+            raise ValueError("invalid value %r for type %r" % (value, cls.name()))
+
+
+class JSON(Type):
+    @classmethod
+    def validate(cls, value):
+        if type(value) is not dict:
             raise ValueError("invalid value %r for type %r" % (value, cls.name()))
 
 

@@ -8,12 +8,12 @@ from muninn.exceptions import Error
 
 
 class Struct(object):
-    def __init__(self, data=None):
+    def __init__(self, data=None, _depth=0):
         super(Struct, self).__init__()
         if data is not None:
             for key in data:
-                if type(data[key]) == dict:
-                    self[key] = Struct(data[key])
+                if _depth == 0 and type(data[key]) == dict:
+                    self[key] = Struct(data[key], _depth=_depth+1)
                 else:
                     self[key] = data[key]
 

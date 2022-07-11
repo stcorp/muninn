@@ -9,6 +9,7 @@ from muninn._compat import dictkeys, dictvalues, is_python2_unicode
 import re
 import functools
 import inspect
+import json
 
 try:
     import psycopg2
@@ -476,6 +477,9 @@ class PostgresqlBackend(object):
             fields.append("uuid")
             parameters.append(uuid)
 
+        # TODO generic conversion? more overlap between sqlite.py and postgresql.py?
+        parameters = [json.dumps(p) if isinstance(p, dict) else p for p in parameters]
+
         # Build and execute INSERT query.
         query = "INSERT INTO %s (%s) VALUES (%s)" % (self._table_name(name), ", ".join(fields),
                                                      ", ".join([self._placeholder()] * len(fields)))
@@ -698,6 +702,7 @@ class PostgresqlBackend(object):
         type_map[Real] = "DOUBLE PRECISION"
         type_map[Boolean] = "BOOLEAN"
         type_map[Text] = "TEXT"
+        type_map[JSON] = "TEXT"
         type_map[Timestamp] = "TIMESTAMP"
         type_map[UUID] = "UUID"
         type_map[Geometry] = "GEOGRAPHY"
@@ -764,6 +769,8 @@ class PostgresqlBackend(object):
         # Append the uuid (value) at the end of the list of parameters (will be used in the WHERE clause).
         parameters.append(uuid)
 
+        parameters = [json.dumps(p) if isinstance(p, dict) else p for p in parameters]
+
         # Build and execute UPDATE query.
         set_clause = ", ".join(["%s = %s" % (field, self._placeholder()) for field in fields])
         query = "UPDATE %s SET %s WHERE uuid = %s" % (self._table_name(name), set_clause, self._placeholder())
@@ -789,7 +796,10 @@ class PostgresqlBackend(object):
                 value = value.encode(self._connection.encoding)
 
             if value is not None or not schema.is_optional(identifier):
+                if issubclass(schema[identifier], JSON):
+                    value = json.loads(value)
                 unpacked_properties[identifier] = value
+
         return unpacked_properties
 
     def _unpack_product_properties(self, description, values):

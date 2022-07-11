@@ -1,8 +1,9 @@
-from muninn.schema import Mapping, optional, Text, Integer
+from muninn.schema import Mapping, optional, Text, Integer, JSON
 
 
 class MyNamespace(Mapping):
     hello = optional(Text)
+    myjson = optional(JSON)
 
 
 class MyNamespace2(Mapping):
