@@ -14,6 +14,7 @@ import tarfile
 import time
 import unittest
 import uuid
+import warnings
 
 import pytest
 
@@ -21,6 +22,7 @@ import boto3
 import botocore
 logging.getLogger("boto3").setLevel(logging.CRITICAL)
 
+warnings.filterwarnings('ignore', 'distutils version classes', DeprecationWarning, 'swiftclient.client')
 import swiftclient
 logging.getLogger("swiftclient").setLevel(logging.CRITICAL)
 
@@ -49,8 +51,8 @@ PARENT_DIR = os.path.dirname(MY_DIR)
 # ignore warnings over which we have no control
 pytestmark = pytest.mark.filterwarnings(
     'ignore:using or importing the ABCs:DeprecationWarning:paramiko',
-    'ignore:encode_point has been deprecated:cryptography.utils.CryptographyDeprecationWarning',
-    'ignore:support for unsafe:cryptography.utils.CryptographyDeprecationWarning',
+    'ignore::cryptography.utils.CryptographyDeprecationWarning',
+    'ignore:distutils version classes:DeprecationWarning:pg8000',
 )
 
 
@@ -236,7 +238,7 @@ def archive(database, storage, use_enclosing_directory, archive_path):
         yield archive
 
 
-@pytest.yield_fixture(params=REMOTE_BACKENDS, scope='session')
+@pytest.fixture(params=REMOTE_BACKENDS, scope='session')
 def remote_backend(request):
     proc = None
 
