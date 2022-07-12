@@ -240,92 +240,77 @@ def archive(database, storage, use_enclosing_directory, archive_path):
         yield archive
 
 
-def remote_url_port(param):
-    port = None
+# TODO pulled setup/teardown out of remote_backend fixture to work around osx issue
+procs = []
+def setup():
+    for param in REMOTE_BACKENDS:
+        if ':' in param:
+            param, _, options = param.partition(':')
+            for option in options.split(';'):
+                opt_key, opt_value = option.split('=')
+                if opt_key == 'port':
+                    port = int(opt_value)
 
-    if ':' in param:
-        param, _, options = param.partition(':')
+            if param == 'http':
+                proc = subprocess.Popen(
+                               'exec python3 -m http.server %d' % port,
+                               shell=True,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE,
+                )
+                procs.append(proc)
+
+            elif param == 'ftp':
+                proc = subprocess.Popen(
+                       'exec python3 -m pyftpdlib -p %d' % port,
+                       shell=True,
+                       stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE,
+                )
+                procs.append(proc)
+
+            elif param == 'sftp':
+                proc = subprocess.Popen(
+                       'exec sftpserver -p %d -k ./sftp_server_rsa.key' % port,
+                       shell=True,
+                       stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE,
+                )
+                procs.append(proc)
+
+
+def teardown():
+    for proc in procs:
+        proc.terminate()
+        proc.wait()
+
+setup()
+atexit.register(teardown)
+
+
+@pytest.fixture(params=REMOTE_BACKENDS, scope='session')
+def remote_backend(request):
+    if ':' in request.param:
+        param, _, options = request.param.partition(':')
         for option in options.split(';'):
             opt_key, opt_value = option.split('=')
             if opt_key == 'port':
                 port = int(opt_value)
-
-    return param, port
-
-http_port = ftp_port = sftp_port = None
-for param in REMOTE_BACKENDS:
-    type_, port = remote_url_port(param)
-    if type_ == 'http':
-        http_port = port
-    elif type_ == 'ftp':
-        ftp_port = port
-    elif type_ == 'sftp':
-        sftp_port = port
-
-
-@pytest.fixture(scope='session')
-def file_backend(request):
-    pass
-
-
-@pytest.fixture(scope='session')
-def http_backend(request):
-    if http_port is None:
-        yield None
     else:
-        proc = subprocess.Popen(
-                   'exec python3 -m http.server %d' % http_port,
-                   shell=True
-               )
-        time.sleep(1)
-        yield http_port
+        param = request.param
 
-        proc.terminate()
-        proc.wait()
-
-
-@pytest.fixture(scope='session')
-def ftp_backend(request):
-    if ftp_port is None:
-        yield None
-    else:
-        proc = subprocess.Popen(
-                   'exec python3 -m pyftpdlib -p %d' % ftp_port,
-                   shell=True
-               )
-        time.sleep(1)
-        yield ftp_port
-
-        proc.terminate()
-        proc.wait()
-
-
-@pytest.fixture(scope='session')
-def sftp_backend(request):
-    if sftp_port is None:
-        yield None
-    else:
-        proc = subprocess.Popen(
-                   'exec sftpserver -p %d -k ./sftp_server_rsa.key' % sftp_port,
-                   shell=True
-               )
-        time.sleep(1)
-        yield ftp_port
-
-        proc.terminate()
-
-
-@pytest.fixture(params=REMOTE_BACKENDS, scope='session')
-def remote_backend(request, file_backend, http_backend, ftp_backend, sftp_backend):
-    type_, port = remote_url_port(request.param)
-    if type_ == 'file':
+    if param == 'file':
         yield 'file://' + os.path.realpath('.')
-    elif type_ == 'http':
+
+    elif param == 'http':
         yield 'http://localhost:%d' % port
-    elif type_ == 'ftp':
+
+    elif param == 'ftp':
         yield 'ftp://localhost:%d' % port
-    elif type_ == 'sftp':
+
+    elif param == 'sftp':
         yield 'sftp://someuser:somepassword@localhost:%d' % port
+
     else:
         assert False
 
