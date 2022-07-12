@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import atexit
 try:
     from configparser import ConfigParser
 except ImportError:
@@ -212,7 +213,8 @@ def archive(database, storage, use_enclosing_directory, archive_path):
         del sys.modules['product_type']
     if 'hook_extension' in sys.modules:
         del sys.modules['hook_extension']
-    os.system('rm *.pyc -f')
+    for f in glob.glob('*.pyc'):
+        os.remove(f)
 
     # create empty dirs (can't commit in git)
     _makedirs('data/multi/emptydir')
@@ -238,10 +240,56 @@ def archive(database, storage, use_enclosing_directory, archive_path):
         yield archive
 
 
+# TODO pulled setup/teardown out of remote_backend fixture to work around osx issue
+procs = []
+def setup():
+    for param in REMOTE_BACKENDS:
+        if ':' in param:
+            param, _, options = param.partition(':')
+            for option in options.split(';'):
+                opt_key, opt_value = option.split('=')
+                if opt_key == 'port':
+                    port = int(opt_value)
+
+            if param == 'http':
+                proc = subprocess.Popen(
+                               'exec python3 -m http.server %d' % port,
+                               shell=True,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE,
+                )
+                procs.append(proc)
+
+            elif param == 'ftp':
+                proc = subprocess.Popen(
+                       'exec python3 -m pyftpdlib -p %d' % port,
+                       shell=True,
+                       stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE,
+                )
+                procs.append(proc)
+
+            elif param == 'sftp':
+                proc = subprocess.Popen(
+                       'exec sftpserver -p %d -k ./sftp_server_rsa.key' % port,
+                       shell=True,
+                       stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE,
+                )
+                procs.append(proc)
+
+
+def teardown():
+    for proc in procs:
+        proc.terminate()
+        proc.wait()
+
+setup()
+atexit.register(teardown)
+
+
 @pytest.fixture(params=REMOTE_BACKENDS, scope='session')
 def remote_backend(request):
-    proc = None
-
     if ':' in request.param:
         param, _, options = request.param.partition(':')
         for option in options.split(';'):
@@ -255,37 +303,16 @@ def remote_backend(request):
         yield 'file://' + os.path.realpath('.')
 
     elif param == 'http':
-        proc = subprocess.Popen(
-                   'exec python3 -m http.server %d' % port,
-                   shell=True,
-                   stdout=subprocess.PIPE,
-                   stderr=subprocess.PIPE,
-               )
         yield 'http://localhost:%d' % port
 
     elif param == 'ftp':
-        proc = subprocess.Popen(
-                   'exec python3 -m pyftpdlib -p %d' % port,
-                   shell=True,
-                   stdout=subprocess.PIPE,
-                   stderr=subprocess.PIPE,
-               )
         yield 'ftp://localhost:%d' % port
 
     elif param == 'sftp':
-        proc = subprocess.Popen(
-                   'exec sftpserver -p %d -k ./sftp_server_rsa.key' % port,
-                   shell=True,
-                   stdout=subprocess.PIPE,
-                   stderr=subprocess.PIPE,
-               )
         yield 'sftp://someuser:somepassword@localhost:%d' % port
+
     else:
         assert False
-
-    if proc is not None:
-        proc.terminate()
-        proc.wait()
 
 
 class TestArchive:
