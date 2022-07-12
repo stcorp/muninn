@@ -36,7 +36,9 @@ $ docker run -d -p 12345:8080 -e SWIFT_USERNAME=test:tester -e SWIFT_KEY=testing
 Create a conda environment for muninn and dependencies (requires mininconda/anaconda to be installed):
 $ conda create -n muninntest
 $ conda activate muninntest
-$ conda install -c conda-forge request tabulate tqdm pytest psycopg2 libspatialite boto3 python-swiftclient pg8000 pyftpdlib paramiko sftpserver
+$ conda install -c conda-forge request tabulate tqdm pytest psycopg2 libspatialite boto3 python-swiftclient pg8000 pyftpdlib paramiko
+$ pip install sftpserver
+
 Update the path to mod_spatialite in the test.cfg file to point to the version in the conda environment
 
 Update settings in test.cfg (DEFAULT section: desired combinations for which to run all tests).

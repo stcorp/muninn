@@ -1,0 +1,16 @@
+name: muninn-test
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - request
+  - tabulate
+  - tqdm
+  - pytest
+  - psycopg2
+  - libspatialite
+  - boto3
+  - python-swiftclient
+  - pg8000
+  - pyftpdlib
+  - paramiko
