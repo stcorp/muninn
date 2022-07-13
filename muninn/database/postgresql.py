@@ -702,7 +702,7 @@ class PostgresqlBackend(object):
         type_map[Real] = "DOUBLE PRECISION"
         type_map[Boolean] = "BOOLEAN"
         type_map[Text] = "TEXT"
-        type_map[JSON] = "JSON"
+        type_map[JSON] = "JSONB"
         type_map[Timestamp] = "TIMESTAMP"
         type_map[UUID] = "UUID"
         type_map[Geometry] = "GEOGRAPHY"
