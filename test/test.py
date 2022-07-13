@@ -8,7 +8,9 @@ except ImportError:
 import datetime
 import glob
 import logging
+import multiprocessing
 import os
+import signal
 import subprocess
 import sys
 import tarfile
@@ -156,6 +158,48 @@ def _makedirs(path):
         os.makedirs(path)
 
 
+# this is needed as direct subprocess.Popen is unsafe (eg with database adapter creating threads)
+
+@pytest.fixture(scope='session', autouse=True)
+def multiprocessing_context():
+    global ctx, manager
+    ctx = multiprocessing.get_context('forkserver')
+    ctx.set_forkserver_preload(['subprocess'])
+    manager = ctx.Manager()
+
+
+def do_popen(cmd, return_dict, join):
+    proc = subprocess.Popen(
+            cmd,
+            shell=True,
+            stdout=subprocess.PIPE if join else subprocess.DEVNULL,
+            stderr=subprocess.PIPE if join else subprocess.DEVNULL,
+    )
+
+    if join:
+        output, errs = proc.communicate()
+
+        return_dict['stdout'] = output
+        return_dict['stderr'] = errs
+        return_dict['returncode'] = proc.returncode
+
+    return_dict['pid'] = proc.pid  # TODO ugh! how to kill automatically when wrapper process dies..
+
+
+def safe_popen(cmd, join=False):
+    return_dict = manager.dict()
+
+    proc = ctx.Process(target=do_popen, args=(cmd, return_dict, join))
+    proc.start()
+
+    if join:
+        proc.join()
+        return return_dict['returncode'], return_dict['stdout'], return_dict['stderr']
+    else:
+        time.sleep(1)
+        return proc, return_dict['pid']
+
+
 # TODO merge fixtures into one with multiple parameters?
 
 @pytest.fixture(params=DATABASE_BACKENDS)
@@ -240,56 +284,10 @@ def archive(database, storage, use_enclosing_directory, archive_path):
         yield archive
 
 
-# TODO pulled setup/teardown out of remote_backend fixture to work around osx issue
-procs = []
-def setup():
-    for param in REMOTE_BACKENDS:
-        if ':' in param:
-            param, _, options = param.partition(':')
-            for option in options.split(';'):
-                opt_key, opt_value = option.split('=')
-                if opt_key == 'port':
-                    port = int(opt_value)
-
-            if param == 'http':
-                proc = subprocess.Popen(
-                               'exec python3 -m http.server %d' % port,
-                               shell=True,
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE,
-                )
-                procs.append(proc)
-
-            elif param == 'ftp':
-                proc = subprocess.Popen(
-                       'exec python3 -m pyftpdlib -p %d' % port,
-                       shell=True,
-                       stdout=subprocess.PIPE,
-                       stderr=subprocess.PIPE,
-                )
-                procs.append(proc)
-
-            elif param == 'sftp':
-                proc = subprocess.Popen(
-                       'exec sftpserver -p %d -k ./sftp_server_rsa.key' % port,
-                       shell=True,
-                       stdout=subprocess.PIPE,
-                       stderr=subprocess.PIPE,
-                )
-                procs.append(proc)
-
-
-def teardown():
-    for proc in procs:
-        proc.terminate()
-        proc.wait()
-
-setup()
-atexit.register(teardown)
-
-
 @pytest.fixture(params=REMOTE_BACKENDS, scope='session')
 def remote_backend(request):
+    proc = None
+
     if ':' in request.param:
         param, _, options = request.param.partition(':')
         for option in options.split(';'):
@@ -303,16 +301,27 @@ def remote_backend(request):
         yield 'file://' + os.path.realpath('.')
 
     elif param == 'http':
+        proc, subpid = safe_popen('python3 -m http.server %d' % port)
+        time.sleep(1)
         yield 'http://localhost:%d' % port
 
     elif param == 'ftp':
+        proc, subpid = safe_popen('python3 -m pyftpdlib -p %d' % port)
+        time.sleep(1)
         yield 'ftp://localhost:%d' % port
 
     elif param == 'sftp':
+        proc, subpid = safe_popen('sftpserver -p %d -k ./sftp_server_rsa.key' % port)
+        time.sleep(1)
         yield 'sftp://someuser:somepassword@localhost:%d' % port
 
     else:
         assert False
+
+    if proc is not None:
+        proc.terminate()
+        proc.join()
+        os.kill(subpid, signal.SIGTERM)
 
 
 class TestArchive:
@@ -1511,22 +1520,18 @@ class TestTools:  # TODO more result checking, preferrably using tools
         python_path = 'PYTHONPATH=%s:$PYTHONPATH' % PARENT_DIR
         cmd = '%s python%s ../muninn/tools/%s.py %s %s %s 2>&1' % \
               (python_path, '3' if PY3 else '', tool, action, archive, args)
-        proc = subprocess.Popen(
-            cmd,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-        output, errs = proc.communicate()
-        if proc.returncode != 0:
+
+        returncode, output, errs = safe_popen(cmd, join=True)
+
+        if returncode != 0:
             for line in output.decode().splitlines():
                 print(line)
             for line in errs.decode().splitlines():
                 print(line)
         if should_fail:
-            assert proc.returncode != 0
+            assert returncode != 0
         else:
-            assert proc.returncode == 0
+            assert returncode == 0
             assert not errs
         return output.decode().splitlines()
 
