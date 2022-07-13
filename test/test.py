@@ -183,7 +183,8 @@ def do_popen(cmd, return_dict, join):
         return_dict['stderr'] = errs
         return_dict['returncode'] = proc.returncode
 
-    return_dict['pid'] = proc.pid  # TODO ugh! how to kill automatically when wrapper process dies..
+    else:
+        return_dict['pid'] = proc.pid  # TODO ugh! how to kill automatically when wrapper process dies..
 
 
 def safe_popen(cmd, join=False):
@@ -301,17 +302,17 @@ def remote_backend(request):
         yield 'file://' + os.path.realpath('.')
 
     elif param == 'http':
-        proc, subpid = safe_popen('python3 -m http.server %d' % port)
+        proc, subpid = safe_popen('exec python3 -m http.server %d' % port)
         time.sleep(1)
         yield 'http://localhost:%d' % port
 
     elif param == 'ftp':
-        proc, subpid = safe_popen('python3 -m pyftpdlib -p %d' % port)
+        proc, subpid = safe_popen('exec python3 -m pyftpdlib -p %d' % port)
         time.sleep(1)
         yield 'ftp://localhost:%d' % port
 
     elif param == 'sftp':
-        proc, subpid = safe_popen('sftpserver -p %d -k ./sftp_server_rsa.key' % port)
+        proc, subpid = safe_popen('exec sftpserver -p %d -k ./sftp_server_rsa.key' % port)
         time.sleep(1)
         yield 'sftp://someuser:somepassword@localhost:%d' % port
 
