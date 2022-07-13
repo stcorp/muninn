@@ -702,7 +702,7 @@ class PostgresqlBackend(object):
         type_map[Real] = "DOUBLE PRECISION"
         type_map[Boolean] = "BOOLEAN"
         type_map[Text] = "TEXT"
-        type_map[JSON] = "TEXT"
+        type_map[JSON] = "JSON"
         type_map[Timestamp] = "TIMESTAMP"
         type_map[UUID] = "UUID"
         type_map[Geometry] = "GEOGRAPHY"
@@ -796,8 +796,6 @@ class PostgresqlBackend(object):
                 value = value.encode(self._connection.encoding)
 
             if value is not None or not schema.is_optional(identifier):
-                if issubclass(schema[identifier], JSON):
-                    value = json.loads(value)
                 unpacked_properties[identifier] = value
 
         return unpacked_properties
