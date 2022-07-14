@@ -5,17 +5,17 @@
 from __future__ import absolute_import, division, print_function
 
 import collections
+
 try:
     from collections.abc import MutableMapping
 except ImportError:
     from collections import MutableMapping
 
 import inspect
-import re
 
 from muninn.exceptions import *
 from muninn.function import Prototype
-from muninn.language import parse_and_analyze, Literal, Name
+from muninn.language import parse_and_analyze, Literal, Name, Identifier
 from muninn.schema import *
 from muninn.visitor import Visitor
 
@@ -31,6 +31,7 @@ AGGREGATE_FUNCTIONS = collections.OrderedDict([
     # (Geometry, []),
     (None, ['min', 'max', 'sum', 'avg']),  # special case: validity_duration
 ])
+
 GROUP_BY_FUNCTIONS = collections.OrderedDict([
     (Long, [None, ]),
     (Integer, [None, ]),
@@ -41,6 +42,7 @@ GROUP_BY_FUNCTIONS = collections.OrderedDict([
     # (UUID, []),
     # (Geometry, []),
 ])
+
 
 
 class TypeMap(MutableMapping):
@@ -306,6 +308,10 @@ class _WhereExpressionVisitor(Visitor):
         return self._named_placeholder(parameter_name, arg=visitable.value)
 
     def visit_Name(self, visitable):
+        if isinstance(visitable.value, Identifier):
+            item = visitable.value
+            return '%s(%s)' % (item.subscript.upper(), self._column_name(item.namespace, item.identifier))
+
         namespace_name = visitable.value.split('.')
         if len(namespace_name) == 1:
             namespace = namespace_name[0]
@@ -384,47 +390,6 @@ class _WhereExpressionVisitor(Visitor):
         raise Error("unsupported abstract syntax tree node type: %r" % type(visitable).__name__)
 
 
-class Identifier(object):
-
-    # @staticmethod
-    def __init__(self, canonical_identifier, namespace_schemas):
-        self.canonical = canonical_identifier
-        if canonical_identifier == 'tag':
-            # the rules to get the namespace database table name also apply to 'tag'
-            self.namespace = canonical_identifier
-            self.identifier = canonical_identifier
-            self.subscript = None
-            self.muninn_type = Text
-        elif canonical_identifier == 'count':
-            self.namespace = None
-            self.identifier = canonical_identifier
-            self.subscript = None
-            self.muninn_type = Long
-        elif not re.match(r'[\w]+\.[\w.]+', canonical_identifier):
-            raise Error("cannot resolve identifier: %r" % canonical_identifier)
-        else:
-            split = canonical_identifier.split('.', 2)
-            self.namespace = split[0]
-            self.identifier = split[1]
-            self.subscript = split[2] if len(split) > 2 else None
-            # check if namespace is valid
-            if self.namespace not in namespace_schemas:
-                raise Error("undefined namespace: \"%s\"" % self.namespace)
-            # check if property name is valid
-            if self.identifier not in namespace_schemas[self.namespace]:
-                if self.property_name != 'core.validity_duration':
-                    raise Error("no property: %r defined within namespace: %r" % (self.identifier, self.namespace))
-            # note: not checking if subscript is valid; the list of possible subscripts varies depending on context
-            if self.property_name == 'core.validity_duration':
-                self.muninn_type = None
-            else:
-                self.muninn_type = namespace_schemas[self.namespace][self.identifier]
-
-    @property
-    def property_name(self):
-        return '%s.%s' % (self.namespace, self.identifier)
-
-
 class SQLBuilder(object):
     def __init__(self, namespace_schemas, type_map, rewriter_table, table_name_func, _named_placeholder_func,
                  _placeholder_func, rewriter_property_func):
@@ -476,7 +441,7 @@ class SQLBuilder(object):
         return query, where_parameters
 
     def build_summary_query(self, where='', parameters=None, aggregates=None, group_by=None, group_by_tag=False,
-                            order_by=None):
+                            having=None, order_by=None):
         aggregates = aggregates or []
         group_by = group_by or []
         order_by = order_by or []
@@ -500,6 +465,15 @@ class SQLBuilder(object):
         group_by_list = [str(i) for i in range(1, len(group_by) + 1)]
         if group_by_list:
             group_by_clause = 'GROUP BY %s' % ', '.join(group_by_list)
+
+        # Generate the HAVING clause
+        having_clause = ''
+        if having is not None:
+            ast = parse_and_analyze(having, self._namespace_schemas, parameters, having=True)
+            visitor = _WhereExpressionVisitor(self._rewriter_table, self._column_name, self._named_placeholder, visitor if where else None)
+            having_expr, having_parameters, _ = visitor.do_visit(ast)
+            where_parameters.update(having_parameters)
+            having_clause = 'HAVING %s' % having_expr
 
         # Parse the ORDER BY clause.
         order_by_clause = ''
@@ -581,6 +555,8 @@ class SQLBuilder(object):
             query = '%s\n%s' % (query, where_clause)
         if group_by_clause:
             query = '%s\n%s' % (query, group_by_clause)
+        if having_clause:
+            query = '%s\n%s' % (query, having_clause)
         if order_by_clause:
             query = '%s\n%s' % (query, order_by_clause)
 

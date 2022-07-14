@@ -1495,7 +1495,8 @@ class Archive(object):
 
         return len(products)
 
-    def summary(self, where="", parameters=None, aggregates=None, group_by=None, group_by_tag=False, order_by=None):
+    def summary(self, where="", parameters=None, aggregates=None, group_by=None, group_by_tag=False,
+                having=None, order_by=None):
         """Return a summary of the products matching the specified search expression.
 
         Arguments:
@@ -1520,7 +1521,7 @@ class Archive(object):
 
         Note that the property names must always include the namespace. 'core' is not assumed.
         """
-        return self._database.summary(where, parameters, aggregates, group_by, group_by_tag, order_by)
+        return self._database.summary(where, parameters, aggregates, group_by, group_by_tag, having, order_by)
 
     def tag(self, where=None, tags=None, parameters={}):
         """Set one or more tags on one or more product(s).

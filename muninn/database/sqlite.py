@@ -877,9 +877,10 @@ class SQLiteBackend(object):
             return self._source_products(uuid)
 
     @translate_sqlite_errors
-    def summary(self, where="", parameters=None, aggregates=None, group_by=None, group_by_tag=False, order_by=None):
+    def summary(self, where="", parameters=None, aggregates=None, group_by=None, group_by_tag=False,
+                having=None, order_by=None):
         query, query_parameters, query_description = self._sql_builder.build_summary_query(
-            where, parameters, aggregates, group_by, group_by_tag, order_by)
+            where, parameters, aggregates, group_by, group_by_tag, having, order_by)
 
         with self._connection:
             cursor = self._connection.cursor()

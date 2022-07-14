@@ -215,7 +215,13 @@ def run(args):
         order_by = coalesce_order_by_args(args.order_by, archive)
 
         result, header = archive.summary(
-            args.expression, aggregates=stats, group_by=group_by, group_by_tag=args.group_by_tag, order_by=order_by)
+            args.expression,
+            aggregates=stats,
+            group_by=group_by,
+            group_by_tag=args.group_by_tag,
+            order_by=order_by,
+            having=args.stats_filter
+        )
 
         # Output summary in the requested output format.
         writer = get_writer(header, args)
@@ -252,6 +258,7 @@ def main():
                         "'sum' and 'avg' are not possible for text and timestamp properties; "
                         "a special property 'validity_duration' (defined as validity_stop - validity_start) can also "
                         "be used; default stats: %r" % ' '.join(DEFAULT_STATS))
+    parser.add_argument("--stats-filter", metavar='EXPRESSION', help="expression used to filter on aggregates")
     parser.add_argument("-H", "--human-readable", action="store_true", help="output human readable core.size")
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
     parser.add_argument("expression", metavar="EXPRESSION", nargs='?', help="expression used to search for products")

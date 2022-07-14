@@ -19,6 +19,7 @@ from muninn.function import Prototype, FunctionTable
 from muninn.schema import *
 from muninn.visitor import Visitor
 
+
 #
 # Table of all supported operators and functions
 #
@@ -615,15 +616,22 @@ def _literal_type(literal):
 
 
 class SemanticAnalysis(Visitor):
-    def __init__(self, namespace_schemas, parameters):
+    def __init__(self, namespace_schemas, parameters, having=False):
         super(SemanticAnalysis, self).__init__()
         self._namespace_schemas = namespace_schemas
         self._parameters = parameters
+        self._having = having
 
     def visit_Literal(self, visitable):
         visitable.type = _literal_type(visitable.value)
 
     def visit_Name(self, visitable):
+        if self._having:
+            item = Identifier(visitable.value, self._namespace_schemas)
+            visitable.type = item.muninn_type
+            visitable.value = item
+            return
+
         split_name = visitable.value.split(".")
 
         # namespace/implicit core property
@@ -723,14 +731,14 @@ def parse(text):
     return abstract_syntax_tree
 
 
-def analyze(abstract_syntax_tree, namespace_schemas={}, parameters={}):
+def analyze(abstract_syntax_tree, namespace_schemas={}, parameters={}, having=False):
     annotated_syntax_tree = copy.deepcopy(abstract_syntax_tree)
-    SemanticAnalysis(namespace_schemas, parameters).visit(annotated_syntax_tree)
+    SemanticAnalysis(namespace_schemas, parameters, having=having).visit(annotated_syntax_tree)
     return annotated_syntax_tree
 
 
-def parse_and_analyze(text, namespace_schemas={}, parameters={}):
-    return analyze(parse(text), namespace_schemas, parameters)
+def parse_and_analyze(text, namespace_schemas={}, parameters={}, having=False):
+    return analyze(parse(text), namespace_schemas, parameters, having)
 
 
 def string_unescape(text):
@@ -760,3 +768,44 @@ def string_unescape(text):
 
     result = regex.sub(_replace, text)
     return result
+
+
+class Identifier(object):
+
+    # @staticmethod
+    def __init__(self, canonical_identifier, namespace_schemas):
+        self.canonical = canonical_identifier
+        if canonical_identifier == 'tag':
+            # the rules to get the namespace database table name also apply to 'tag'
+            self.namespace = canonical_identifier
+            self.identifier = canonical_identifier
+            self.subscript = None
+            self.muninn_type = Text
+        elif canonical_identifier == 'count':
+            self.namespace = None
+            self.identifier = canonical_identifier
+            self.subscript = None
+            self.muninn_type = Long
+        elif not re.match(r'[\w]+\.[\w.]+', canonical_identifier):
+            raise Error("cannot resolve identifier: %r" % canonical_identifier)
+        else:
+            split = canonical_identifier.split('.', 2)
+            self.namespace = split[0]
+            self.identifier = split[1]
+            self.subscript = split[2] if len(split) > 2 else None
+            # check if namespace is valid
+            if self.namespace not in namespace_schemas:
+                raise Error("undefined namespace: \"%s\"" % self.namespace)
+            # check if property name is valid
+            if self.identifier not in namespace_schemas[self.namespace]:
+                if self.property_name != 'core.validity_duration':
+                    raise Error("no property: %r defined within namespace: %r" % (self.identifier, self.namespace))
+            # note: not checking if subscript is valid; the list of possible subscripts varies depending on context
+            if self.property_name == 'core.validity_duration':
+                self.muninn_type = None
+            else:
+                self.muninn_type = namespace_schemas[self.namespace][self.identifier]
+
+    @property
+    def property_name(self):
+        return '%s.%s' % (self.namespace, self.identifier)
