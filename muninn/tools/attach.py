@@ -18,7 +18,7 @@ from muninn.tools.ingest import CheckProductListAction, filter_paths, get_path_e
 class AttachProcessor(Processor):
 
     def __init__(self, args):
-        super(AttachProcessor, self).__init__(args.archive)
+        super(AttachProcessor, self).__init__(args)
         self.path_expansion_function = get_path_expansion_function(args.path_is_stem, args.path_is_enclosing_directory)
         self.use_symlinks = args.link
         self.force = args.force

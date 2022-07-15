@@ -18,7 +18,6 @@ except ImportError:
 
 import muninn
 
-
 # This is a base class for operations on a list of items that can be performed in parallel using multiprocessing.
 # If you use the processor object as a callable then it is assumed that the operation is performed using subprocesses.
 # It will then create its own muninn archive instance per sub-process and prevents KeyboardInterrupt handling.
@@ -26,9 +25,17 @@ import muninn
 # archive handle.
 class Processor(object):
 
-    def __init__(self, archive_name):
-        self._archive_name = archive_name
+    def __init__(self, args):
+        global _POOL  # TODO what about multiple processors..
+
+        self._archive_name = args.archive
         self._archive = None
+
+        if args.parallel:
+            if args.processes is not None:
+                _POOL = multiprocessing.Pool(args.processes)
+            else:
+                _POOL = multiprocessing.Pool()
 
     def perform_operation(self, archive, item):
         pass
@@ -47,13 +54,9 @@ class Processor(object):
         num_success = 0
 
         if args.parallel:
-            if args.processes is not None:
-                pool = multiprocessing.Pool(args.processes)
-            else:
-                pool = multiprocessing.Pool()
-            num_success = sum(list(bar(pool.imap(self, items), total=total)))
-            pool.close()
-            pool.join()
+            num_success = sum(list(bar(_POOL.imap(self, items), total=total)))
+            _POOL.close()
+            _POOL.join()
 
         elif total > 1:
             for item in bar(items):

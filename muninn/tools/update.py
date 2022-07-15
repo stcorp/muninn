@@ -31,7 +31,7 @@ ACTIONS = [
 class UpdateProcessor(Processor):
 
     def __init__(self, args):
-        super(UpdateProcessor, self).__init__(args.archive)
+        super(UpdateProcessor, self).__init__(args)
         self.action = args.action
         self.argument = args.argument
         self.disable_hooks = args.disable_hooks

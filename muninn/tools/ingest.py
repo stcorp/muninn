@@ -66,7 +66,7 @@ def get_path_expansion_function(is_stem=False, is_enclosing_directory=False):
 class IngestProcessor(Processor):
 
     def __init__(self, args):
-        super(IngestProcessor, self).__init__(args.archive)
+        super(IngestProcessor, self).__init__(args)
         assert not args.link or not args.keep
         self.path_expansion_function = get_path_expansion_function(args.path_is_stem, args.path_is_enclosing_directory)
         self.use_symlinks = args.link

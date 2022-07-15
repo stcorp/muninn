@@ -11,7 +11,7 @@ from muninn.tools.utils import Processor, create_parser, parse_args_and_run
 
 class RemoveProcessor(Processor):
     def __init__(self, args):
-        super(RemoveProcessor, self).__init__(args.archive)
+        super(RemoveProcessor, self).__init__(args)
         self.args = args
 
     def perform_operation(self, archive, product):

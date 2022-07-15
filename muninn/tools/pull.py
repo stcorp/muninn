@@ -13,7 +13,7 @@ from muninn.tools.utils import Processor, create_parser, parse_args_and_run
 
 class PullProcessor(Processor):
     def __init__(self, args):
-        super(PullProcessor, self).__init__(args.archive)
+        super(PullProcessor, self).__init__(args)
         self.args = args
         self.verify_hash = True if args.verify_hash else False
         self.verify_hash_download = True if args.verify_hash_download else False

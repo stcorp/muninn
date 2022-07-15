@@ -16,7 +16,7 @@ from muninn.tools.utils import Processor, create_parser, parse_args_and_run
 
 class ExportProcessor(Processor):
     def __init__(self, args, target_path):
-        super(ExportProcessor, self).__init__(args.archive)
+        super(ExportProcessor, self).__init__(args)
         self.args = args
         self.target_path = target_path
 

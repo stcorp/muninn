@@ -17,7 +17,7 @@ from muninn.util import product_hash
 
 class VerifyProcessor(Processor):
     def __init__(self, args):
-        super(VerifyProcessor, self).__init__(args.archive)
+        super(VerifyProcessor, self).__init__(args)
         self.args = args
 
     def perform_operation(self, archive, product):

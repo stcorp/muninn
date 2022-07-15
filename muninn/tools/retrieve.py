@@ -21,7 +21,7 @@ def directory(text):
 
 class RetrieveProcessor(Processor):
     def __init__(self, args, target_path):
-        super(RetrieveProcessor, self).__init__(args.archive)
+        super(RetrieveProcessor, self).__init__(args)
         self.args = args
         self.target_path = target_path
 
