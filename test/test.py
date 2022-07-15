@@ -1207,7 +1207,7 @@ class TestArchive:
                                         aggregates=['core.archive_date.min', 'core.archive_date.max'],
                                         where='size > 0',
                                         order_by=['core.product_name'],
-                                        having='core.archive_date.min >= 2020-02-02',
+                                        having='core.archive_date.min >= 2020-02-02 and count >= 1',
                                        )
         assert len(data) == 2
 

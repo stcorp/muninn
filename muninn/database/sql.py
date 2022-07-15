@@ -310,7 +310,10 @@ class _WhereExpressionVisitor(Visitor):
     def visit_Name(self, visitable):
         if isinstance(visitable.value, Identifier):
             item = visitable.value
-            return '%s(%s)' % (item.subscript.upper(), self._column_name(item.namespace, item.identifier))
+            if item.canonical == 'count':
+                return 'COUNT(*)'
+            else:
+                return '%s(%s)' % (item.subscript.upper(), self._column_name(item.namespace, item.identifier))
 
         namespace_name = visitable.value.split('.')
         if len(namespace_name) == 1:
