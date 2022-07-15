@@ -1528,7 +1528,7 @@ class TestQuery:
 
 class TestTools:  # TODO more result checking, preferrably using tools
     def _run(self, tool, args='', action='', archive='my_arch', should_fail=False):
-        python_path = 'PYTHONPATH=%s:$PYTHONPATH' % PARENT_DIR
+        python_path = 'PYTHONPATH=%s:.:$PYTHONPATH' % PARENT_DIR
         cmd = '%s python%s ../muninn/tools/%s.py %s %s %s 2>&1' % \
               (python_path, '3' if PY3 else '', tool, action, archive, args)
 
