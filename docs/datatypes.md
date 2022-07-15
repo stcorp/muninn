@@ -7,7 +7,7 @@ permalink: /datatypes/
 # Data types
 
 Each product property can be of one of the following supported types: boolean,
-integer, long, real, text, timestamp, uuid, and geometry. These types are
+integer, long, real, text, timestamp, uuid, geometry and json. These types are
 described in detail below.
 
 The boolean type represents a truth value and has two possible states: ``true``
@@ -129,3 +129,5 @@ Some examples of literal geometry values:
   ``POLYGON ((5.0 52.0, 6.0 53.0, 3.0 52.5, 5.0 52.0))``
 
   ``POLYGON EMPTY``
+
+The json type represents JSON objects.
