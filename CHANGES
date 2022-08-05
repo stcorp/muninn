@@ -19,6 +19,11 @@
 
 * Run hooks after core.active is set to True (regression introduced in 5.4).
 
+* Creating a table will now set COLLATE of TEXT properties to 'C' for the
+  postgres backend to guarantee consistent sorting. Fields of existing tables
+  can be manually updated using the following sql command template:
+     ALTER TABLE table ALTER COLUMN property SET DATA TYPE TEXT COLLATE "C"
+
 5.4 2022-02-22
 ~~~~~~~~~~~~~~
 

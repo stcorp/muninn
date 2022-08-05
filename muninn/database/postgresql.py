@@ -701,7 +701,7 @@ class PostgresqlBackend(object):
         type_map[Integer] = "INTEGER"
         type_map[Real] = "DOUBLE PRECISION"
         type_map[Boolean] = "BOOLEAN"
-        type_map[Text] = "TEXT"
+        type_map[Text] = "TEXT COLLATE \"C\""
         type_map[JSON] = "JSONB"
         type_map[Timestamp] = "TIMESTAMP"
         type_map[UUID] = "UUID"

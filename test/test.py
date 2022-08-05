@@ -1222,6 +1222,24 @@ class TestArchive:
         archive.create_properties(product)
         assert len(archive.search()) == 1
 
+    def test_sort(self, archive):
+        def _create_product(name):
+            product = muninn.struct.Struct()
+            product.core = muninn.struct.Struct()
+            product.core.uuid = uuid.uuid4()
+            product.core.active = True
+            product.core.product_type = 'foo'
+            product.core.product_name = name
+            product.core.physical_name = name
+            archive.create_properties(product)
+        _create_product('abc')
+        _create_product('ABC')
+        _create_product('A_AA')
+        s = archive.search(order_by=['core.product_name'])
+        names = [p.core.product_name for p in s]
+        print(names)
+        assert names == ['ABC', 'A_AA', 'abc']
+
 
 class TestQuery:
     def _prep_data(self, archive):
