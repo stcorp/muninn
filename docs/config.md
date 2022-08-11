@@ -22,7 +22,7 @@ settings:
   supported backends are ``postgresql`` and ``sqlite``.
 
 - ``storage``: The backend used for storing product data. The currently
-  supported backends are ``fs``, ``s3`` and ``swift``.
+  supported backends are ``none``, ``fs``, ``s3`` and ``swift``.
 
 - ``cascade_grace_period``: Number of minutes after which a product may be
   considered for automatic removal. The default is 0 (immediately).
@@ -100,6 +100,16 @@ contain the following settings:
   to 'mod_spatialite' by default (which only works if library is on search path).
   Change this to e.g. /usr/local/lib/mod_spatialite to set an explicit path
   (no filename extension needed).
+
+
+# Section "none"
+
+This section contains backend specific settings for the ``none`` storage backend,
+of which there are currently none.
+
+When using this backend, muninn does not maintain an archive storage, and
+instead uses the ``remote_url`` product property to point to products in local
+storage.
 
 
 # Section "fs"

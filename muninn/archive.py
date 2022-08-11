@@ -25,6 +25,7 @@ from muninn.core import Core
 from muninn.exceptions import Error, StorageError
 from muninn.extension import CascadeRule
 from muninn.schema import Text, Boolean, Integer, Sequence, Mapping
+from muninn.storage.none import NoStorageBackend
 from muninn.struct import Struct
 from muninn import remote
 
@@ -997,8 +998,11 @@ class Archive(object):
         else:
             raise Error("cannot determine physical name for multi-part product")
 
+        if isinstance(self._storage, NoStorageBackend):  # TODO nicer check
+            ingest_product = False
+
         # Determine archive path
-        if ingest_product:
+        elif ingest_product:
             if use_current_path:
                 properties.core.archive_path = self._storage.current_archive_path(paths, properties)
             else:
@@ -1046,6 +1050,10 @@ class Archive(object):
                 use_enclosing_directory = plugin.use_enclosing_directory
                 self._storage.put(paths, properties, use_enclosing_directory, use_symlinks)
                 properties.core.archive_date = self._database.server_time_utc()
+
+            elif isinstance(self._storage, NoStorageBackend):  # TODO to backend?
+                assert len(paths) == 1  # TODO what about multiple
+                properties.core.remote_url = 'file://' + os.path.realpath(paths[0])
 
         except Exception as e:
             if not (isinstance(e, StorageError) and e.anything_stored):

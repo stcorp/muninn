@@ -66,6 +66,11 @@ class BaseChecker(object):
         self.parser.read(u'my_arch.cfg')
 
 
+class NoneChecker(BaseChecker):
+    def __init__(self, *args, **kwargs):
+        super(NoneChecker, self).__init__(*args, **kwargs)
+
+
 class FSChecker(BaseChecker):
     def __init__(self, *args, **kwargs):
         super(FSChecker, self).__init__(*args, **kwargs)
@@ -147,6 +152,7 @@ class SwiftChecker(BaseChecker):
 
 
 STORAGE_CHECKERS = {
+    'none': NoneChecker,
     'fs': FSChecker,
     's3': S3Checker,
     'swift': SwiftChecker,
@@ -208,8 +214,12 @@ def database(request):
     return request.param
 
 
-@pytest.fixture(params=STORAGE_BACKENDS)
+@pytest.fixture(params=[s for s in STORAGE_BACKENDS if s != 'none'])
 def storage(request):
+    return request.param
+
+@pytest.fixture(params=[s for s in STORAGE_BACKENDS if s == 'none'])
+def storage_pure(request):
     return request.param
 
 
@@ -223,8 +233,7 @@ def use_enclosing_directory(request):
     return request.param
 
 
-@pytest.fixture
-def archive(database, storage, use_enclosing_directory, archive_path):
+def _archive(database, storage, use_enclosing_directory, archive_path):
     database, _, database_options = database.partition(':')
 
     # create my_arch.cfg by combining my_arch.cfg.template and test.cfg
@@ -283,6 +292,15 @@ def archive(database, storage, use_enclosing_directory, archive_path):
         archive._checker = STORAGE_CHECKERS[storage](storage)
 
         yield archive
+
+
+@pytest.fixture
+def archive(database, storage, use_enclosing_directory, archive_path):
+    yield from _archive(database, storage, use_enclosing_directory, archive_path)
+
+@pytest.fixture
+def archive_pure(database, storage_pure, use_enclosing_directory, archive_path):
+    yield from _archive(database, storage_pure, use_enclosing_directory, archive_path)
 
 
 @pytest.fixture(params=REMOTE_BACKENDS, scope='session')
@@ -1237,8 +1255,24 @@ class TestArchive:
         _create_product('A_AA')
         s = archive.search(order_by=['core.product_name'])
         names = [p.core.product_name for p in s]
-        print(names)
         assert names == ['ABC', 'A_AA', 'abc']
+
+
+class TestArchivePureCatalogue:  # TODO merge with TestArchive
+    def test_ingest(self, archive_pure):
+        properties = archive_pure.ingest(  # TODO what about multiple paths?
+            ['data/a.txt'],
+        )
+        assert properties.core.archive_path is None
+        assert properties.core.remote_url == 'file://' + os.path.realpath('data/a.txt')
+        assert len(archive_pure.search()) == 1
+
+    def test_remove(self, archive_pure):
+        properties = archive_pure.ingest(
+            ['data/a.txt'],
+        )
+        archive_pure.remove(properties)
+        assert len(archive_pure.search()) == 0
 
 
 class TestQuery:
@@ -1756,7 +1790,6 @@ class TestTools:  # TODO more result checking, preferrably using tools
 
         output = self._run('hash', 'calc -s data/pi', archive='')
         assert len(output) == 1
-
 
     def test_export(self, archive):
         output = self._run('ingest', 'data/pi.txt')
