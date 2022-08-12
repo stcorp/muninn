@@ -1258,7 +1258,7 @@ class TestArchive:
         assert names == ['ABC', 'A_AA', 'abc']
 
 
-class TestArchivePureCatalogue:  # TODO merge with TestArchive
+class TestArchivePureCatalogue:  # TODO merge with TestArchive?
     def test_ingest(self, archive_pure):
         properties = archive_pure.ingest(  # TODO what about multiple paths?
             ['data/a.txt'],
@@ -1273,6 +1273,14 @@ class TestArchivePureCatalogue:  # TODO merge with TestArchive
         )
         archive_pure.remove(properties)
         assert len(archive_pure.search()) == 0
+
+    def test_retrieve(self, archive_pure):
+        properties = archive_pure.ingest(
+            ['data/a.txt'],
+        )
+        with muninn.util.TemporaryDirectory() as tmp_path:
+            archive_pure.retrieve(target_path=tmp_path)
+            assert os.listdir(tmp_path) == ['a.txt']
 
 
 class TestQuery:

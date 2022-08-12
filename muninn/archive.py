@@ -531,19 +531,25 @@ class Archive(object):
         self._storage.delete(product_path, product)
 
     def _retrieve(self, product, target_path, use_symlinks=False):
-        # Determine the path of the product in storage.
-        product_path = self._product_path(product)
-        if product_path is None:
-            raise Error("no data available for product '%s' (%s)" % (product.core.product_name, product.core.uuid))
+        if 'archive_path' in product.core:
+            # Determine the path of the product in storage.
+            product_path = self._product_path(product)
 
-        # Get the product type specific plug-in.
-        plugin = self.product_type_plugin(product.core.product_type)
-        use_enclosing_directory = plugin.use_enclosing_directory
+            # Get the product type specific plug-in.
+            plugin = self.product_type_plugin(product.core.product_type)
+            use_enclosing_directory = plugin.use_enclosing_directory
 
-        # Symbolic link or copy the product at or to the specified target directory.
-        self._storage.get(product, product_path, target_path, use_enclosing_directory, use_symlinks)
+            # Symbolic link or copy the product at or to the specified target directory.
+            self._storage.get(product, product_path, target_path, use_enclosing_directory, use_symlinks)
 
-        return os.path.join(target_path, os.path.basename(product_path))
+            return os.path.join(target_path, os.path.basename(product_path))
+
+        elif 'remote_url' in product.core:
+            retrieve_files = remote.retrieve_function(self, product, True)  # TODO verify hash?
+            retrieve_files(target_path)
+
+        else:
+            raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
 
     def _strip(self, product):
         # Set the archive path to None to indicate the product has no data in storage associated with it.
@@ -1043,7 +1049,6 @@ class Archive(object):
                     properties.core.hash = util.product_hash(paths, hash_type=hash_type)
                 except EnvironmentError as _error:
                     raise Error("cannot determine product hash [%s]" % (_error,))
-                # Update the product hash in the product catalogue.
                 self.update_properties(Struct({'core': {'hash': properties.core.hash}}), properties.core.uuid)
 
             if ingest_product:
@@ -1054,6 +1059,7 @@ class Archive(object):
             elif isinstance(self._storage, NoStorageBackend):  # TODO to backend?
                 assert len(paths) == 1  # TODO what about multiple
                 properties.core.remote_url = 'file://' + os.path.realpath(paths[0])
+                self.update_properties(Struct({'core': {'remote_url': properties.core.remote_url}}), properties.core.uuid)
 
         except Exception as e:
             if not (isinstance(e, StorageError) and e.anything_stored):
@@ -1405,13 +1411,14 @@ class Archive(object):
         A list with the target paths for the retrieved products (when a search expression or multiple properties/uuids
         were passed), or a single target path.
         """
-        products = self._get_products(where, parameters, property_names=_CORE_PROP_NAMES)
+        products = self._get_products(where, parameters, property_names=_CORE_PROP_NAMES + ['remote_url'])
 
         result = []
         for product in products:
-            if not product.core.active or 'archive_path' not in product.core:
+            if product.core.active and ('archive_path' in product.core or 'remote_url' in product.core):
+                result.append(self._retrieve(product, target_path, use_symlinks))
+            else:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
-            result.append(self._retrieve(product, target_path, use_symlinks))
 
         if isinstance(where, UUID):
             return result[0]

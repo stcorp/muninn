@@ -215,8 +215,8 @@ REMOTE_BACKENDS = {
 
 
 def retrieve_function(archive, product, verify_hash_download):
-    if getattr(product.core, "archive_path", None) is None:
-        raise Error("cannot pull files that do not have archive_path set")
+    if getattr(product.core, 'archive_path', None) is None and getattr(product.core, 'remote_url', None) is None:
+        raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
 
     # determine the backend to use
     backend = None
