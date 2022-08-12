@@ -1282,6 +1282,18 @@ class TestArchivePureCatalogue:  # TODO merge with TestArchive?
             archive_pure.retrieve(target_path=tmp_path)
             assert os.listdir(tmp_path) == ['a.txt']
 
+    def test_export(self, archive_pure):
+        if archive_pure._params['use_enclosing_directory']:  # TODO plugin doesn't compress single files?
+            properties = archive_pure.ingest(
+                ['data/a.txt'],
+            )
+            with muninn.util.TemporaryDirectory() as tmp_path:
+                archive_pure.export(target_path=tmp_path)
+                assert os.listdir(tmp_path) == ['a.txt']
+            with muninn.util.TemporaryDirectory() as tmp_path:
+                archive_pure.export(target_path=tmp_path, format='tgz')
+                assert os.listdir(tmp_path) == ['a.txt.tgz']
+
 
 class TestQuery:
     def _prep_data(self, archive):

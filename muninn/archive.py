@@ -1167,7 +1167,9 @@ class Archive(object):
                 product = self._get_product(uuid_or_properties.core.uuid,
                                             property_names=property_names)
 
-        return os.path.join(self._storage.global_prefix, self._product_path(product))
+        product_path = self._product_path(product)
+        if product_path is not None:
+            return os.path.join(self._storage.global_prefix, product_path)
 
     def pull(self, where="", parameters={}, verify_hash=False, verify_hash_download=False):
         """Pull one or more remote products into the archive.

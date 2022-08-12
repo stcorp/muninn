@@ -76,7 +76,12 @@ class MyTypePlugin(object):
         assert product.mynamespace2.counter == 28
         product_filepath = archive.product_path(product)
 
-        target_filepath = os.path.join(os.path.abspath(target_path), product.core.archive_path, product.core.physical_name + ".tgz")
+        if product_filepath is None: # storage=none
+            product_filepath = product.core.remote_url[7:]
+            target_filepath = os.path.join(os.path.abspath(target_path), product.core.physical_name + ".tgz")
+        else:
+            target_filepath = os.path.join(os.path.abspath(target_path), product.core.archive_path, product.core.physical_name + ".tgz")
+
         if not os.path.exists(os.path.dirname(target_filepath)):
             os.makedirs(os.path.dirname(target_filepath))
 
