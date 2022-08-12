@@ -1267,6 +1267,8 @@ class TestArchivePureCatalogue:  # TODO merge with TestArchive?
         assert properties.core.remote_url == 'file://' + os.path.realpath('data/a.txt')
         assert len(archive_pure.search()) == 1
 
+        assert archive_pure.product_path(properties).startswith('file://')
+
     def test_remove(self, archive_pure):
         properties = archive_pure.ingest(
             ['data/a.txt'],
