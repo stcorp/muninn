@@ -74,10 +74,8 @@ class MyTypePlugin(object):
 
     def export_tgz(self, archive, product, target_path, paths):
         assert product.mynamespace2.counter == 28
-        product_filepath = archive.product_path(product)
 
-        if product_filepath is None: # storage=none
-            product_filepath = product.core.remote_url[7:]
+        if getattr(product.core, 'archive_path', None) is None:
             target_filepath = os.path.join(os.path.abspath(target_path), product.core.physical_name + ".tgz")
         else:
             target_filepath = os.path.join(os.path.abspath(target_path), product.core.archive_path, product.core.physical_name + ".tgz")
@@ -86,7 +84,7 @@ class MyTypePlugin(object):
             os.makedirs(os.path.dirname(target_filepath))
 
         with TemporaryDirectory(prefix=".calc_hash-", suffix="-%s" % product.core.uuid.hex) as tmp_path:
-            tmp_path = os.path.join(tmp_path, os.path.basename(product_filepath))
+            tmp_path = os.path.join(tmp_path, product.core.physical_name)
             os.makedirs(tmp_path)
 
             archive.retrieve(product.core.uuid, target_path=tmp_path) # TODO symlinks currently don't work with compress?
