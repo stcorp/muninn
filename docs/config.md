@@ -104,10 +104,8 @@ contain the following settings:
 
 # Section "none"
 
-This section contains backend specific settings for the ``none`` storage backend
-and may contain the following settings:
-
-- ``tmp_root``: [Optional] path where temporary data should be stored.
+This section contains backend specific settings for the ``none`` storage backend,
+for which there are currently none.
 
 When using this backend, muninn does not maintain an archive storage, and
 instead uses the ``remote_url`` product property to point to products in local
