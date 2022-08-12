@@ -1057,8 +1057,10 @@ class Archive(object):
                 properties.core.archive_date = self._database.server_time_utc()
 
             elif isinstance(self._storage, NoStorageBackend):  # TODO to backend?
-                assert len(paths) == 1  # TODO what about multiple
-                properties.core.remote_url = 'file://' + os.path.realpath(paths[0])
+                if len(paths) == 1:
+                    properties.core.remote_url = 'file://' + os.path.realpath(paths[0])
+                else:
+                    properties.core.remote_url = 'file://' + os.path.realpath(os.path.dirname(paths[0]))  # TODO test
                 self.update_properties(Struct({'core': {'remote_url': properties.core.remote_url}}), properties.core.uuid)
 
         except Exception as e:
