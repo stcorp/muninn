@@ -497,7 +497,7 @@ class Archive(object):
         self._database.delete_product_properties(product.core.uuid)
 
         # Remove any data in storage associated with the product.
-        self._remove(product)
+        self._remove_storage(product)
 
         # Run the post remove hook (if defined by the product type plug-in or hook extensions).
         self._run_hooks('post_remove_hook', product, reverse=True)
@@ -520,7 +520,7 @@ class Archive(object):
         else:
             return None, paths
 
-    def _remove(self, product):
+    def _remove_storage(self, product):
         # If the product has no data in storage associated with it, return.
         product_path = self._product_path(product)
         if product_path is None:
@@ -557,7 +557,7 @@ class Archive(object):
                                product.core.uuid)
 
         # Remove any data in storage associated with the product.
-        self._remove(product)
+        self._remove_storage(product)
 
     def _update_export_formats(self, plugin):
         # Find all callables of which the name starts with "export_". The remainder of the name is used as the name of
