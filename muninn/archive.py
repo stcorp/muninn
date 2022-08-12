@@ -484,7 +484,7 @@ class Archive(object):
         return products
 
     def _product_path(self, product):
-        if getattr(product.core, "archive_path", None) is None:
+        if getattr(product.core, 'archive_path', None) is None:
             return None
 
         return self._storage.product_path(product)
@@ -1164,8 +1164,8 @@ class Archive(object):
                 product = self._get_product(uuid_or_properties,
                                             property_names=property_names)
             else:
-                products = self._get_product(product_name=uuid_or_properties,
-                                             property_names=property_names)
+                product = self._get_product(uuid_or_properties.core.uuid,
+                                            property_names=property_names)
 
         return os.path.join(self._storage.global_prefix, self._product_path(product))
 
