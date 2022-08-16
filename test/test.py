@@ -576,7 +576,7 @@ class TestArchive:
 
         with pytest.raises(muninn.exceptions.Error) as excinfo:
             archive.remove(uuid.uuid4())
-        assert 'not found' in str(excinfo)
+        assert 'No product found' in str(excinfo)
 
     def test_ingest_multi_file(self, archive):
         # copy
@@ -675,7 +675,7 @@ class TestArchive:
 
         with pytest.raises(muninn.exceptions.Error) as excinfo:
             nstripped = archive.strip(uuid.uuid4())
-        assert 'not found' in str(excinfo)
+        assert 'No product found' in str(excinfo)
 
     def test_attach(self, archive):
         path = os.path.join(archive._params['archive_path'], 'pi.txt')
@@ -882,7 +882,7 @@ class TestArchive:
 
             with pytest.raises(muninn.exceptions.Error) as excinfo:
                 archive.retrieve(uuid.uuid4())
-            assert 'not found' in str(excinfo)
+            assert 'No product found' in str(excinfo)
 
         # symlink
         if archive._params['storage'] == 'fs':

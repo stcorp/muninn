@@ -447,7 +447,6 @@ class Archive(object):
             assert len(products) == 1
             return products[0]
 
-    # TODO for performance, we may want to call something like 'run_for_uuids' instead of search
     def _get_products(self, where, parameters=None, namespaces=None, property_names=None):
         if isinstance(where, basestring):
             return self.search(where, parameters=parameters, namespaces=namespaces, property_names=property_names)
@@ -470,16 +469,7 @@ class Archive(object):
                 product_uuid = term.core.uuid
             else:
                 raise Error('Invalid product selection')
-
-            where = 'uuid == @uuid'  # TODO simplify to _get_product(product_uuid)..?
-            parameters = {'uuid': product_uuid}
-            matches = self.search(where, parameters=parameters, namespaces=namespaces, property_names=property_names)
-            if len(matches) == 0:
-                raise Error("product with uuid '%s' not found" % product_uuid)
-            else:
-                assert len(matches) == 1
-
-            products.append(matches[0])
+            products.append(self._get_product(product_uuid, namespaces=namespaces, property_names=property_names))
 
         return products
 
