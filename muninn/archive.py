@@ -62,6 +62,7 @@ class _ArchiveConfig(Mapping):
     remote_backend_extensions = _ExtensionList(optional=True)
     hook_extensions = _ExtensionList(optional=True)
     auth_file = Text(optional=True)
+    tempdir = Text(optional=True)
 
 
 def _load_backend_module(name):
@@ -119,7 +120,7 @@ def create(configuration, id=None):
 
     # Load and create the storage backend.
     storage_module = _load_storage_module(options.pop("storage", "fs"))
-    storage = storage_module.create(configuration)
+    storage = storage_module.create(configuration, options.get('tempdir', None))
 
     # Create the archive.
     namespace_extensions = options.pop("namespace_extensions", [])
@@ -203,7 +204,7 @@ class Archive(object):
     id = None
 
     def __init__(self, backend, storage, cascade_grace_period=0,
-                 max_cascade_cycles=25, auth_file=None, id=None):
+                 max_cascade_cycles=25, auth_file=None, id=None, tempdir=None):
         self._cascade_grace_period = datetime.timedelta(minutes=cascade_grace_period)
         self._max_cascade_cycles = max_cascade_cycles
         self._auth_file = auth_file
@@ -212,13 +213,14 @@ class Archive(object):
         self._product_type_plugins = {}
         self._remote_backend_plugins = copy.copy(remote.REMOTE_BACKENDS)
         self._hook_extensions = collections.OrderedDict()
+
         self._export_formats = set()
 
         self._database = backend
         self._database.initialize(self._namespace_schemas)
 
         self._storage = storage
-
+        self._tempdir = tempdir
         self.id = id
 
     def register_namespace(self, namespace, schema):

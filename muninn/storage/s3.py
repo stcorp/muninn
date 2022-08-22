@@ -26,23 +26,22 @@ class _S3Config(Mapping):
     secret_access_key = Text()
     region = Text(optional=True)
     prefix = Text(optional=True)
-    tmp_root = Text(optional=True)
     download_args = Text(optional=True)  # JSON representation of boto3 download_file ExtraArgs parameter
     upload_args = Text(optional=True)  # JSON representation of boto3 upload_file ExtraArgs parameter
     copy_args = Text(optional=True)  # JSON representation of boto3 copy ExtraArgs parameter
     transfer_config = Text(optional=True)  # JSON representation of boto3.s3.transfer.TransferConfig parameters
 
 
-def create(configuration):
+def create(configuration, tempdir):
     options = config.parse(configuration.get("s3", {}), _S3Config)
     _S3Config.validate(options)
-    return S3StorageBackend(**options)
+    return S3StorageBackend(**options, tempdir=tempdir)
 
 
 class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate directory, 'dir/' with contents?
-    def __init__(self, bucket, host, access_key, secret_access_key, port=None, region=None, prefix='', tmp_root=None,
-                 download_args=None, upload_args=None, copy_args=None, transfer_config=None):
-        super(S3StorageBackend, self).__init__()
+    def __init__(self, bucket, host, access_key, secret_access_key, port=None, region=None, prefix='',
+                 download_args=None, upload_args=None, copy_args=None, transfer_config=None, tempdir=None):
+        super(S3StorageBackend, self).__init__(tempdir)
 
         self.bucket = bucket
         if prefix and not prefix.endswith('/'):
@@ -62,10 +61,6 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
         self.global_prefix = os.path.join(endpoint_url, bucket, prefix)
 
         self._root = bucket
-        if tmp_root:
-            tmp_root = os.path.realpath(tmp_root)
-            util.make_path(tmp_root)
-        self._tmp_root = tmp_root
 
         self._resource = boto3.resource(
             service_name='s3',

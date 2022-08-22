@@ -4,12 +4,19 @@ import muninn.util as util
 
 
 class StorageBackend(object):
-    def __init__(self):
+    def __init__(self, tempdir=None):
         self.supports_symlinks = False
         self.global_prefix = ''
 
+        if tempdir is not None:
+            tmp_root = os.path.realpath(tempdir)
+            util.make_path(tmp_root)
+            self._tmp_root = tmp_root
+        else:
+            self._tmp_root = None
+
     def get_tmp_root(self, product):
-        if self._tmp_root:
+        if self._tmp_root is not None:
             tmp_root = os.path.join(self._tmp_root, product.core.archive_path)
             util.make_path(tmp_root)
             return tmp_root

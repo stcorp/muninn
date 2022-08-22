@@ -16,7 +16,7 @@ class _FSConfig(Mapping):
     use_symlinks = Boolean(optional=True)
 
 
-def create(configuration):
+def create(configuration, tempdir):
     fs_section = configuration.get("fs", {})
     if not fs_section:  # backward compatibility
         options = {}
@@ -33,12 +33,12 @@ def create(configuration):
         options = config.parse(fs_section, _FSConfig)
         _FSConfig.validate(options)
 
-    return FilesystemStorageBackend(**options)
+    return FilesystemStorageBackend(**options, tempdir=tempdir)
 
 
 class FilesystemStorageBackend(StorageBackend):
-    def __init__(self, root, use_symlinks=None):
-        super(FilesystemStorageBackend, self).__init__()
+    def __init__(self, root, use_symlinks=None, tempdir=None):
+        super(FilesystemStorageBackend, self).__init__(tempdir)
 
         self._root = os.path.realpath(root)
         self._use_symlinks = use_symlinks or False
@@ -52,7 +52,10 @@ class FilesystemStorageBackend(StorageBackend):
             raise Error("unable to create archive root path '%s' [%s]" % (self._root, _error))
 
     def get_tmp_root(self, product):
-        tmp_root = os.path.join(self._root, product.core.archive_path)
+        if self._tmp_root is None:
+            tmp_root = os.path.join(self._root, product.core.archive_path)
+        else:
+            tmp_root = self._tmp_root
         util.make_path(tmp_root)
         return tmp_root
 

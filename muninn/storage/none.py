@@ -13,7 +13,7 @@ class _FSConfig(Mapping):
     _alias = "none"
 
 
-def create(configuration):
+def create(configuration, tempdir):
     return NoStorageBackend()
 
 
