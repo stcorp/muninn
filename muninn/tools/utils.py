@@ -10,6 +10,9 @@ import multiprocessing
 import os
 import sys
 
+from multiprocessing import RLock
+RLock() # fork off resource tracker before tqdm does it (with multiple threads running)
+
 try:
     from tqdm import tqdm as bar
 except ImportError:
