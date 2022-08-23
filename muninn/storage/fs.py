@@ -51,11 +51,9 @@ class FilesystemStorageBackend(StorageBackend):
         except EnvironmentError as _error:
             raise Error("unable to create archive root path '%s' [%s]" % (self._root, _error))
 
+    # tempdirs must be on the same file system for moves (below) to be atomic!
     def get_tmp_root(self, product):
-        if self._tmp_root is None:
-            tmp_root = os.path.join(self._root, product.core.archive_path)
-        else:
-            tmp_root = self._tmp_root
+        tmp_root = os.path.join(self._root, product.core.archive_path)
         util.make_path(tmp_root)
         return tmp_root
 
