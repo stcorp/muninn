@@ -25,7 +25,6 @@ from muninn.core import Core
 from muninn.exceptions import Error, StorageError
 from muninn.extension import CascadeRule
 from muninn.schema import Text, Boolean, Integer, Sequence, Mapping
-from muninn.storage.none import NoStorageBackend
 from muninn.struct import Struct
 from muninn import remote
 
@@ -119,8 +118,12 @@ def create(configuration, id=None):
     backend = backend_module.create(configuration)
 
     # Load and create the storage backend.
-    storage_module = _load_storage_module(options.pop("storage", "fs"))
-    storage = storage_module.create(configuration, options.get('tempdir', None))
+    storage_name = options.pop('storage', 'none')
+    if storage_name == 'none':
+        storage = None
+    else:
+        storage_module = _load_storage_module(storage_name)
+        storage = storage_module.create(configuration, options.get('tempdir', None))
 
     # Create the archive.
     namespace_extensions = options.pop("namespace_extensions", [])
@@ -612,6 +615,17 @@ class Archive(object):
 
         return properties, tags
 
+    def _run_for_product(self, product, fn, use_enclosing_directory):
+        if self._storage is None:
+            product_path = product.core.remote_url[7:]
+            if os.path.isdir(product_path):
+                paths = [os.path.join(product_path, basename) for basename in os.listdir(product_path)]
+            else:
+                paths = [product_path]
+            return fn(paths)
+        else:
+            return self._storage.run_for_product(product, fn, use_enclosing_directory)
+
     def attach(self, paths, product_type=None, use_symlinks=None,
                verify_hash=False, verify_hash_before=False,
                use_current_path=False, force=False):
@@ -817,7 +831,8 @@ class Archive(object):
         """
         self.destroy_catalogue()
 
-        self._storage.destroy()
+        if self._storage is not None:
+            self._storage.destroy()
 
     def destroy_catalogue(self):
         """Completely remove the catalogue database, but leaving the datastore in storage untouched.
@@ -875,7 +890,7 @@ class Archive(object):
                     def _export(paths):
                         exported_path = export_method(self, product, target_path, paths)
                         result.append(exported_path)
-                    self._storage.run_for_product(product, _export, plugin.use_enclosing_directory)
+                    self._run_for_product(product, _export, plugin.use_enclosing_directory)
                 else:
                     exported_path = export_method(self, product, target_path)
                     result.append(exported_path)
@@ -996,7 +1011,7 @@ class Archive(object):
         else:
             raise Error("cannot determine physical name for multi-part product")
 
-        if isinstance(self._storage, NoStorageBackend):  # TODO nicer check
+        if self._storage is None:
             ingest_product = False
 
         # Determine archive path
@@ -1048,7 +1063,7 @@ class Archive(object):
                 self._storage.put(paths, properties, use_enclosing_directory, use_symlinks)
                 properties.core.archive_date = self._database.server_time_utc()
 
-            elif isinstance(self._storage, NoStorageBackend):  # TODO to backend?
+            elif self._storage is None:
                 if len(paths) == 1:
                     properties.core.remote_url = 'file://' + os.path.realpath(paths[0])
                 else:
@@ -1128,7 +1143,7 @@ class Archive(object):
                     catalogue will be removed.
         """
         if not force:
-            if self._storage.exists():
+            if self._storage is not None and self._storage.exists():
                 raise Error("storage already exists")
             if self._database.exists():
                 raise Error("database already exists")
@@ -1138,7 +1153,8 @@ class Archive(object):
 
         # Prepare the archive for use.
         self._database.prepare()
-        self._storage.prepare()
+        if self._storage is not None:
+            self._storage.prepare()
 
     def prepare_catalogue(self, dry_run=False):
         """Prepare the catalogue of the archive for (first) use."""
@@ -1319,7 +1335,7 @@ class Archive(object):
                     product.core.hash = None
                 self._run_hooks('post_ingest_hook', product, paths=paths)
 
-        self._storage.run_for_product(product, _rebuild_properties, use_enclosing_directory)
+        self._run_for_product(product, _rebuild_properties, use_enclosing_directory)
 
     def rebuild_pull_properties(self, uuid, verify_hash=False, disable_hooks=False, use_current_path=False):
         """Refresh products by re-running the pull, but using the existing products stored in the archive.
@@ -1364,7 +1380,7 @@ class Archive(object):
             if not disable_hooks:
                 self._run_hooks('post_pull_hook', product, paths=paths)
 
-        self._storage.run_for_product(product, _rebuild_pull_properties, use_enclosing_directory)
+        self._run_for_product(product, _rebuild_pull_properties, use_enclosing_directory)
 
     def remove(self, where="", parameters={}, force=False, cascade=True):
         """Remove one or more products from the archive, both from storage as well as from the product catalogue.
@@ -1647,7 +1663,7 @@ class Archive(object):
 
             if paths is None:
                 product_hash = functools.partial(util.product_hash, hash_type=hash_type)
-                current_hash = self._storage.run_for_product(product, product_hash, plugin.use_enclosing_directory)
+                current_hash = self._run_for_product(product, product_hash, plugin.use_enclosing_directory)
             else:
                 current_hash = util.product_hash(paths, hash_type=hash_type)
 
