@@ -1296,6 +1296,11 @@ class TestArchivePureCatalogue:  # TODO merge with TestArchive?
                 archive_pure.export(target_path=tmp_path, format='tgz')
                 assert os.listdir(tmp_path) == ['a.txt.tgz']
 
+    def test_rebuild_properties(self, archive_pure):
+        properties = archive_pure.ingest(
+            ['data/a.txt'],
+        )
+        archive_pure.rebuild_properties(properties.core.uuid)  # TODO just pass properties?
 
 class TestQuery:
     def _prep_data(self, archive):

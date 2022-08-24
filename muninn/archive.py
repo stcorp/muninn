@@ -1256,13 +1256,8 @@ class Archive(object):
                                      "product_type", "physical_name"])
 
         product = self._get_product(uuid)
-        if not product.core.active:
+        if not (product.core.active and ('archive_path' in product.core or 'remote_url' in product.core)):
             raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
-
-        # Determine the path of the product within storage
-        product_path = self._product_path(product)
-        if product_path is None:
-            raise Error("no data available for product '%s' (%s)" % (product.core.product_name, product.core.uuid))
 
         # Extract product metadata.
         plugin = self.product_type_plugin(product.core.product_type)
@@ -1280,10 +1275,14 @@ class Archive(object):
                     pass
 
             # update size
-            properties.core.size = self._storage.size(product_path)
+            if 'archive_path' in product.core:
+                product_path = self._product_path(product)
+                properties.core.size = self._storage.size(product_path)  # TODO just pass product?
+            else:
+                properties.core.size = util.product_size(product.core.remote_url[7:])
 
             # Make sure product is stored in the correct location
-            if not use_current_path:
+            if not use_current_path and 'archive_path' in product.core:
                 new_archive_path, paths = self._relocate(product, properties, paths)
                 if new_archive_path is not None:
                     properties.core.archive_path = new_archive_path
