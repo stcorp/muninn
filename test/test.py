@@ -54,6 +54,7 @@ PARENT_DIR = os.path.dirname(MY_DIR)
 # ignore warnings over which we have no control
 pytestmark = pytest.mark.filterwarnings(
     'ignore:using or importing the ABCs:DeprecationWarning:paramiko',
+    'ignore:the imp module is deprecated:DeprecationWarning:invoke',
     'ignore::cryptography.utils.CryptographyDeprecationWarning',
     'ignore:distutils version classes:DeprecationWarning:pg8000',
 )
