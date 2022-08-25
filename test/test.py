@@ -1813,7 +1813,7 @@ class TestTools:  # TODO more result checking, preferrably using tools
         output = self._run('update', '""', 'pull')
         output = self._run('update', '"" prodtype', 'retype')
 
-    def test_hash(self, archive):  # TODO actually failing?
+    def test_hash(self, archive):
         output = self._run('ingest', 'data/a.txt')
         output = self._run('ingest', 'data/b.txt')
 
