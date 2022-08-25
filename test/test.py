@@ -1260,7 +1260,7 @@ class TestArchive:
 
 class TestArchivePureCatalogue:  # TODO merge with TestArchive?
     def test_ingest(self, archive_pure):
-        properties = archive_pure.ingest(  # TODO what about multiple paths?
+        properties = archive_pure.ingest(
             ['data/a.txt'],
         )
         assert properties.core.archive_path is None
@@ -1284,17 +1284,25 @@ class TestArchivePureCatalogue:  # TODO merge with TestArchive?
             archive_pure.retrieve(target_path=tmp_path)
             assert os.listdir(tmp_path) == ['a.txt']
 
-    def test_export(self, archive_pure):
-        if archive_pure._params['use_enclosing_directory']:  # TODO plugin doesn't compress single files?
+    def test_retrieve_multi(self, archive_pure):
+        if archive_pure._params['use_enclosing_directory']:  # TODO fix archive to accept?
             properties = archive_pure.ingest(
-                ['data/a.txt'],
+                ['data/dir/multi/1.txt', 'data/dir/multi/2.txt'],  # TODO does this cause other files under multi to be included?
             )
             with muninn.util.TemporaryDirectory() as tmp_path:
-                archive_pure.export(target_path=tmp_path)
-                assert os.listdir(tmp_path) == ['a.txt']
-            with muninn.util.TemporaryDirectory() as tmp_path:
-                archive_pure.export(target_path=tmp_path, format='tgz')
-                assert os.listdir(tmp_path) == ['a.txt.tgz']
+                archive_pure.retrieve(target_path=tmp_path)
+                assert os.listdir(os.path.join(tmp_path, 'multi')) == ['1.txt', '2.txt']
+
+    def test_export(self, archive_pure):
+        properties = archive_pure.ingest(
+            ['data/a.txt'],
+        )
+        with muninn.util.TemporaryDirectory() as tmp_path:
+            archive_pure.export(target_path=tmp_path)
+            assert os.listdir(tmp_path) == ['a.txt']
+        with muninn.util.TemporaryDirectory() as tmp_path:
+            archive_pure.export(target_path=tmp_path, format='tgz')
+            assert os.listdir(tmp_path) == ['a.txt.tgz']
 
     def test_rebuild_properties(self, archive_pure):
         properties = archive_pure.ingest(
