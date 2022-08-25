@@ -1293,22 +1293,27 @@ class TestArchivePureCatalogue:  # TODO merge with TestArchive?
                 archive_pure.retrieve(target_path=tmp_path)
                 assert os.listdir(os.path.join(tmp_path, 'multi')) == ['1.txt', '2.txt']
 
-    def test_export(self, archive_pure):
-        properties = archive_pure.ingest(
-            ['data/a.txt'],
-        )
-        with muninn.util.TemporaryDirectory() as tmp_path:
-            archive_pure.export(target_path=tmp_path)
-            assert os.listdir(tmp_path) == ['a.txt']
-        with muninn.util.TemporaryDirectory() as tmp_path:
-            archive_pure.export(target_path=tmp_path, format='tgz')
-            assert os.listdir(tmp_path) == ['a.txt.tgz']
-
     def test_rebuild_properties(self, archive_pure):
         properties = archive_pure.ingest(
             ['data/a.txt'],
         )
         archive_pure.rebuild_properties(properties.core.uuid)  # TODO just pass properties?
+
+    def test_export(self, archive_pure, remote_backend):
+        properties = archive_pure.ingest(
+            ['data/a.txt'],
+        )
+
+        remote_url = os.path.join(remote_backend, 'data/a.txt')
+        archive_pure.update_properties(muninn.Struct({'core': {'remote_url': remote_url}}), properties.core.uuid, True)
+
+        with muninn.util.TemporaryDirectory() as tmp_path:
+            archive_pure.export(target_path=tmp_path)
+            assert os.listdir(tmp_path) == ['a.txt']
+
+        with muninn.util.TemporaryDirectory() as tmp_path:
+            archive_pure.export(target_path=tmp_path, format='tgz')
+            assert os.listdir(tmp_path) == ['a.txt.tgz']
 
 class TestQuery:
     def _prep_data(self, archive):
