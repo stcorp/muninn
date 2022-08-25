@@ -610,12 +610,24 @@ class Archive(object):
 
     def _run_for_product(self, product, fn, use_enclosing_directory):
         if self._storage is None:
-            product_path = product.core.remote_url[7:]
-            if os.path.isdir(product_path):
-                paths = [os.path.join(product_path, basename) for basename in os.listdir(product_path)]
+            remote_url = product.core.remote_url
+
+            if remote_url.startswith('file://'):
+                product_path = product.core.remote_url[7:]
+                if os.path.isdir(product_path):
+                    paths = [os.path.join(product_path, basename) for basename in os.listdir(product_path)]
+                else:
+                    paths = [product_path]
+                return fn(paths)
+
             else:
-                paths = [product_path]
-            return fn(paths)
+                with util.TemporaryDirectory(prefix=".run_for_product-",
+                                             suffix="-%s" % product.core.uuid.hex) as tmp_path:
+                    retrieve_files = remote.retrieve_function(self, product, True)  # TODO verify hash?
+                    retrieve_files(tmp_path)
+                    paths = [os.path.join(tmp_path, basename) for basename in os.listdir(tmp_path)]
+                    return fn(paths)
+
         else:
             return self._storage.run_for_product(product, fn, use_enclosing_directory)
 
@@ -1637,14 +1649,10 @@ class Archive(object):
         self._database.update_product_properties(properties, uuid=uuid, new_namespaces=new_namespaces)
 
     def _verify_hash(self, product, paths=None):
-        if 'archive_path' in product.core:
+        if 'archive_path' in product.core or 'remote_url' in product.core:
             if 'hash' not in product.core:
                 raise Error("no hash available for product '%s' (%s)" %
                             (product.core.product_name, product.core.uuid))
-
-            product_path = self._product_path(product)
-            if product_path is None:
-                raise Error("no data available for product '%s' (%s)" % (product.core.product_name, product.core.uuid))
 
             stored_hash = product.core.hash
             hash_type = self._extract_hash_type(stored_hash)
@@ -1679,7 +1687,7 @@ class Archive(object):
         Returns:
         A list of UUIDs of products for which the verification failed.
         """
-        property_names = _CORE_PROP_NAMES + ['hash']
+        property_names = _CORE_PROP_NAMES + ['hash', 'remote_url']
         products = self._get_products(where, parameters, property_names=property_names)
 
         failed_products = []

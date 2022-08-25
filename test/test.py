@@ -1315,6 +1315,17 @@ class TestArchivePureCatalogue:  # TODO merge with TestArchive?
             archive_pure.export(target_path=tmp_path, format='tgz')
             assert os.listdir(tmp_path) == ['a.txt.tgz']
 
+    def test_verify_hash(self, archive_pure, remote_backend):
+        properties = archive_pure.ingest(
+            ['data/a.txt'],
+        )
+
+        remote_url = os.path.join(remote_backend, 'data/a.txt')
+        archive_pure.update_properties(muninn.Struct({'core': {'remote_url': remote_url}}), properties.core.uuid, True)
+
+        archive_pure.verify_hash()
+
+
 class TestQuery:
     def _prep_data(self, archive):
         self.uuid_a = archive.ingest(['data/a.txt']).core.uuid
@@ -1802,7 +1813,7 @@ class TestTools:  # TODO more result checking, preferrably using tools
         output = self._run('update', '""', 'pull')
         output = self._run('update', '"" prodtype', 'retype')
 
-    def test_hash(self, archive):
+    def test_hash(self, archive):  # TODO actually failing?
         output = self._run('ingest', 'data/a.txt')
         output = self._run('ingest', 'data/b.txt')
 
