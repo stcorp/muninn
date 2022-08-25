@@ -51,17 +51,6 @@ settings:
 
 - ``tempdir``: [Optional] path where temporary data should be stored.
 
-Deprecated settings:
-
-- ``root``: The root path on disk of the archive when using the file system
-  storage backend. Please use the ``fs`` section instead.
-
-- ``use_symlinks``: If set to ``true``, an archived product will consist of
-  symbolic links to the original product, instead of a copy of the product.
-  The default is ``false``. Please use the ``fs`` section instead.
-
-- ``backend``: Same as ``database`` (please use this instead).
-
 
 # Section "postgresql"
 

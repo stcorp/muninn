@@ -49,11 +49,8 @@ class _ExtensionList(Sequence):
 class _ArchiveConfig(Mapping):
     _alias = "archive"
 
-    root = Text(optional=True)
-    backend = Text(optional=True)
-    database = Text(optional=True)
-    storage = Text(optional=True)
-    use_symlinks = Boolean(optional=True)
+    database = Text()
+    storage = Text()
     cascade_grace_period = Integer(optional=True)
     max_cascade_cycles = Integer(optional=True)
     namespace_extensions = _ExtensionList(optional=True)
@@ -64,7 +61,7 @@ class _ArchiveConfig(Mapping):
     tempdir = Text(optional=True)
 
 
-def _load_backend_module(name):
+def _load_database_module(name):
     module_name = "muninn.database.%s" % name
 
     try:
@@ -108,17 +105,13 @@ def create(configuration, id=None):
     options = config.parse(configuration.get("archive", {}), _ArchiveConfig)
     _ArchiveConfig.validate(options)
 
-    # Load and create the backend.
-    if 'backend' in options:
-        print("WARNING: the 'backend' option will be removed. Please use 'database' instead.", file=sys.stderr)
-        backend = options.pop('backend')
-    else:
-        backend = options.pop('database')
-    backend_module = _load_backend_module(backend)
-    backend = backend_module.create(configuration)
+    # Load and create the database backend.
+    database_name = options.pop('database')
+    database_module = _load_database_module(database_name)
+    database = database_module.create(configuration)
 
     # Load and create the storage backend.
-    storage_name = options.pop('storage', 'none')
+    storage_name = options.pop('storage')
     if storage_name == 'none':
         storage = None
     else:
@@ -130,7 +123,7 @@ def create(configuration, id=None):
     product_type_extensions = options.pop("product_type_extensions", [])
     remote_backend_extensions = options.pop("remote_backend_extensions", [])
     hook_extensions = options.pop("hook_extensions", [])
-    archive = Archive(backend=backend, storage=storage, id=id, **options)
+    archive = Archive(database=database, storage=storage, id=id, **options)
 
     # Register core namespace.
     archive.register_namespace("core", Core)
@@ -206,7 +199,7 @@ class Archive(object):
     #: Archive id (usually name of configuration file)
     id = None
 
-    def __init__(self, backend, storage, cascade_grace_period=0,
+    def __init__(self, database, storage, cascade_grace_period=0,
                  max_cascade_cycles=25, auth_file=None, id=None, tempdir=None):
         self._cascade_grace_period = datetime.timedelta(minutes=cascade_grace_period)
         self._max_cascade_cycles = max_cascade_cycles
@@ -219,7 +212,7 @@ class Archive(object):
 
         self._export_formats = set()
 
-        self._database = backend
+        self._database = database
         self._database.initialize(self._namespace_schemas)
 
         self._storage = storage
@@ -452,7 +445,7 @@ class Archive(object):
             assert len(products) == 1
             return products[0]
 
-    def _get_products(self, where, parameters=None, namespaces=None, property_names=None):
+    def _get_products(self, where, parameters=None, namespaces=None, property_names=None):  # TODO generator?
         if isinstance(where, basestring):
             return self.search(where, parameters=parameters, namespaces=namespaces, property_names=property_names)
 

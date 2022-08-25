@@ -17,22 +17,8 @@ class _FSConfig(Mapping):
 
 
 def create(configuration, tempdir):
-    fs_section = configuration.get("fs", {})
-    if not fs_section:  # backward compatibility
-        options = {}
-        arch_section = configuration.get('archive')
-        try:
-            options['root'] = config.parse(arch_section['root'], Text)
-        except KeyError:
-            raise ValueError('archive: storage: fs: no value for mandatory item "root"')
-        try:
-            options['use_symlinks'] = config.parse(arch_section['use_symlinks'], Boolean)
-        except KeyError:
-            pass
-    else:
-        options = config.parse(fs_section, _FSConfig)
-        _FSConfig.validate(options)
-
+    options = config.parse(configuration.get("fs", {}), _FSConfig)
+    _FSConfig.validate(options)
     return FilesystemStorageBackend(**options, tempdir=tempdir)
 
 
