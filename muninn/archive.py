@@ -1308,7 +1308,7 @@ class Archive(object):
                 product_path = self._product_path(product)
                 properties.core.size = self._storage.size(product_path)  # TODO just pass product?
             else:
-                properties.core.size = util.product_size(product.core.remote_url[7:])
+                properties.core.size = self._run_for_product(product, util.product_size, use_enclosing_directory)
 
             # Make sure product is stored in the correct location
             if not use_current_path and 'archive_path' in product.core:
