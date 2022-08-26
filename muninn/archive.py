@@ -472,7 +472,7 @@ class Archive(object):
         return products
 
     def _product_path(self, product):
-        if getattr(product.core, 'archive_path', None) is None:
+        if self._storage is None or getattr(product.core, 'archive_path', None) is None:
             return None
 
         return self._storage.product_path(product)
@@ -1468,7 +1468,8 @@ class Archive(object):
 
     def root(self):
         """Return the archive root path."""
-        return self._storage._root
+        if self._storage is not None:
+            return self._storage._root
 
     def search(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], property_names=[]):
         """Search the product catalogue for products matching the specified search expression.

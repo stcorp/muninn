@@ -406,7 +406,7 @@ class TestArchive:
                     verify_hash=True,
                     use_symlinks=use_symlinks
                 )
-            assert 'cannot determine physical name for multi-part product' in str(excinfo)
+            assert 'cannot ingest multi-file product without enclosing directory' in str(excinfo)
             return
 
         if intra:  # relative symlinks within archive
