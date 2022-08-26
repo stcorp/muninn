@@ -678,7 +678,7 @@ class Archive(object):
         elif len(paths) == 1:
             physical_name = os.path.basename(paths[0])
         else:
-            raise Error("cannot determine physical name for multi-part product")
+            raise Error("cannot attach multi-file product without enclosing directory")
 
         # Find product in catalogue
         product = self._get_product(product_type=product_type, physical_name=physical_name,
@@ -1015,7 +1015,7 @@ class Archive(object):
         elif len(paths) == 1:
             properties.core.physical_name = os.path.basename(paths[0])
         else:
-            raise Error("cannot determine physical name for multi-part product")
+            raise Error("cannot ingest multi-file product without enclosing directory")
 
         if self._storage is None:
             ingest_product = False
@@ -1233,6 +1233,9 @@ class Archive(object):
             self.update_properties(Struct({'core': metadata}), product.core.uuid)
 
             def _pull(paths):
+                if len(paths) > 1 and not use_enclosing_directory:
+                    raise Error("cannot pull multi-file product without enclosing directory")
+
                 # reactivate and update archive_date, size
                 product_path = self._product_path(product)
                 size = self._storage.size(product_path)
