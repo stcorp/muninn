@@ -510,9 +510,10 @@ class Archive(object):
 
     def _remove_storage(self, product):
         # If the product has no data in storage associated with it, return.
+        if self._storage is None:
+            return
         product_path = self._product_path(product)
         if product_path is None:
-            # If the product does not exist, do not consider this an error.
             return
 
         # Remove the data associated with the product from storage.
@@ -1207,6 +1208,10 @@ class Archive(object):
         Returns:
         The number of pulled products
         """
+
+        if self._storage is None:
+            raise Error('"pull" operation not available for storage=none')
+
         products = self._get_products(where, parameters, namespaces=self.namespaces())
 
         for product in products:
@@ -1353,6 +1358,9 @@ class Archive(object):
         use_current_path -- Do not attempt to relocate the product to the location specified in the product
                             type plug-in. Useful for read-only archives.
         """
+        if self._storage is None:
+            raise Error('"rebuild_pull_properties" operation not available for storage=none')
+
         product = self._get_product(uuid)
         if 'archive_path' not in product.core:
             raise Error("cannot update missing product")

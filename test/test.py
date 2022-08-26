@@ -1326,6 +1326,15 @@ class TestArchivePureCatalogue:  # TODO merge with TestArchive?
 
         archive_pure.verify_hash()
 
+    def test_errors(self, archive_pure):
+        with pytest.raises(muninn.exceptions.Error) as excinfo:
+            s = archive_pure.pull()
+        assert '"pull" operation not available for storage=none' in str(excinfo)
+
+        with pytest.raises(muninn.exceptions.Error) as excinfo:
+            s = archive_pure.rebuild_pull_properties(None)
+        assert '"rebuild_pull_properties" operation not available for storage=none' in str(excinfo)
+
 
 class TestQuery:
     def _prep_data(self, archive):
