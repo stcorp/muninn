@@ -1292,7 +1292,7 @@ class TestArchivePureCatalogue:  # TODO merge with TestArchive?
             )
             with muninn.util.TemporaryDirectory() as tmp_path:
                 archive_pure.retrieve(target_path=tmp_path)
-                assert os.listdir(os.path.join(tmp_path, 'multi')) == ['1.txt', '2.txt']
+                assert set(os.listdir(os.path.join(tmp_path, 'multi'))) == set(['1.txt', '2.txt'])
 
     def test_rebuild_properties(self, archive_pure):
         properties = archive_pure.ingest(
