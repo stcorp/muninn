@@ -1,3 +1,16 @@
+* Introduced a public python API for muninn.
+
+* muninn-retrieve and muninn-export will now download a product based on the
+  core.remote_url setting if core.archive_path was not set (i.e. the product
+  was not stored in the archive).
+  To disable this and use the old behaviour, make sure to explictly add an
+  'is_defined(archive_path)' filter when performing a retrieve/export.
+
+* Introduced storage=none option for archives. This works as a pure catalogue:
+  archive_path/archive_date should never be set, attach/strip/pull won't work,
+  ingest will set remote_url to a file:// url pointing to the ingested product,
+  retrieve and export work purely based on remote_url (see previous point).
+
 * S3 backend 'host' configuration parameter can now be a full endpoint url and
   'port' parameter is now optional.
 
@@ -17,7 +30,8 @@
 
 * Added support for auto-extraction of tar files for muninn-pull.
 
-* Run hooks after core.active is set to True (regression introduced in 5.4).
+* Run hooks after core.active is set to True instead of before (regression
+  introduced in 5.4).
 
 * Creating a table will now set COLLATE of TEXT properties to 'C' for the
   postgres backend to guarantee consistent sorting. Fields of existing tables
