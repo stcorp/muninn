@@ -1339,6 +1339,10 @@ class TestArchivePureCatalogue:  # TODO merge with TestArchive?
             s = archive_pure.attach(None)
         assert '"attach" operation not available for storage=none' in str(excinfo)
 
+        with pytest.raises(muninn.exceptions.Error) as excinfo:
+            s = archive_pure.strip()
+        assert '"strip" operation not available for storage=none' in str(excinfo)
+
 class TestQuery:
     def _prep_data(self, archive):
         self.uuid_a = archive.ingest(['data/a.txt']).core.uuid

@@ -1525,6 +1525,9 @@ class Archive(object):
         Returns:
         The number of stripped products
         """
+        if self._storage is None:
+            raise Error('"strip" operation not available for storage=none')
+
         products = self._get_products(where, parameters, property_names=_CORE_PROP_NAMES)
 
         for product in products:
