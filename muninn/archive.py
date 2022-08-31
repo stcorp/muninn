@@ -664,6 +664,9 @@ class Archive(object):
         Returns:
         The attached product.
         """
+        if self._storage is None:
+            raise Error('"attach" operation not available for storage=none')
+
         paths = self._check_paths(paths, 'attach')
 
         if product_type is None:
