@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 
@@ -16,14 +17,30 @@ logging.getLogger("swiftclient").setLevel(logging.CRITICAL)
 class _SwiftConfig(Mapping):
     _alias = "swift"
 
-    container = Text()
-    user = Text()
-    key = Text()
     authurl = Text()
+    container = Text(optional=True)
+    user = Text(optional=True)
+    key = Text(optional=True)
 
 
 def create(configuration, tempdir, auth_file):
     options = config.parse(configuration.get("swift", {}), _SwiftConfig)
+
+    # if access_key and secret_access_key missing, use auth_file
+    if 'user' not in options and 'key' not in options and auth_file is not None:
+        credentials = json.loads(open(auth_file).read())
+        for key, value in credentials.items():
+            if key == options['authurl'] and value['auth_type'] == 'Swift':
+                for option in ('user', 'key', 'container'):
+                    if option in value and option not in options:
+                        options[option] = value[option]
+                break
+
+    # check that mandatory options are configured
+    for option in ('user', 'key', 'container'):
+        if option not in options:
+            raise Error("'%s' not configured" % option)
+
     _SwiftConfig.validate(options)
     return SwiftStorageBackend(**options, tempdir=tempdir)
 
