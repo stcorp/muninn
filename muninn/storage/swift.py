@@ -22,7 +22,7 @@ class _SwiftConfig(Mapping):
     authurl = Text()
 
 
-def create(configuration, tempdir):
+def create(configuration, tempdir, auth_file):
     options = config.parse(configuration.get("swift", {}), _SwiftConfig)
     _SwiftConfig.validate(options)
     return SwiftStorageBackend(**options, tempdir=tempdir)

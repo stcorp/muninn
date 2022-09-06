@@ -116,7 +116,7 @@ def create(configuration, id=None):
         storage = None
     else:
         storage_module = _load_storage_module(storage_name)
-        storage = storage_module.create(configuration, options.get('tempdir', None))
+        storage = storage_module.create(configuration, options.get('tempdir', None), options.get('auth_file', None))
 
     # Create the archive.
     namespace_extensions = options.pop("namespace_extensions", [])

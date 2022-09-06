@@ -21,9 +21,9 @@ class _S3Config(Mapping):
 
     host = Text()
     port = Integer(optional=True)
-    bucket = Text()
-    access_key = Text()
-    secret_access_key = Text()
+    bucket = Text(optional=True)
+    access_key = Text(optional=True)
+    secret_access_key = Text(optional=True)
     region = Text(optional=True)
     prefix = Text(optional=True)
     download_args = Text(optional=True)  # JSON representation of boto3 download_file ExtraArgs parameter
@@ -32,8 +32,24 @@ class _S3Config(Mapping):
     transfer_config = Text(optional=True)  # JSON representation of boto3.s3.transfer.TransferConfig parameters
 
 
-def create(configuration, tempdir):
+def create(configuration, tempdir, auth_file):
     options = config.parse(configuration.get("s3", {}), _S3Config)
+
+    # if access_key and secret_access_key missing, use auth_file
+    if 'access_key' not in options and 'secret_access_key' not in options and auth_file is not None:
+        credentials = json.loads(open(auth_file).read())
+        for key, value in credentials.items():
+            if key == options['host'] and value['auth_type'] == 'S3':
+                for option in ('access_key', 'secret_access_key', 'port', 'bucket', 'region'):
+                    if option in value and option not in options:
+                        options[option] = value[option]
+                break
+
+    # check that mandatory options are configured
+    for option in ('access_key', 'secret_access_key', 'bucket'):
+        if option not in options:
+            raise Error("'%s' not configured" % option)
+
     _S3Config.validate(options)
     return S3StorageBackend(**options, tempdir=tempdir)
 
@@ -44,6 +60,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
         super(S3StorageBackend, self).__init__(tempdir)
 
         self.bucket = bucket
+
         if prefix and not prefix.endswith('/'):
             prefix += '/'
         self._prefix = prefix

@@ -16,7 +16,7 @@ class _FSConfig(Mapping):
     use_symlinks = Boolean(optional=True)
 
 
-def create(configuration, tempdir):
+def create(configuration, tempdir, auth_file):
     options = config.parse(configuration.get("fs", {}), _FSConfig)
     _FSConfig.validate(options)
     return FilesystemStorageBackend(**options, tempdir=tempdir)
