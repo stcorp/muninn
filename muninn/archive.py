@@ -532,7 +532,7 @@ class Archive(object):
             return os.path.join(target_path, os.path.basename(product_path))
 
         elif 'remote_url' in product.core:
-            retrieve_files = remote.retrieve_function(self, product, True)  # TODO verify hash?
+            retrieve_files = remote.retrieve_function(self, product, True)
             retrieve_files(target_path)
 
         else:
