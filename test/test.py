@@ -1159,7 +1159,6 @@ class TestArchive:
         properties = self._pull(archive, remote_backend)
         archive.rebuild_pull_properties(properties.core.uuid, verify_hash=True)
 
-    # TODO why do we have to specify 'core.' in most places..
     def test_summary(self, archive):
         product1 = archive.ingest(['data/a.txt'])
         year = product1.core.archive_date.year
@@ -1222,13 +1221,14 @@ class TestArchive:
         assert s1 > s2
 
         # having
-        data, headers = archive.summary(group_by=['core.product_name'],
-                                        aggregates=['core.archive_date.min', 'core.archive_date.max'],
-                                        where='size > 0',
-                                        order_by=['core.product_name'],
-                                        having='core.archive_date.min >= 2020-02-02 and count >= 1',
-                                       )
-        assert len(data) == 2
+        for having in ('archive_date.min', 'core.archive_date.min'):
+            data, headers = archive.summary(group_by=['core.product_name'],
+                                            aggregates=['core.archive_date.min', 'core.archive_date.max'],
+                                            where='size > 0',
+                                            order_by=['core.product_name'],
+                                            having='%s >= 2020-02-02 and count >= 1' % having,
+                                           )
+            assert len(data) == 2
 
     def test_broken_plugin(self, archive):
         product = self._ingest_file(archive)
