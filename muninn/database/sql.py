@@ -648,9 +648,12 @@ class SQLBuilder(object):
             direction = "DESC" if item.startswith("-") else "ASC"
             name = item[1:] if item.startswith("+") or item.startswith("-") else item
 
-            try:
+            segments = name.split('.')
+            if len(segments) == 1:
+                namespace, name = 'core', segments[0]
+            elif len(segments) == 2:
                 namespace, name = name.split(".")
-            except ValueError:
+            else:
                 raise Error("invalid property name: %r" % name)
 
             if name not in self._namespace_schema(namespace):

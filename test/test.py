@@ -1254,9 +1254,10 @@ class TestArchive:
         _create_product('abc')
         _create_product('ABC')
         _create_product('A_AA')
-        s = archive.search(order_by=['core.product_name'])
-        names = [p.core.product_name for p in s]
-        assert names == ['ABC', 'A_AA', 'abc']
+        for prop in ('core.product_name', 'product_name'):
+            s = archive.search(order_by=[prop])
+            names = [p.core.product_name for p in s]
+            assert names == ['ABC', 'A_AA', 'abc']
 
 
 class TestArchivePureCatalogue:  # TODO merge with TestArchive?
