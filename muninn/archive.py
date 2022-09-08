@@ -1633,7 +1633,6 @@ class Archive(object):
             for product in products:
                 self._database.untag(product.core.uuid, tags)
 
-    # TODO pass 'where' condition at 'uuid'?
     def update_properties(self, properties, uuid=None, create_namespaces=False):
         """Update product properties in the product catalogue. The UUID of the product to update will be taken from the
         "core.uuid" property if it is present in the specified properties. Otherwise, the UUID should be provided
