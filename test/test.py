@@ -1209,7 +1209,7 @@ class TestArchive:
         assert data == [(7, 2)] or data == [[7, 2]]  # TODO pg8000
 
         # order by
-        data, headers = archive.summary(group_by=['core.archive_date.second'], order_by=['core.archive_date.second'])
+        data, headers = archive.summary(group_by=['core.archive_date.second'], order_by=['archive_date.second'])
         s1, s2 = int(data[0][0]), int(data[1][0])
         if s1 == 59:
             s2 += 60

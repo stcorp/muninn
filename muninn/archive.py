@@ -1571,8 +1571,6 @@ class Archive(object):
         order_by      --  A list of result column names that determines the ordering of the results. If the list is
                           empty, the order of the results is ordered by the `group_by` specification. Each name in the
                           list can have a '+' (ascending) or '-' (descending) prefix, or no prefix (ascending).
-
-        Note that the property names must always include the namespace. 'core' is not assumed.
         """
         return self._database.summary(where, parameters, aggregates, group_by, group_by_tag, having, order_by)
 

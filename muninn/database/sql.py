@@ -450,7 +450,10 @@ class SQLBuilder(object):
         order_by = order_by or []
         if group_by_tag:
             group_by = group_by + ['tag']
-        result_fields = group_by + ['count'] + aggregates
+
+        result_fields = []
+        for field in group_by + ['count'] + aggregates:
+            result_fields.append(Identifier(field, self._namespace_schemas).resolve)
         join_set = set(item.split('.')[0] for item in group_by)
 
         # Parse the WHERE clause.
@@ -484,7 +487,7 @@ class SQLBuilder(object):
         for item in order_by:
             direction = 'DESC' if item.startswith('-') else 'ASC'
             name = item[1:] if item.startswith('+') or item.startswith('-') else item
-            Identifier(name, self._namespace_schemas)  # check if the identifier is valid
+            name = Identifier(name, self._namespace_schemas).resolve
             if name not in result_fields:
                 raise Error("cannot order result by %r; field is not present in result" % name)
             order_by_list.append('"%s" %s' % (name, direction))
@@ -519,6 +522,7 @@ class SQLBuilder(object):
             if item.subscript:
                 column_name = self._rewriter_property(column_name, item.subscript)
             select_list.append('%s AS "%s"' % (column_name, item.canonical))
+
         # aggregated fields
         select_list.append('COUNT(*) AS count')  # always aggregate row count
         for item in aggregates:

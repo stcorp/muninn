@@ -771,35 +771,53 @@ def string_unescape(text):
 
 
 class Identifier(object):
-
-    # @staticmethod
     def __init__(self, canonical_identifier, namespace_schemas):
         self.canonical = canonical_identifier
+        self.subscript = None
+
         if canonical_identifier == 'tag':
             # the rules to get the namespace database table name also apply to 'tag'
             self.namespace = canonical_identifier
             self.identifier = canonical_identifier
-            self.subscript = None
             self.muninn_type = Text
+
         elif canonical_identifier == 'count':
             self.namespace = None
             self.identifier = canonical_identifier
-            self.subscript = None
             self.muninn_type = Long
+
         elif not re.match(r'[\w]+\.[\w.]+', canonical_identifier):
             raise Error("cannot resolve identifier: %r" % canonical_identifier)
+
         else:
-            split = canonical_identifier.split('.', 2)
-            self.namespace = split[0]
-            self.identifier = split[1]
-            self.subscript = split[2] if len(split) > 2 else None
+            segments = canonical_identifier.split('.')
+
+            if len(segments) == 1:
+                self.namespace = 'core'
+                self.identifier = segments[0]
+
+            elif len(segments) == 2:
+                if segments[0] in namespace_schemas:
+                    self.namespace, self.identifier = segments
+                else:
+                    self.namespace = 'core'
+                    self.identifier, self.subscript = segments
+
+            elif len(segments) == 3:
+                self.namespace, self.identifier, self.subscript = segments
+
+            else:
+                raise Error("cannot resolve identifier: %r" % canonical_identifier)
+
             # check if namespace is valid
             if self.namespace not in namespace_schemas:
                 raise Error("undefined namespace: \"%s\"" % self.namespace)
+
             # check if property name is valid
             if self.identifier not in namespace_schemas[self.namespace]:
                 if self.property_name != 'core.validity_duration':
                     raise Error("no property: %r defined within namespace: %r" % (self.identifier, self.namespace))
+
             # note: not checking if subscript is valid; the list of possible subscripts varies depending on context
             if self.property_name == 'core.validity_duration':
                 self.muninn_type = None
@@ -809,3 +827,12 @@ class Identifier(object):
     @property
     def property_name(self):
         return '%s.%s' % (self.namespace, self.identifier)
+
+    @property
+    def resolve(self):
+        if self.canonical in ('count', 'tag'):
+            return self.canonical
+        elif self.subscript is None:
+            return '%s.%s' % (self.namespace, self.identifier)
+        else:
+            return '%s.%s.%s' % (self.namespace, self.identifier, self.subscript)
