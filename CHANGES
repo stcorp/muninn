@@ -14,21 +14,35 @@
 * S3 backend 'host' configuration parameter can now be a full endpoint url and
   'port' parameter is now optional.
 
+* S3/Swift storage credentials can now be taken from auth_file credentials
+  file and don't have to be included in the archive configuration file itself.
+
+* Added JSON datatype for metadata properties (this uses JSONB storage when
+  using the postgresql database backend).
+
 * Added --force and --verify-hash-before options to muninn-attach and added
   additional improvements to keep hash and size in line with attached product.
 
 * Improved (re)setting metadata state after storage failure for attach, pull,
   and ingest.
 
-* Allow 'muninn-strip --force' to reactive a product even if archive_path is
+* Added support for alternative number bases in queries (e.g. '==0xffff').
+
+* Added --parallel option to all remaining muninn command-line tools.
+
+* Added --force and --verify-hash-before options to muninn-attach.
+
+* Allow 'muninn-strip --force' to reactivate a product even if archive_path is
   empty.
 
 * Removed muninn-update post_ingest and post_pull commands since these were no
   longer working with generic hooks and the S3/Swift storage backends.
 
+* Added built-in remote backend for sftp (requires paramiko package).
+
 * Fixed issue in zip auto-extraction for muninn-pull.
 
-* Added support for auto-extraction of tar files for muninn-pull.
+* Added support for auto-extraction of tar(/gz) files for muninn-pull.
 
 * Run hooks after core.active is set to True instead of before (regression
   introduced in 5.4).
@@ -37,6 +51,8 @@
   postgres backend to guarantee consistent sorting. Fields of existing tables
   can be manually updated using the following sql command template:
      ALTER TABLE table ALTER COLUMN property SET DATA TYPE TEXT COLLATE "C"
+
+* Removed support for all deprecated archive configuration options.
 
 5.4 2022-02-22
 ~~~~~~~~~~~~~~
