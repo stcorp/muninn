@@ -451,10 +451,12 @@ class SQLBuilder(object):
         if group_by_tag:
             group_by = group_by + ['tag']
 
+        join_set = set()
         result_fields = []
         for field in group_by + ['count'] + aggregates:
-            result_fields.append(Identifier(field, self._namespace_schemas).resolve)
-        join_set = set(item.split('.')[0] for item in group_by)
+            ident = Identifier(field, self._namespace_schemas)
+            result_fields.append(ident.resolve)
+            join_set.add(ident.namespace)
 
         # Parse the WHERE clause.
         where_clause, where_parameters = '', {}
@@ -521,7 +523,7 @@ class SQLBuilder(object):
                                                                   group_by_functions))
             if item.subscript:
                 column_name = self._rewriter_property(column_name, item.subscript)
-            select_list.append('%s AS "%s"' % (column_name, item.canonical))
+            select_list.append('%s AS "%s"' % (column_name, item.resolve))
 
         # aggregated fields
         select_list.append('COUNT(*) AS count')  # always aggregate row count
@@ -552,9 +554,9 @@ class SQLBuilder(object):
         # Generate the FROM clause.
         from_clause = 'FROM %s' % self._table_name('core')
 
-        join_set.discard('core')
         for namespace in join_set:
-            from_clause = '%s LEFT JOIN %s USING (uuid)' % (from_clause, self._table_name(namespace))
+            if namespace not in ('core', None):
+                from_clause = '%s LEFT JOIN %s USING (uuid)' % (from_clause, self._table_name(namespace))
 
         # Generate the complete query.
         query = '%s\n%s' % (select_clause, from_clause)
