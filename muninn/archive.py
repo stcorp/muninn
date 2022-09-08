@@ -219,6 +219,12 @@ class Archive(object):
         self._tempdir = tempdir
         self.id = id
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
+
     def register_namespace(self, namespace, schema):
         """Register a namespace.
 
@@ -356,72 +362,48 @@ class Archive(object):
         """Return a list of supported hook extensions."""
         return list(self._hook_extensions.keys())
 
-    def _plugin_hash_type(self, plugin):
-        if hasattr(plugin, 'hash_type'):
-            if not plugin.hash_type:
-                return None
-            else:
-                return plugin.hash_type
+    def _analyze_paths(self, plugin, paths):
+        metadata = plugin.analyze(paths)
 
-        elif hasattr(plugin, 'use_hash'):
-            if plugin.use_hash:
-                return 'sha1'
-            else:
-                return None
-
+        if hasattr(plugin, 'namespaces'):
+            namespaces = plugin.namespaces
         else:
-            return 'md5'  # default after use_hash deprecation
+            namespaces = []
+
+        for namespace in metadata:
+            if namespace != 'core' and namespace not in namespaces:
+                warnings.warn("plugin.namespaces does not contain '%s'" % namespace, DeprecationWarning)
+
+        if isinstance(metadata, (tuple, list)):
+            properties, tags = metadata
+        else:
+            properties, tags = metadata, []
+
+        return properties, tags
+
+    def _check_paths(self, paths, action):
+        if isinstance(paths, basestring):
+            paths = [paths]
+
+        if not paths:
+            raise Error("nothing to %s" % action)
+
+        # Use absolute paths to make error messages more useful, and to avoid broken links when ingesting/attaching
+        # a product using symbolic links.
+        paths = [os.path.realpath(path) for path in paths]
+
+        # Ensure that the set of files and / or directories that make up the product does not contain duplicate
+        # basenames.
+        basenames = [os.path.basename(path) for path in paths]
+        if len(set(basenames)) < len(basenames):
+            raise Error("basename of each part should be unique for multi-part products")
+
+        return paths
 
     def _extract_hash_type(self, hash_value):
         prefix, middle, _ = hash_value.partition(':')
         if middle == ':' and prefix in HASH_ALGORITHMS:
             return prefix
-
-    def cleanup_derived_products(self):
-        """Clean up all derived products for which the source products no
-        longer exist, as specified by the cascade rule configured in the
-        respective product type plugins.
-
-        Please see the Muninn documentation for more information on how
-        to configure cascade rules.
-        """
-        repeat = True
-        cycle = 0
-        while repeat and cycle < self._max_cascade_cycles:
-            repeat = False
-            cycle += 1
-            for product_type in self.product_types():
-                plugin = self.product_type_plugin(product_type)
-
-                cascade_rule = getattr(plugin, "cascade_rule", CascadeRule.IGNORE)
-                if cascade_rule == CascadeRule.IGNORE:
-                    continue
-
-                strip = cascade_rule in (CascadeRule.CASCADE_PURGE_AS_STRIP, CascadeRule.STRIP)
-                products = self._database.find_products_without_source(product_type, self._cascade_grace_period, strip)
-                if products:
-                    repeat = True
-
-                if strip:
-                    for product in products:
-                        self._strip(product)
-                else:
-                    for product in products:
-                        self._purge(product)
-
-                if cascade_rule in (CascadeRule.CASCADE_PURGE_AS_STRIP, CascadeRule.CASCADE_PURGE):
-                    continue
-
-                products = self._database.find_products_without_available_source(product_type)
-                if products:
-                    repeat = True
-
-                if cascade_rule in (CascadeRule.STRIP, CascadeRule.CASCADE):
-                    for product in products:
-                        self._strip(product)
-                else:
-                    for product in products:
-                        self._purge(product)
 
     def _get_product(self, uuid=None, namespaces=None, property_names=None, must_exist=True, **kwargs):
         if uuid is not None:
@@ -470,6 +452,22 @@ class Archive(object):
             products.append(self._get_product(product_uuid, namespaces=namespaces, property_names=property_names))
 
         return products
+
+    def _plugin_hash_type(self, plugin):
+        if hasattr(plugin, 'hash_type'):
+            if not plugin.hash_type:
+                return None
+            else:
+                return plugin.hash_type
+
+        elif hasattr(plugin, 'use_hash'):
+            if plugin.use_hash:
+                return 'sha1'
+            else:
+                return None
+
+        else:
+            return 'md5'  # default after use_hash deprecation
 
     def _product_path(self, product):
         if self._storage is None or getattr(product.core, 'archive_path', None) is None:
@@ -540,6 +538,46 @@ class Archive(object):
         else:
             raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
 
+    def _run_hooks(self, hook_name, properties, reverse=False, paths=None):
+        plugins = list(self._hook_extensions.values())
+        plugin = self._product_type_plugins.get(properties.core.product_type)
+        if plugin is not None:
+            plugins.insert(0, plugin)
+
+        if reverse:
+            plugins = reversed(plugins)
+
+        for plugin in plugins:
+            hook_method = getattr(plugin, hook_name, None)
+            if hook_method is not None:
+                if _inspect_nargs(hook_method) == 4:
+                    hook_method(self, properties, paths)
+                else:
+                    hook_method(self, properties)
+
+    def _run_for_product(self, product, fn, use_enclosing_directory):
+        if self._storage is None:
+            remote_url = product.core.remote_url
+
+            if remote_url.startswith('file://'):
+                product_path = product.core.remote_url[7:]
+                if os.path.isdir(product_path):
+                    paths = [os.path.join(product_path, basename) for basename in os.listdir(product_path)]
+                else:
+                    paths = [product_path]
+                return fn(paths)
+
+            else:
+                with util.TemporaryDirectory(prefix=".run_for_product-",
+                                             suffix="-%s" % product.core.uuid.hex) as tmp_path:
+                    retrieve_files = remote.retrieve_function(self, product, True)  # TODO verify hash?
+                    retrieve_files(tmp_path)
+                    paths = [os.path.join(tmp_path, basename) for basename in os.listdir(tmp_path)]
+                    return fn(paths)
+
+        else:
+            return self._storage.run_for_product(product, fn, use_enclosing_directory)
+
     def _strip(self, product):
         # Set the archive path to None to indicate the product has no data in storage associated with it.
         self.update_properties(Struct({'core': {'active': True, 'archive_path': None, 'archive_date': None}}),
@@ -571,66 +609,30 @@ class Archive(object):
             properties.core = Struct()
         properties.core.metadata_date = self._database.server_time_utc()
 
-    def _check_paths(self, paths, action):
-        if isinstance(paths, basestring):
-            paths = [paths]
+    def _verify_hash(self, product, paths=None):
+        if 'archive_path' in product.core or 'remote_url' in product.core:
+            if 'hash' not in product.core:
+                raise Error("no hash available for product '%s' (%s)" %
+                            (product.core.product_name, product.core.uuid))
 
-        if not paths:
-            raise Error("nothing to %s" % action)
+            stored_hash = product.core.hash
+            hash_type = self._extract_hash_type(stored_hash)
+            plugin = self.product_type_plugin(product.core.product_type)
 
-        # Use absolute paths to make error messages more useful, and to avoid broken links when ingesting/attaching
-        # a product using symbolic links.
-        paths = [os.path.realpath(path) for path in paths]
+            if hash_type is None:
+                hash_type = 'sha1'  # default before use_hash deprecation
+                stored_hash = 'sha1:' + stored_hash
 
-        # Ensure that the set of files and / or directories that make up the product does not contain duplicate
-        # basenames.
-        basenames = [os.path.basename(path) for path in paths]
-        if len(set(basenames)) < len(basenames):
-            raise Error("basename of each part should be unique for multi-part products")
-
-        return paths
-
-    def _analyze_paths(self, plugin, paths):
-        metadata = plugin.analyze(paths)
-
-        if hasattr(plugin, 'namespaces'):
-            namespaces = plugin.namespaces
-        else:
-            namespaces = []
-
-        for namespace in metadata:
-            if namespace != 'core' and namespace not in namespaces:
-                warnings.warn("plugin.namespaces does not contain '%s'" % namespace, DeprecationWarning)
-
-        if isinstance(metadata, (tuple, list)):
-            properties, tags = metadata
-        else:
-            properties, tags = metadata, []
-
-        return properties, tags
-
-    def _run_for_product(self, product, fn, use_enclosing_directory):
-        if self._storage is None:
-            remote_url = product.core.remote_url
-
-            if remote_url.startswith('file://'):
-                product_path = product.core.remote_url[7:]
-                if os.path.isdir(product_path):
-                    paths = [os.path.join(product_path, basename) for basename in os.listdir(product_path)]
-                else:
-                    paths = [product_path]
-                return fn(paths)
-
+            if paths is None:
+                product_hash = functools.partial(util.product_hash, hash_type=hash_type)
+                current_hash = self._run_for_product(product, product_hash, plugin.use_enclosing_directory)
             else:
-                with util.TemporaryDirectory(prefix=".run_for_product-",
-                                             suffix="-%s" % product.core.uuid.hex) as tmp_path:
-                    retrieve_files = remote.retrieve_function(self, product, True)  # TODO verify hash?
-                    retrieve_files(tmp_path)
-                    paths = [os.path.join(tmp_path, basename) for basename in os.listdir(tmp_path)]
-                    return fn(paths)
+                current_hash = util.product_hash(paths, hash_type=hash_type)
 
-        else:
-            return self._storage.run_for_product(product, fn, use_enclosing_directory)
+            if current_hash != stored_hash:
+                return False
+
+        return True
 
     def attach(self, paths, product_type=None, use_symlinks=None,
                verify_hash=False, verify_hash_before=False,
@@ -765,6 +767,52 @@ class Archive(object):
     def auth_file(self):
         """Return the path of the authentication file to download from remote locations."""
         return self._auth_file
+
+    def cleanup_derived_products(self):
+        """Clean up all derived products for which the source products no
+        longer exist, as specified by the cascade rule configured in the
+        respective product type plugins.
+
+        Please see the Muninn documentation for more information on how
+        to configure cascade rules.
+        """
+        repeat = True
+        cycle = 0
+        while repeat and cycle < self._max_cascade_cycles:
+            repeat = False
+            cycle += 1
+            for product_type in self.product_types():
+                plugin = self.product_type_plugin(product_type)
+
+                cascade_rule = getattr(plugin, "cascade_rule", CascadeRule.IGNORE)
+                if cascade_rule == CascadeRule.IGNORE:
+                    continue
+
+                strip = cascade_rule in (CascadeRule.CASCADE_PURGE_AS_STRIP, CascadeRule.STRIP)
+                products = self._database.find_products_without_source(product_type, self._cascade_grace_period, strip)
+                if products:
+                    repeat = True
+
+                if strip:
+                    for product in products:
+                        self._strip(product)
+                else:
+                    for product in products:
+                        self._purge(product)
+
+                if cascade_rule in (CascadeRule.CASCADE_PURGE_AS_STRIP, CascadeRule.CASCADE_PURGE):
+                    continue
+
+                products = self._database.find_products_without_available_source(product_type)
+                if products:
+                    repeat = True
+
+                if cascade_rule in (CascadeRule.STRIP, CascadeRule.CASCADE):
+                    for product in products:
+                        self._strip(product)
+                else:
+                    for product in products:
+                        self._purge(product)
 
     def close(self):
         """Close the archive immediately instead of when (and if) the archive
@@ -1111,23 +1159,6 @@ class Archive(object):
             self._run_hooks('post_ingest_hook', properties, paths=paths)
 
         return properties
-
-    def _run_hooks(self, hook_name, properties, reverse=False, paths=None):
-        plugins = list(self._hook_extensions.values())
-        plugin = self._product_type_plugins.get(properties.core.product_type)
-        if plugin is not None:
-            plugins.insert(0, plugin)
-
-        if reverse:
-            plugins = reversed(plugins)
-
-        for plugin in plugins:
-            hook_method = getattr(plugin, hook_name, None)
-            if hook_method is not None:
-                if _inspect_nargs(hook_method) == 4:
-                    hook_method(self, properties, paths)
-                else:
-                    hook_method(self, properties)
 
     def link(self, uuid, source_uuids):
         """Link a product to one or more source products.
@@ -1663,31 +1694,6 @@ class Archive(object):
         self._update_metadata_date(properties)
         self._database.update_product_properties(properties, uuid=uuid, new_namespaces=new_namespaces)
 
-    def _verify_hash(self, product, paths=None):
-        if 'archive_path' in product.core or 'remote_url' in product.core:
-            if 'hash' not in product.core:
-                raise Error("no hash available for product '%s' (%s)" %
-                            (product.core.product_name, product.core.uuid))
-
-            stored_hash = product.core.hash
-            hash_type = self._extract_hash_type(stored_hash)
-            plugin = self.product_type_plugin(product.core.product_type)
-
-            if hash_type is None:
-                hash_type = 'sha1'  # default before use_hash deprecation
-                stored_hash = 'sha1:' + stored_hash
-
-            if paths is None:
-                product_hash = functools.partial(util.product_hash, hash_type=hash_type)
-                current_hash = self._run_for_product(product, product_hash, plugin.use_enclosing_directory)
-            else:
-                current_hash = util.product_hash(paths, hash_type=hash_type)
-
-            if current_hash != stored_hash:
-                return False
-
-        return True
-
     def verify_hash(self, where="", parameters={}):
         """Verify the hash for one or more products in the archive.
 
@@ -1711,9 +1717,3 @@ class Archive(object):
                 failed_products.append(product.core.uuid)
 
         return failed_products  # TODO different type of return value when single product passed?
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.close()
