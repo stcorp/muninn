@@ -47,7 +47,7 @@ settings:
   [Extensions](../extensions)). The default is the empty list.
 
 - ``auth_file``: [Optional] JSON file containing the credentials to download
-  using muninn-pull
+  using muninn-pull and/or for S3/Swift access credentials.
 
 - ``tempdir``: [Optional] path where temporary data should be stored.
 
@@ -122,15 +122,17 @@ backend and may contain the following settings:
 
 - ``bucket``: Mandatory. The bucket containing the archive.
 - ``prefix``: [Optional] archive prefix within bucket.
-- ``host``: Mandatory. S3 host URL.
-- ``port``: Mandatory. S3 host port.
-- ``access_key``: Mandatory. S3 authentication access key.
-- ``secret_access_key``: Mandatory. S3 authentication secret access key.
+- ``host``: Mandatory. S3 host name or URL.
+- ``port``: Optional. S3 host port.
+- ``region``: Optional. Name of the S3 region.
+- ``access_key``: Mandatory*. S3 authentication access key.
+- ``secret_access_key``: Mandatory*. S3 authentication secret access key.
 - ``download_args``: [Optional] JSON representation of boto3 download_file ExtraArgs parameter.
 - ``upload_args``: [Optional] JSON representation of boto3 upload_file ExtraArgs parameter.
 - ``copy_args``: [Optional] JSON representation of boto3 copy ExtraArgs parameter.
 - ``transfer_config``: [Optional] JSON representation of boto3.s3.transfer.TransferConfig parameters.
 
+[*] ``access_key`` and ``secret_access_key`` can be taken from a credentials file pointed to by ``auth_file``. The entry in the credentials file should then have a key value equal to the ``host`` value in the archive configuration and it should contain fields for ``auth_type`` (set to ``S3``),  ``bucket`` (set equal to the ``bucket`` value in the archive configuration), and of course contain the ``access_key`` and ``secret_access_key`` fields.
 
 # Section "swift"
 
@@ -138,9 +140,11 @@ This section contains backend specific settings for the Swift storage
 backend and may contain the following settings:
 
 - ``container``: Mandatory. The container containing the archive.
-- ``user``: Mandatory. Swift authentication user name.
-- ``key``: Mandatory. Swift authentication key.
+- ``user``: Mandatory*. Swift authentication user name.
+- ``key``: Mandatory*. Swift authentication key.
 - ``authurl``: Mandatory. Swift authentication auth URL.
+
+[*] ``user`` and ``key`` can be taken from a credentials file pointed to by ``auth_file``. The entry in the credentials file should then have a key value equal to the ``authurl`` value in the archive configuration and it should contain a field for ``auth_type`` (set to ``Swift``), and of course contain the ``user`` and ``key`` fields.
 
 
 # Example configuration file
@@ -149,12 +153,12 @@ backend and may contain the following settings:
 [archive]
 database = postgresql
 storage = fs
-product_type_extensions = cryosat asar
+namespace_extensions = muninn_sentinel5p
+product_type_extensions = muninn_generic_products muninn_sentinel5p
 auth_file = /home/alice/credentials.json
 
 [fs]
 root = /home/alice/archives/foo
-use_symlinks = true
 
 [postgresql]
 connection_string = dbname=foo user=alice password=wonderland host=192.168.0.1
@@ -184,6 +188,19 @@ connection_string = dbname=foo user=alice password=wonderland host=192.168.0.1
      "client_id": "thisclient",
      "client_secret": "somesecret",
      "token_url": "https://authentication-server.com/token/endpoint"
+  }
+  "https://s3-provider.com/": {
+     "auth_type": "S3",
+     "bucket": "my-bucket",
+     "access_key": "XXXXXXXXXXXXXXXXXXXX",
+     "secret_access_key": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+  }
+  "another-s3-provider.com": {
+     "auth_type": "S3",
+     "bucket": "another-bucket",
+     "port": 443,
+     "access_key": "XXXXXXXXXXXXXXXXXXXX",
+     "secret_access_key": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
   }
 }
 ```
