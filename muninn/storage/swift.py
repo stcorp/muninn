@@ -30,7 +30,7 @@ def create(configuration, tempdir, auth_file):
     if 'user' not in options and 'key' not in options and auth_file is not None:
         credentials = json.loads(open(auth_file).read())
         for key, value in credentials.items():
-            if key == options['authurl'] and value['auth_type'] == 'Swift':
+            if key == options['authurl'] and value.get('auth_type') == 'Swift':
                 for option in ('user', 'key', 'container'):
                     if option in value and option not in options:
                         options[option] = value[option]

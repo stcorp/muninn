@@ -21,7 +21,7 @@ class _S3Config(Mapping):
 
     host = Text()
     port = Integer(optional=True)
-    bucket = Text(optional=True)
+    bucket = Text()
     access_key = Text(optional=True)
     secret_access_key = Text(optional=True)
     region = Text(optional=True)
@@ -36,17 +36,21 @@ def create(configuration, tempdir, auth_file):
     options = config.parse(configuration.get("s3", {}), _S3Config)
 
     # if access_key and secret_access_key missing, use auth_file
-    if 'access_key' not in options and 'secret_access_key' not in options and auth_file is not None:
+    if (auth_file is not None and
+            'access_key' not in options and
+            'secret_access_key' not in options and
+            'host' in options and
+            'bucket' in options):
         credentials = json.loads(open(auth_file).read())
         for key, value in credentials.items():
-            if key == options['host'] and value['auth_type'] == 'S3':
+            if value.get('auth_type') == 'S3' and key == options['host'] and value.get('bucket') == options['bucket']:
                 for option in ('access_key', 'secret_access_key', 'port', 'bucket', 'region'):
                     if option in value and option not in options:
                         options[option] = value[option]
                 break
 
     # check that mandatory options are configured
-    for option in ('access_key', 'secret_access_key', 'bucket'):
+    for option in ('access_key', 'secret_access_key'):
         if option not in options:
             raise Error("'%s' not configured" % option)
 
