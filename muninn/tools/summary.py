@@ -9,8 +9,6 @@ from datetime import timedelta
 import argparse
 
 import muninn
-from muninn.schema import Timestamp
-from muninn.database.sql import AGGREGATE_FUNCTIONS, GROUP_BY_FUNCTIONS
 from muninn.tools.utils import create_parser, parse_args_and_run
 
 

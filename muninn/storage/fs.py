@@ -6,7 +6,6 @@ from muninn.schema import Mapping, Text, Boolean
 import muninn.util as util
 from muninn.exceptions import Error, StorageError
 import muninn.config as config
-from muninn.util import product_size
 
 
 class _FSConfig(Mapping):

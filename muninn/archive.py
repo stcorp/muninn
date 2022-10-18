@@ -8,7 +8,6 @@ from muninn._compat import string_types as basestring
 import collections
 import copy
 import datetime
-import errno
 import functools
 import inspect
 import hashlib
@@ -24,7 +23,7 @@ import muninn.util as util
 from muninn.core import Core
 from muninn.exceptions import Error, StorageError
 from muninn.extension import CascadeRule
-from muninn.schema import Text, Boolean, Integer, Sequence, Mapping
+from muninn.schema import Text, Integer, Sequence, Mapping
 from muninn.struct import Struct
 from muninn import remote
 
@@ -1125,7 +1124,8 @@ class Archive(object):
                     properties.core.remote_url = 'file://' + os.path.realpath(paths[0])
                 else:
                     properties.core.remote_url = 'file://' + os.path.realpath(os.path.dirname(paths[0]))  # TODO test
-                self.update_properties(Struct({'core': {'remote_url': properties.core.remote_url}}), properties.core.uuid)
+                self.update_properties(Struct({'core': {'remote_url': properties.core.remote_url}}),
+                                       properties.core.uuid)
 
         except Exception as e:
             if not (isinstance(e, StorageError) and e.anything_stored):

@@ -13,12 +13,13 @@ import sys
 try:
     from tqdm import tqdm as bar
     from multiprocessing import RLock
-    RLock() # fork off resource tracker before tqdm does it (with multiple threads running)
+    RLock()  # fork off resource tracker before tqdm does it (with multiple threads running)
 except ImportError:
     def bar(range, total=None):
         return range
 
 import muninn
+
 
 # This is a base class for operations on a list of items that can be performed in parallel using multiprocessing.
 # If you use the processor object as a callable then it is assumed that the operation is performed using subprocesses.

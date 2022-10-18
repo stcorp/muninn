@@ -35,17 +35,15 @@ def get_credentials(archive, url):
 
 
 def download_http_oath2(url, target_dir, credentials, timeout=60):
-    import requests
     from requests_oauthlib import OAuth2Session
     from oauthlib.oauth2 import LegacyApplicationClient
-    from oauthlib.oauth2.rfc6749 import tokens
 
     assert credentials['grant_type'] == "ResourceOwnerPasswordCredentialsGrant"
 
     session = OAuth2Session(client=LegacyApplicationClient(client_id=credentials['client_id']))
-    token = session.fetch_token(token_url=credentials['token_url'], username=credentials['username'],
-                                password=credentials['password'], client_id=credentials['client_id'],
-                                client_secret=credentials['client_secret'])
+    session.fetch_token(token_url=credentials['token_url'], username=credentials['username'],
+                        password=credentials['password'], client_id=credentials['client_id'],
+                        client_secret=credentials['client_secret'])
     try:
         r = session.get(url, timeout=timeout, stream=True)
         r.raise_for_status()

@@ -44,7 +44,6 @@ GROUP_BY_FUNCTIONS = collections.OrderedDict([
 ])
 
 
-
 class TypeMap(MutableMapping):
     def __init__(self):
         self._types = {}
@@ -478,7 +477,8 @@ class SQLBuilder(object):
         having_clause = ''
         if having is not None:
             ast = parse_and_analyze(having, self._namespace_schemas, parameters, having=True)
-            visitor = _WhereExpressionVisitor(self._rewriter_table, self._column_name, self._named_placeholder, visitor if where else None)
+            visitor = _WhereExpressionVisitor(self._rewriter_table, self._column_name, self._named_placeholder,
+                                              visitor if where else None)
             having_expr, having_parameters, _ = visitor.do_visit(ast)
             where_parameters.update(having_parameters)
             having_clause = 'HAVING %s' % having_expr

@@ -409,8 +409,8 @@ class PostgresqlBackend(object):
     def _execute_list(self, sql_list):
         cursor = self._connection.cursor()
         try:
-            for sql in sql_list:
-                cursor.execute(sql)
+            for item in sql_list:
+                cursor.execute(item)
         finally:
             cursor.close()
 

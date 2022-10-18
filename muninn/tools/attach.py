@@ -4,7 +4,6 @@
 
 from __future__ import absolute_import, division, print_function
 
-import argparse
 import logging
 import sys
 import os
@@ -47,9 +46,9 @@ class AttachProcessor(Processor):
             return 0
 
         try:
-            properties = archive.attach(product_paths, self.product_type, use_symlinks=self.use_symlinks,
-                                        verify_hash=self.verify_hash, verify_hash_before=self.verify_hash_before,
-                                        use_current_path=self.keep, force=self.force)
+            archive.attach(product_paths, self.product_type, use_symlinks=self.use_symlinks,
+                           verify_hash=self.verify_hash, verify_hash_before=self.verify_hash_before,
+                           use_current_path=self.keep, force=self.force)
         except muninn.Error as error:
             logging.error("%s: unable to attach product [%s]" % (path, error))
             return 0
