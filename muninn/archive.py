@@ -231,7 +231,7 @@ class Archive(object):
         namespace -- Namespace name
         schema    -- Schema definition of the namespace.
         """
-        if not re.match(r"[a-z][_a-z]*(\.[a-z][_a-z]*)*", namespace):
+        if not re.match(r"[a-z][_a-z]*", namespace):
             raise ValueError("invalid namespace name %s" % namespace)
         if namespace in self._namespace_schemas:
             raise Error("redefinition of namespace: \"%s\"" % namespace)
