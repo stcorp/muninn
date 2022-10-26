@@ -36,7 +36,7 @@ class _ExtensionName(Text):
     @classmethod
     def validate(cls, value):
         super(_ExtensionName, cls).validate(value)
-        if not re.match(r"[a-z][_a-z]*(\.[a-z][_a-z]*)*", value):
+        if not re.match(r"[a-zA-Z][_a-zA-Z0-9]*(\.[a-zA-Z][_a-zA-Z0-9]*)*$", value):
             raise ValueError("invalid value %r for type %r" % (value, cls.name()))
 
 
@@ -231,7 +231,7 @@ class Archive(object):
         namespace -- Namespace name
         schema    -- Schema definition of the namespace.
         """
-        if not re.match(r"[a-z][_a-z]*", namespace):
+        if not re.match(r"[a-z][_a-z0-9]*$", namespace):
             raise ValueError("invalid namespace name %s" % namespace)
         if namespace in self._namespace_schemas:
             raise Error("redefinition of namespace: \"%s\"" % namespace)
