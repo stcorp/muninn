@@ -100,72 +100,6 @@ def _inspect_nargs(func):
     return len(getargspec(func).args)
 
 
-def create(configuration, id=None):
-    options = config.parse(configuration.get("archive", {}), _ArchiveConfig)
-    _ArchiveConfig.validate(options)
-
-    # Load and create the database backend.
-    database_name = options.pop('database')
-    database_module = _load_database_module(database_name)
-    database = database_module.create(configuration)
-
-    # Load and create the storage backend.
-    storage_name = options.pop('storage')
-    if storage_name == 'none':
-        storage = None
-    else:
-        storage_module = _load_storage_module(storage_name)
-        storage = storage_module.create(configuration, options.get('tempdir', None), options.get('auth_file', None))
-
-    # Create the archive.
-    namespace_extensions = options.pop("namespace_extensions", [])
-    product_type_extensions = options.pop("product_type_extensions", [])
-    remote_backend_extensions = options.pop("remote_backend_extensions", [])
-    hook_extensions = options.pop("hook_extensions", [])
-    archive = Archive(database=database, storage=storage, id=id, **options)
-
-    # Register core namespace.
-    archive.register_namespace("core", Core)
-
-    # Register custom namespaces.
-    for name in namespace_extensions:
-        extension = _load_extension(name)
-        try:
-            for namespace in extension.namespaces():
-                archive.register_namespace(namespace, extension.namespace(namespace))
-        except AttributeError:
-            raise Error("extension %r does not implement the namespace extension API" % name)
-
-    # Register product types.
-    for name in product_type_extensions:
-        extension = _load_extension(name)
-        try:
-            for product_type in extension.product_types():
-                archive.register_product_type(product_type, extension.product_type_plugin(product_type))
-        except AttributeError:
-            raise Error("extension %r does not implement the product type extension API" % name)
-
-    # Register custom remote backends.
-    for name in remote_backend_extensions:
-        extension = _load_extension(name)
-        try:
-            for remote_backend in extension.remote_backends():
-                archive.register_remote_backend(remote_backend, extension.remote_backend(remote_backend))
-        except AttributeError:
-            raise Error("extension %r does not implement the remote backend extension API" % name)
-
-    # Register hook extensions.
-    for name in hook_extensions:
-        extension = _load_extension(name)
-        try:
-            for hook_extension in extension.hook_extensions():
-                archive.register_hook_extension(hook_extension, extension.hook_extension(hook_extension))
-        except AttributeError:
-            raise Error("extension %r does not implement the hook extension API" % name)
-
-    return archive
-
-
 _CORE_PROP_NAMES = [
     'uuid',
     'active',
@@ -195,8 +129,71 @@ class Archive(object):
 
     """
 
-    #: Archive id (usually name of configuration file)
-    id = None
+    @staticmethod
+    def create(configuration, id=None):
+        options = config.parse(configuration.get("archive", {}), _ArchiveConfig)
+        _ArchiveConfig.validate(options)
+
+        # Load and create the database backend.
+        database_name = options.pop('database')
+        database_module = _load_database_module(database_name)
+        database = database_module.create(configuration)
+
+        # Load and create the storage backend.
+        storage_name = options.pop('storage')
+        if storage_name == 'none':
+            storage = None
+        else:
+            storage_module = _load_storage_module(storage_name)
+            storage = storage_module.create(configuration, options.get('tempdir', None), options.get('auth_file', None))
+
+        # Create the archive.
+        namespace_extensions = options.pop("namespace_extensions", [])
+        product_type_extensions = options.pop("product_type_extensions", [])
+        remote_backend_extensions = options.pop("remote_backend_extensions", [])
+        hook_extensions = options.pop("hook_extensions", [])
+        archive = Archive(database=database, storage=storage, id=id, **options)
+
+        # Register core namespace.
+        archive.register_namespace("core", Core)
+
+        # Register custom namespaces.
+        for name in namespace_extensions:
+            extension = _load_extension(name)
+            try:
+                for namespace in extension.namespaces():
+                    archive.register_namespace(namespace, extension.namespace(namespace))
+            except AttributeError:
+                raise Error("extension %r does not implement the namespace extension API" % name)
+
+        # Register product types.
+        for name in product_type_extensions:
+            extension = _load_extension(name)
+            try:
+                for product_type in extension.product_types():
+                    archive.register_product_type(product_type, extension.product_type_plugin(product_type))
+            except AttributeError:
+                raise Error("extension %r does not implement the product type extension API" % name)
+
+        # Register custom remote backends.
+        for name in remote_backend_extensions:
+            extension = _load_extension(name)
+            try:
+                for remote_backend in extension.remote_backends():
+                    archive.register_remote_backend(remote_backend, extension.remote_backend(remote_backend))
+            except AttributeError:
+                raise Error("extension %r does not implement the remote backend extension API" % name)
+
+        # Register hook extensions.
+        for name in hook_extensions:
+            extension = _load_extension(name)
+            try:
+                for hook_extension in extension.hook_extensions():
+                    archive.register_hook_extension(hook_extension, extension.hook_extension(hook_extension))
+            except AttributeError:
+                raise Error("extension %r does not implement the hook extension API" % name)
+
+        return archive
 
     def __init__(self, database, storage, cascade_grace_period=0,
                  max_cascade_cycles=25, auth_file=None, id=None, tempdir=None):
@@ -216,7 +213,7 @@ class Archive(object):
 
         self._storage = storage
         self._tempdir = tempdir
-        self.id = id
+        self.id = id  # Archive id (usually name of configuration file)
 
     def __enter__(self):
         return self

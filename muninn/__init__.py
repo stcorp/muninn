@@ -11,7 +11,7 @@ __all__ = ["Error", "InternalError", "Struct", "Archive", "open", "config_path"]
 
 import os as _os
 
-from muninn.archive import Archive, create as _create_archive
+from muninn.archive import Archive
 from muninn.exceptions import *
 from muninn.struct import Struct
 
@@ -40,7 +40,7 @@ def open(id=None, **kwargs):
         section = configuration.setdefault(name, {})
         section.update(value)
 
-    return _create_archive(configuration, id)
+    return Archive.create(configuration, id)
 
 
 def _read_archive_config_file(path):
