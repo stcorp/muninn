@@ -8,26 +8,30 @@ permalink: /api/
 {:toc}
 
 <a name="muninn"></a>
+
 # muninn
 
-<a name="muninn.config_path"></a>
+<a id="muninn.config_path"></a>
+
 #### config\_path
 
 ```python
-config_path()
+def config_path()
 ```
 
-Returns value of `MUNINN_CONFIG_PATH` environment variable.
+Return the value of the `MUNINN_CONFIG_PATH` environment variable.
 
-<a name="muninn.open"></a>
+<a id="muninn.open"></a>
+
 #### open
 
 ```python
-open(id=None, **kwargs)
+def open(id=None, **kwargs)
 ```
 
-Opens archive for given archive id, by searching using the
-`MUNINN_CONFIG_PATH` enivironment variable.
+Open an archive for the given archive id, by searching for the
+corresponding configuration file in the locations found in the
+`MUNINN_CONFIG_PATH` environment variable.
 
 **Arguments**:
 
@@ -36,12 +40,14 @@ Opens archive for given archive id, by searching using the
 
 **Returns**:
 
-  Instance of `muninn.archive.Archive`
+  An instance of `muninn.archive.Archive`
 
-<a name="muninn.archive"></a>
+<a id="muninn.archive"></a>
+
 # muninn.archive
 
-<a name="muninn.archive.Archive"></a>
+<a id="muninn.archive.Archive"></a>
+
 ## Archive Objects
 
 ```python
@@ -64,52 +70,49 @@ Please see the Muninn documentation for details about how to configure
 a Muninn archive (and also set an environment variable so Muninn can find
 its configuration file.)
 
-<a name="muninn.archive.Archive.id"></a>
-#### id
+<a id="muninn.archive.Archive.register_namespace"></a>
 
-Archive id (usually name of configuration file)
-
-<a name="muninn.archive.Archive.register_namespace"></a>
 #### register\_namespace
 
 ```python
-register_namespace(namespace, schema)
+def register_namespace(namespace, schema)
 ```
 
-Register a namespace.
+Register a namespace. A valid namespace identifier starts
+with a lowercase character, and can contain any number of
+additional lowercase characters, underscores, or digits.
 
 **Arguments**:
 
-- `namespace` - Namespace name
+- `namespace` - Namespace identifier.
 - `schema` - Schema definition of the namespace.
 
-<a name="muninn.archive.Archive.namespace_schema"></a>
+<a id="muninn.archive.Archive.namespace_schema"></a>
+
 #### namespace\_schema
 
 ```python
-namespace_schema(namespace)
+def namespace_schema(namespace)
 ```
 
 Return the schema definition of the specified namespace.
 
-**Arguments**:
+<a id="muninn.archive.Archive.namespaces"></a>
 
-- `namespace` - Namespace name
-
-<a name="muninn.archive.Archive.namespaces"></a>
 #### namespaces
 
 ```python
-namespaces()
+def namespaces()
 ```
 
-Return a list of registered namespaces.
+Return a list containing all registered namespaces.
 
-<a name="muninn.archive.Archive.register_product_type"></a>
+<a id="muninn.archive.Archive.register_product_type"></a>
+
 #### register\_product\_type
 
 ```python
-register_product_type(product_type, plugin)
+def register_product_type(product_type, plugin)
 ```
 
 Register a product type.
@@ -122,34 +125,37 @@ Register a product type.
   extracting product properties from products of the
   specified product type.
 
-<a name="muninn.archive.Archive.product_type_plugin"></a>
+<a id="muninn.archive.Archive.product_type_plugin"></a>
+
 #### product\_type\_plugin
 
 ```python
-product_type_plugin(product_type)
+def product_type_plugin(product_type)
 ```
 
 Return a reference to the specified product type plugin.
 
-product_type -- Product type name
+product_type -- Product type name.
 
-<a name="muninn.archive.Archive.product_types"></a>
+<a id="muninn.archive.Archive.product_types"></a>
+
 #### product\_types
 
 ```python
-product_types()
+def product_types()
 ```
 
 Return a list of registered product types.
 
-<a name="muninn.archive.Archive.register_remote_backend"></a>
+<a id="muninn.archive.Archive.register_remote_backend"></a>
+
 #### register\_remote\_backend
 
 ```python
-register_remote_backend(remote_backend, plugin)
+def register_remote_backend(remote_backend, plugin)
 ```
 
-Register a remote backend
+Register a remote backend.
 
 **Arguments**:
 
@@ -159,33 +165,36 @@ Register a remote backend
   details of extracting product properties from
   products of the specified remote backend.
 
-<a name="muninn.archive.Archive.remote_backend"></a>
+<a id="muninn.archive.Archive.remote_backend"></a>
+
 #### remote\_backend
 
 ```python
-remote_backend(remote_backend)
+def remote_backend(remote_backend)
 ```
 
-Return a reference to the specified remote backend plugin
+Return a reference to the specified remote backend plugin.
 
 **Arguments**:
 
-- `remote_backend` - Remote backend name
+- `remote_backend` - Remote backend name.
 
-<a name="muninn.archive.Archive.remote_backends"></a>
+<a id="muninn.archive.Archive.remote_backends"></a>
+
 #### remote\_backends
 
 ```python
-remote_backends()
+def remote_backends()
 ```
 
 Return a list of supported remote backends.
 
-<a name="muninn.archive.Archive.register_hook_extension"></a>
+<a id="muninn.archive.Archive.register_hook_extension"></a>
+
 #### register\_hook\_extension
 
 ```python
-register_hook_extension(hook_extension, plugin)
+def register_hook_extension(hook_extension, plugin)
 ```
 
 Register a hook extension.
@@ -196,11 +205,12 @@ Register a hook extension.
 - `plugin` - Reference to an object that implements the hook
   extension plugin API
 
-<a name="muninn.archive.Archive.hook_extension"></a>
+<a id="muninn.archive.Archive.hook_extension"></a>
+
 #### hook\_extension
 
 ```python
-hook_extension(hook_extension)
+def hook_extension(hook_extension)
 ```
 
 Return the hook extension with the specified name.
@@ -209,34 +219,28 @@ Return the hook extension with the specified name.
 
 - `hook_extension` - Hook extension name
 
-<a name="muninn.archive.Archive.hook_extensions"></a>
+<a id="muninn.archive.Archive.hook_extensions"></a>
+
 #### hook\_extensions
 
 ```python
-hook_extensions()
+def hook_extensions()
 ```
 
 Return a list of supported hook extensions.
 
-<a name="muninn.archive.Archive.cleanup_derived_products"></a>
-#### cleanup\_derived\_products
+<a id="muninn.archive.Archive.attach"></a>
 
-```python
-cleanup_derived_products()
-```
-
-Clean up all derived products for which the source products no
-longer exist, as specified by the cascade rule configured in the
-respective product type plugins.
-
-Please see the Muninn documentation for more information on how
-to configure cascade rules.
-
-<a name="muninn.archive.Archive.attach"></a>
 #### attach
 
 ```python
-attach(paths, product_type=None, use_symlinks=None, verify_hash=False, verify_hash_before=False, use_current_path=False, force=False)
+def attach(paths,
+           product_type=None,
+           use_symlinks=None,
+           verify_hash=False,
+           verify_hash_before=False,
+           use_current_path=False,
+           force=False)
 ```
 
 Add a product to the archive using an existing metadata record in the database.
@@ -271,20 +275,37 @@ The existing metadata record is found by performing a search based on product_ty
 
   The attached product.
 
-<a name="muninn.archive.Archive.auth_file"></a>
+<a id="muninn.archive.Archive.auth_file"></a>
+
 #### auth\_file
 
 ```python
-auth_file()
+def auth_file()
 ```
 
 Return the path of the authentication file to download from remote locations.
 
-<a name="muninn.archive.Archive.close"></a>
+<a id="muninn.archive.Archive.cleanup_derived_products"></a>
+
+#### cleanup\_derived\_products
+
+```python
+def cleanup_derived_products()
+```
+
+Clean up all derived products for which the source products no
+longer exist, as specified by the cascade rule configured in the
+respective product type plugins.
+
+Please see the Muninn documentation for more information on how
+to configure cascade rules.
+
+<a id="muninn.archive.Archive.close"></a>
+
 #### close
 
 ```python
-close()
+def close()
 ```
 
 Close the archive immediately instead of when (and if) the archive
@@ -292,29 +313,33 @@ instance is collected.
 
 Using the archive after calling this function results in undefined behavior.
 
-<a name="muninn.archive.Archive.count"></a>
+<a id="muninn.archive.Archive.count"></a>
+
 #### count
 
 ```python
-count(where="", parameters={})
+def count(where="", parameters={})
 ```
 
 Return the number of products matching the specified search expression.
 
 **Arguments**:
 
-- `where` - Search expression.
+- `where` - Search expression (default: "").
 - `parameters` - Parameters referenced in the search expression (if any).
 
-<a name="muninn.archive.Archive.create_properties"></a>
+<a id="muninn.archive.Archive.create_properties"></a>
+
 #### create\_properties
 
 ```python
-create_properties(properties, disable_hooks=False)
+def create_properties(properties, disable_hooks=False)
 ```
 
-Create a record for the given product in the product catalogue.
-An important side effect of this operation is that it will fail if:
+Create a record for the given product (as defined by the
+provided dictionary of properties) in the product catalogue.
+An important side effect of this operation is that it will
+fail if:
 
 1. The core.uuid is not unique within the product catalogue.
 2. The combination of core.archive_path and core.physical_name is
@@ -322,14 +347,15 @@ not unique within the product catalogue.
 
 **Arguments**:
 
-- `properties` - Product properties
-- `disable_hooks` - Do not execute any hooks (default False)
+- `properties` - The product properties.
+- `disable_hooks` - Do not execute any hooks (default: False).
 
-<a name="muninn.archive.Archive.delete_properties"></a>
+<a id="muninn.archive.Archive.delete_properties"></a>
+
 #### delete\_properties
 
 ```python
-delete_properties(where="", parameters={})
+def delete_properties(where="", parameters={})
 ```
 
 Remove properties for one or more products from the catalogue.
@@ -339,19 +365,20 @@ will _not_ trigger any of the specific cascade rules.
 
 **Arguments**:
 
-- `where` - Search expression or one or more product uuid(s) or properties.
-- `parameters` - Parameters referenced in the search expression (if any).
+- `where` - Search expression or one or more product uuid(s) or properties (default: "").
+- `parameters` - Parameters referenced in the search expression (default: empty dictionary).
   
 
 **Returns**:
 
   The number of updated products
 
-<a name="muninn.archive.Archive.derived_products"></a>
+<a id="muninn.archive.Archive.derived_products"></a>
+
 #### derived\_products
 
 ```python
-derived_products(uuid)
+def derived_products(uuid)
 ```
 
 Return the UUIDs of the products that are linked to the given
@@ -359,13 +386,14 @@ product as derived products.
 
 **Arguments**:
 
-- `uuid` - Product UUID
+- `uuid` - Product UUID.
 
-<a name="muninn.archive.Archive.destroy"></a>
+<a id="muninn.archive.Archive.destroy"></a>
+
 #### destroy
 
 ```python
-destroy()
+def destroy()
 ```
 
 Completely remove the archive, including both the products and the
@@ -375,69 +403,75 @@ Using the archive after calling this function results in undefined
 behavior. The prepare() function can be used to bring the archive back
 into a useable state.
 
-<a name="muninn.archive.Archive.destroy_catalogue"></a>
+<a id="muninn.archive.Archive.destroy_catalogue"></a>
+
 #### destroy\_catalogue
 
 ```python
-destroy_catalogue()
+def destroy_catalogue()
 ```
 
-Completely remove the catalogue database, but leaving the datastore in storage untouched.
+Completely remove the catalogue database, but leave the datastore in storage untouched.
 
 Using the archive after calling this function results in undefined behavior.
 Using the prepare_catalogue() function and ingesting all products again, can bring the archive
 back into a useable state.
 
-<a name="muninn.archive.Archive.export"></a>
+<a id="muninn.archive.Archive.export"></a>
+
 #### export
 
 ```python
-export(where="", parameters={}, target_path=os.path.curdir, format=None)
+def export(where="", parameters={}, target_path=os.path.curdir, format=None)
 ```
 
 Export one or more products from the archive.
 
 By default, a copy of the original product will be retrieved from the archive. This default behavior can be
-customized by the product type plug-in. For example, the custom implementation for a certain product type might
+customized by the product type plugin. For example, the custom implementation for a certain product type might
 retrieve one or more derived products and bundle them together with the product itself.
 
 **Arguments**:
 
-- `where` - Search expression or one or more product uuid(s) or properties.
-- `parameters` - Parameters referenced in the search expression (if any).
-- `target_path` - Directory in which the retrieved products will be stored.
-- `format` - Format in which the products will be exported.
+- `where` - Search expression or one or more product uuid(s) or properties (default: "").
+- `parameters` - Parameters referenced in the search expression (default: empty dictionary).
+- `target_path` - Directory in which the retrieved products will be stored (default: current directory).
+- `format` - Format in which the products will be exported (default: None).
   
 
 **Returns**:
 
-  A list with the export paths for the exported products (when a search expression or multiple properties/uuids
-  were passed), or a single export path.
+  Either a list containing the export paths for the
+  exported products (when a search expression or multiple
+  properties/UUIDs were passed), or a single export path.
 
-<a name="muninn.archive.Archive.export_formats"></a>
+<a id="muninn.archive.Archive.export_formats"></a>
+
 #### export\_formats
 
 ```python
-export_formats()
+def export_formats()
 ```
 
 Return a list of supported alternative export formats.
 
-<a name="muninn.archive.Archive.generate_uuid"></a>
+<a id="muninn.archive.Archive.generate_uuid"></a>
+
 #### generate\_uuid
 
 ```python
 @staticmethod
-generate_uuid()
+def generate_uuid()
 ```
 
-Return a new generated UUID that can be used as UUID for a product metadata record
+Return a new generated UUID that can be used as UUID for a product metadata record.
 
-<a name="muninn.archive.Archive.identify"></a>
+<a id="muninn.archive.Archive.identify"></a>
+
 #### identify
 
 ```python
-identify(paths)
+def identify(paths)
 ```
 
 Determine the product type of the product (specified as a single path, or a list of paths if it is a
@@ -450,13 +484,21 @@ multi-part product).
 
 **Returns**:
 
-  Determined product type
+  The determined product type.
 
-<a name="muninn.archive.Archive.ingest"></a>
+<a id="muninn.archive.Archive.ingest"></a>
+
 #### ingest
 
 ```python
-ingest(paths, product_type=None, properties=None, ingest_product=True, use_symlinks=None, verify_hash=False, use_current_path=False, force=False)
+def ingest(paths,
+           product_type=None,
+           properties=None,
+           ingest_product=True,
+           use_symlinks=None,
+           verify_hash=False,
+           use_current_path=False,
+           force=False)
 ```
 
 Ingest a product into the archive. Multiple paths can be specified, but the set of files and/or directories
@@ -498,27 +540,29 @@ try to copy/symlink it.
 
 **Returns**:
 
-  The ingested product
+  The ingested product.
 
-<a name="muninn.archive.Archive.link"></a>
+<a id="muninn.archive.Archive.link"></a>
+
 #### link
 
 ```python
-link(uuid, source_uuids)
+def link(uuid, source_uuids)
 ```
 
 Link a product to one or more source products.
 
 **Arguments**:
 
-- `uuid` - Product UUID
-- `source_uuids` - Source UUIDs
+- `uuid` - Product UUID.
+- `source_uuids` - Source UUIDs.
 
-<a name="muninn.archive.Archive.prepare"></a>
+<a id="muninn.archive.Archive.prepare"></a>
+
 #### prepare
 
 ```python
-prepare(force=False)
+def prepare(force=False)
 ```
 
 Prepare the archive for (first) use.
@@ -531,33 +575,48 @@ initialized such that the archive is ready for use.
 - `force` - If set to True then any existing products and / or product
   catalogue will be removed.
 
-<a name="muninn.archive.Archive.prepare_catalogue"></a>
+<a id="muninn.archive.Archive.prepare_catalogue"></a>
+
 #### prepare\_catalogue
 
 ```python
-prepare_catalogue(dry_run=False)
+def prepare_catalogue(dry_run=False)
 ```
 
 Prepare the catalogue of the archive for (first) use.
 
-<a name="muninn.archive.Archive.product_path"></a>
+**Arguments**:
+
+- `dry_run` - Do not actually execute the preparation commands.
+  
+
+**Returns**:
+
+  The list of SQL commands that (would) have been executed by this function.
+
+<a id="muninn.archive.Archive.product_path"></a>
+
 #### product\_path
 
 ```python
-product_path(uuid_or_properties)
+def product_path(uuid_or_properties)
 ```
 
 Return the path in storage to the specified product.
 
 **Arguments**:
 
-- `uuid_or_properties` - UUID or product
+- `uuid_or_properties` - UUID or dictionary of product properties.
 
-<a name="muninn.archive.Archive.pull"></a>
+<a id="muninn.archive.Archive.pull"></a>
+
 #### pull
 
 ```python
-pull(where="", parameters={}, verify_hash=False, verify_hash_download=False)
+def pull(where="",
+         parameters={},
+         verify_hash=False,
+         verify_hash_download=False)
 ```
 
 Pull one or more remote products into the archive.
@@ -577,32 +636,37 @@ archive (i.e. the archive_path core metadata field should not be set).
 
 **Returns**:
 
-  The number of pulled products
+  The number of pulled products.
 
-<a name="muninn.archive.Archive.rebuild_properties"></a>
+<a id="muninn.archive.Archive.rebuild_properties"></a>
+
 #### rebuild\_properties
 
 ```python
-rebuild_properties(uuid, disable_hooks=False, use_current_path=False)
+def rebuild_properties(uuid, disable_hooks=False, use_current_path=False)
 ```
 
-Rebuild product properties by re-extracting these properties (using product type plug-ins) from the
+Rebuild product properties by re-extracting these properties (using product type plugins) from the
 products stored in the archive.
-Only properties and tags that are returned by the product type plug-in will be updated. Other properties or
+Only properties and tags that are returned by the product type plugin will be updated. Other properties or
 tags will remain as they were.
 
 **Arguments**:
 
 - `uuid` - Product UUID
-- `disable_hooks` - Disable product type hooks (not meant for routine operation).
+- `disable_hooks` - Disable product type hooks (not meant for routine operation) (default: False).
 - `use_current_path` - Do not attempt to relocate the product to the location specified in the product
-  type plug-in. Useful for read-only archives.
+  type plugin. Useful for read-only archives (default: False).
 
-<a name="muninn.archive.Archive.rebuild_pull_properties"></a>
+<a id="muninn.archive.Archive.rebuild_pull_properties"></a>
+
 #### rebuild\_pull\_properties
 
 ```python
-rebuild_pull_properties(uuid, verify_hash=False, disable_hooks=False, use_current_path=False)
+def rebuild_pull_properties(uuid,
+                            verify_hash=False,
+                            disable_hooks=False,
+                            use_current_path=False)
 ```
 
 Refresh products by re-running the pull, but using the existing products stored in the archive.
@@ -611,16 +675,17 @@ Refresh products by re-running the pull, but using the existing products stored 
 
 - `uuid` - Product UUID
 - `verify_hash` - If set to True then the product in the archive will be matched against
-  the hash from the metadata (only if the metadata contained a hash).
-- `disable_hooks` - Disable product type hooks (not meant for routine operation).
+  the hash from the metadata (only if the metadata contained a hash) (default: False).
+- `disable_hooks` - Disable product type hooks (not meant for routine operation) (default: False).
 - `use_current_path` - Do not attempt to relocate the product to the location specified in the product
-  type plug-in. Useful for read-only archives.
+  type plugin. Useful for read-only archives (default: False).
 
-<a name="muninn.archive.Archive.remove"></a>
+<a id="muninn.archive.Archive.remove"></a>
+
 #### remove
 
 ```python
-remove(where="", parameters={}, force=False, cascade=True)
+def remove(where="", parameters={}, force=False, cascade=True)
 ```
 
 Remove one or more products from the archive, both from storage as well as from the product catalogue.
@@ -631,42 +696,53 @@ products being removed (or stripped) along with it. Such products are _not_ incl
 
 **Arguments**:
 
-- `where` - Search expression or one or more product uuid(s) or properties.
-- `parameters` - Parameters referenced in the search expression (if any).
+- `where` - Search expression or one or more product uuid(s) or properties (default: "").
+- `parameters` - Parameters referenced in the search expression (default: empty dictionary).
 - `force` - If set to True, also remove partially ingested products. This affects products for which a
   failure occured during ingestion, as well as products in the process of being ingested. Use
-  this option with care.
-- `cascade` - Apply cascade rules to strip/remove dependent products.
+  this option with care (default: False).
+- `cascade` - Apply cascade rules to strip/remove dependent products (default: True).
+  
 
-<a name="muninn.archive.Archive.retrieve"></a>
+**Returns**:
+
+  The number of removed products.
+
+<a id="muninn.archive.Archive.retrieve"></a>
+
 #### retrieve
 
 ```python
-retrieve(where="", parameters={}, target_path=os.path.curdir, use_symlinks=False)
+def retrieve(where="",
+             parameters={},
+             target_path=os.path.curdir,
+             use_symlinks=False)
 ```
 
 Retrieve one or more products from the archive.
 
 **Arguments**:
 
-- `where` - Search expression or one or more product uuid(s) or properties.
-- `parameters` - Parameters referenced in the search expression (if any).
-- `target_path` - Directory under which the retrieved products will be stored.
+- `where` - Search expression or one or more product uuid(s) or properties (default: "").
+- `parameters` - Parameters referenced in the search expression (default: empty dictionary).
+- `target_path` - Directory under which the retrieved products will be stored (default: current directory).
 - `use_symlinks` - If set to True, products will be retrieved as symbolic links to the original products kept
   in the archive. If set to False, products will retrieved as copies of the original products.
-  By default, products will be retrieved as copies.
+  By default, products will be retrieved as copies (default: False).
   
 
 **Returns**:
 
-  A list with the target paths for the retrieved products (when a search expression or multiple properties/uuids
-  were passed), or a single target path.
+  Either a list containing the target paths for the
+  retrieved products (when a search expression or multiple
+  properties/uuids were passed), or a single target path.
 
-<a name="muninn.archive.Archive.retrieve_properties"></a>
+<a id="muninn.archive.Archive.retrieve_properties"></a>
+
 #### retrieve\_properties
 
 ```python
-retrieve_properties(uuid, namespaces=[], property_names=[])
+def retrieve_properties(uuid, namespaces=[], property_names=[])
 ```
 
 Return properties for the specified product.
@@ -677,33 +753,41 @@ Return properties for the specified product.
 - `namespaces` - List of namespaces of which the properties should be retrieved. By default, only properties
   defined in the "core" namespace will be retrieved.
 
-<a name="muninn.archive.Archive.root"></a>
+<a id="muninn.archive.Archive.root"></a>
+
 #### root
 
 ```python
-root()
+def root()
 ```
 
 Return the archive root path.
 
-<a name="muninn.archive.Archive.search"></a>
+<a id="muninn.archive.Archive.search"></a>
+
 #### search
 
 ```python
-search(where="", order_by=[], limit=None, parameters={}, namespaces=[], property_names=[])
+def search(where="",
+           order_by=[],
+           limit=None,
+           parameters={},
+           namespaces=[],
+           property_names=[])
 ```
 
 Search the product catalogue for products matching the specified search expression.
 
 **Arguments**:
 
-- `where` - Search expression.
+- `where` - Search expression (default: "").
 - `order_by` - A list of property names that determines the ordering of the results. If the list is empty, the
   order of the results in undetermined and can very between calls to this function. Each property
   name in this list can be provided with a '+' or '-' prefix, or without a prefix. A '+' prefix,
-  or no predix denotes ascending sort order, a '-' prefix denotes decending sort order.
-- `limit` - Limit the maximum number of results to the specified number.
-- `parameters` - Parameters referenced in the search expression (if any).
+  or no prefix denotes ascending sort order, a '-' prefix denotes decending sort order
+- `(default` - empty list).
+- `limit` - Limit the maximum number of results to the specified number (default: None).
+- `parameters` - Parameters referenced in the search expression (default: empty dictionary).
 - `namespaces` - List of namespaces of which the properties should be retrieved. By default, only properties
   defined in the "core" namespace will be retrieved.
   property_names
@@ -717,13 +801,14 @@ Search the product catalogue for products matching the specified search expressi
 
 **Returns**:
 
-  A list of matching products
+  A list of matching products.
 
-<a name="muninn.archive.Archive.source_products"></a>
+<a id="muninn.archive.Archive.source_products"></a>
+
 #### source\_products
 
 ```python
-source_products(uuid)
+def source_products(uuid)
 ```
 
 Return the UUIDs of the products that are linked to the given product as source products.
@@ -732,11 +817,12 @@ Return the UUIDs of the products that are linked to the given product as source 
 
 - `uuid` - Product UUID
 
-<a name="muninn.archive.Archive.strip"></a>
+<a id="muninn.archive.Archive.strip"></a>
+
 #### strip
 
 ```python
-strip(where="", parameters={}, force=False, cascade=True)
+def strip(where="", parameters={}, force=False, cascade=True)
 ```
 
 Remove one or more products from storage only (not from the product catalogue).
@@ -746,83 +832,100 @@ products being stripped (or removed) along with it.
 
 **Arguments**:
 
-- `where` - Search expression or one or more product uuid(s) or properties.
-- `parameters` - Parameters referenced in the search expression (if any).
+- `where` - Search expression or one or more product uuid(s) or properties (default: "").
+- `parameters` - Parameters referenced in the search expression (default: empty dictionary).
 - `force` - If set to True, also strip partially ingested products. This affects products for which a
   failure occured during ingestion, as well as products in the process of being ingested. Use
-  this option with care.
-- `cascade` - Apply cascade rules to strip/purge dependent products.
+  this option with care (default: False).
+- `cascade` - Apply cascade rules to strip/purge dependent products (default: True).
   
 
 **Returns**:
 
-  The number of stripped products
+  The number of stripped products.
 
-<a name="muninn.archive.Archive.summary"></a>
+<a id="muninn.archive.Archive.summary"></a>
+
 #### summary
 
 ```python
-summary(where="", parameters=None, aggregates=None, group_by=None, group_by_tag=False, order_by=None)
+def summary(where="",
+            parameters=None,
+            aggregates=None,
+            group_by=None,
+            group_by_tag=False,
+            having=None,
+            order_by=None)
 ```
 
 Return a summary of the products matching the specified search expression.
 
 **Arguments**:
 
-- `where` - Search expression.
-- `parameters` - Parameters referenced in the search expression (if any).
+- `where` - Search expression (default: "").
+- `parameters` - Parameters referenced in the search expression (default: None).
 - `aggregates` - A list of property aggregates defined as "<property_name>.<reduce_fn>".
   Properties need to be of type long, integer, real, text or timestamp.
   The reduce function can be 'min', 'max', 'sum', or 'avg'.
   'sum' and 'avg' are not possible for text and timestamp properties.
   A special property 'validity_duration' (defined as validity_stop - validity_start) can also
-  be used.
+  be used. (default: None)
 - `group_by` - A list of property names whose values are used for grouping the aggregation results.
   There will be a separate result row for each combination of group_by property values.
   Properties need to be of type long, integer, boolean, text or timestamp.
   Timestamps require a binning subscript which can be 'year', 'month', 'yearmonth', or 'date'
-  (e.g. 'validity_start.yearmonth').
+  (e.g. 'validity_start.yearmonth'). (default: None)
 - `group_by_tag` - If set to True, results will also be grouped by available tag values.
-  Note that products will be counted multiple times if they have multiple tags.
+  Note that products will be counted multiple times if they have multiple tags (default: False)
+- `having` - A list of property aggregates defined as `<property_name>.<reduce_fn>`; properties need to be
+  of type long, integer, real, text or timestamp; the reduce function can be 'min', 'max', 'sum',
+  or 'avg'; 'sum' and 'avg' are not possible for text and timestamp properties; a special property
+  'validity_duration' (defined as validity_stop - validity_start) can also be used (default: None).
 - `order_by` - A list of result column names that determines the ordering of the results. If the list is
   empty, the order of the results is ordered by the `group_by` specification. Each name in the
-  list can have a '+' (ascending) or '-' (descending) prefix, or no prefix (ascending).
+  list can have a '+' (ascending) or '-' (descending) prefix, or no prefix (ascending). (default: None)
   
-  Note that the property names must always include the namespace. 'core' is not assumed.
 
-<a name="muninn.archive.Archive.tag"></a>
+**Returns**:
+
+  A list of row tuples matching the search expression created from the arguments.
+
+<a id="muninn.archive.Archive.tag"></a>
+
 #### tag
 
 ```python
-tag(where=None, tags=None, parameters={})
+def tag(where=None, tags=None, parameters={})
 ```
 
 Set one or more tags on one or more product(s).
 
 **Arguments**:
 
-- `where` - Search expression or one or more product uuid(s) or properties.
-- `tags` - One or more tags
-- `parameters` - Parameters referenced in the search expression (if any).
+- `where` - Search expression or one or more product uuid(s) or properties (default: None).
+- `tags` - One or more tags (default: None).
+- `parameters` - Parameters referenced in the search expression (default: empty dictionary).
 
-<a name="muninn.archive.Archive.tags"></a>
+<a id="muninn.archive.Archive.tags"></a>
+
 #### tags
 
 ```python
-tags(uuid)
+def tags(uuid)
 ```
 
 Return the tags of a product.
 
 **Arguments**:
 
-- `uuid` - Product UUID
+- `uuid` - Product UUID.
 
-<a name="muninn.archive.Archive.unlink"></a>
+<a id="muninn.archive.Archive.unlink"></a>
+
 #### unlink
 
 ```python
-unlink(uuid, source_uuids=None)
+def unlink(uuid, source_uuids=None)
 ```
 
 Remove the link between a product and one or more of its source products.
@@ -832,26 +935,28 @@ Remove the link between a product and one or more of its source products.
 - `uuid` - Product UUID
 - `source_uuids` - Source product UUIDs
 
-<a name="muninn.archive.Archive.untag"></a>
+<a id="muninn.archive.Archive.untag"></a>
+
 #### untag
 
 ```python
-untag(where=None, tags=None, parameters={})
+def untag(where=None, tags=None, parameters={})
 ```
 
 Remove one or more tags from one or more product(s).
 
 **Arguments**:
 
-- `where` - Search expression or one or more product uuid(s) or properties.
-- `tags` - One or more tags (default all existing tags)
-- `parameters` - Parameters referenced in the search expression (if any).
+- `where` - Search expression or one or more product uuid(s) or properties (default: None).
+- `tags` - One or more tags (default: None, meaning all existing tags)
+- `parameters` - Parameters referenced in the search expression (default: empty dictionaryu).
 
-<a name="muninn.archive.Archive.update_properties"></a>
+<a id="muninn.archive.Archive.update_properties"></a>
+
 #### update\_properties
 
 ```python
-update_properties(properties, uuid=None, create_namespaces=False)
+def update_properties(properties, uuid=None, create_namespaces=False)
 ```
 
 Update product properties in the product catalogue. The UUID of the product to update will be taken from the
@@ -865,16 +970,17 @@ catalogue.
 
 Argument:
 properties         -- Product properties
-uuid               --  UUID of the product to update. By default, the UUID will be taken from the "core.uuid"
-                       property.
-create_namespaces  --  Test if all namespaces are already defined for the product, and create them if needed
-                       (default False)
+uuid               -- UUID of the product to update. By default, the UUID will be taken from the "core.uuid"
+                      property.
+create_namespaces  -- Test if all namespaces are already defined for the product, and create them if needed
+                      (default: False)
 
-<a name="muninn.archive.Archive.verify_hash"></a>
+<a id="muninn.archive.Archive.verify_hash"></a>
+
 #### verify\_hash
 
 ```python
-verify_hash(where="", parameters={})
+def verify_hash(where="", parameters={})
 ```
 
 Verify the hash for one or more products in the archive.
