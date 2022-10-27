@@ -6,11 +6,11 @@ permalink: /datatypes/
 
 # Data types
 
-Each product property can be of one of the following supported types: boolean,
-integer, long, real, text, timestamp, uuid, geometry and json. These types are
+Each product property can be of one of the following supported types: *boolean,
+integer, long, real, text, timestamp, uuid, geometry, and json*. These types are
 described in detail below.
 
-The boolean type represents a truth value and has two possible states: ``true``
+The *boolean* type represents a truth value and has two possible states: ``true``
 and ``false``.
 
 The valid literal boolean values are:
@@ -19,7 +19,7 @@ The valid literal boolean values are:
 
   ``false``
 
-The integer types (integer and long) represent whole numbers. The integer type
+The *integer* types (integer and long) represent whole numbers. The integer type
 is a 32-bit signed integer and can be used to represent values in the range
 -2147483648 to +2147483647 (inclusive). The long type is a 64-bit signed
 integer and can be used to represent values in the range -9223372036854775808
@@ -35,7 +35,7 @@ Some examples of literal integer values:
 
   ``+99``
 
-The floating point type (real) represents fractional numbers. The real type is
+The *floating point* type (real) represents fractional numbers. The real type is
 a double precision floating point number and has a typical range of around
 1E-307 to 1E+308 with a precision of at least 15 digits.
 
@@ -49,7 +49,7 @@ Some examples of literal real values:
 
   ``1.0``
 
-The text type represents text. Literal values are enclosed in double quotes and
+The *text* type represents text. Literal values are enclosed in double quotes and
 most common backslash escape sequences are recognized. To include a double quote
 or a backslash inside a text literal, they must be escaped with a backslash,
 i.e. ``\"`` and ``\\``.
@@ -60,7 +60,7 @@ Some examples of literal text values:
 
   ``"This is a so-called \"text\" literal."``
 
-The timestamp type represents an instance in time with microsecond resolution.
+The *timestamp* type represents an instance in time with microsecond resolution.
 Time zone information is not included. Although throughout muninn all
 timestamps are expressed in UTC, users (and especially product type plug-in
 developers) can choose a different convention (e.g. local time) for custom
@@ -89,7 +89,7 @@ Some examples of literal timestamp values:
 
   ``9999-99-99T99:99:99.99``
 
-The uuid type represents a universally unique identifier, a 128-bit number that
+The *uuid* type represents a universally unique identifier, a 128-bit number that
 is used to uniquely identify products in a muninn archive.
 
 Some examples of literal uuid values:
@@ -100,7 +100,7 @@ Some examples of literal uuid values:
 
   ``bdc10916-d89f-416c-8987-a9c2af9b1ef7``
 
-The geometry type represents two-dimensional geometric objects. The spatial
+The *geometry* type represents two-dimensional geometric objects. The spatial
 reference system used is WGS84 (SRID=4326). Longitude is measured in degrees
 East, latitude is measured in degrees North. The coordinates of a point are
 ordered as (longitude, latitude).
@@ -130,4 +130,4 @@ Some examples of literal geometry values:
 
   ``POLYGON EMPTY``
 
-The json type represents JSON objects.
+The *json* type represents JSON objects.
