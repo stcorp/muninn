@@ -7,7 +7,7 @@ permalink: /api/
 * toc
 {:toc}
 
-<a name="muninn"></a>
+<a id="muninn"></a>
 
 # muninn
 
@@ -234,13 +234,7 @@ Return a list of supported hook extensions.
 #### attach
 
 ```python
-def attach(paths,
-           product_type=None,
-           use_symlinks=None,
-           verify_hash=False,
-           verify_hash_before=False,
-           use_current_path=False,
-           force=False)
+def attach(paths, product_type=None, use_symlinks=None, verify_hash=False, verify_hash_before=False, use_current_path=False, force=False)
 ```
 
 Add a product to the archive using an existing metadata record in the database.
@@ -325,7 +319,7 @@ Return the number of products matching the specified search expression.
 
 **Arguments**:
 
-- `where` - Search expression (default: "").
+- `where` - Search expression.
 - `parameters` - Parameters referenced in the search expression (if any).
 
 <a id="muninn.archive.Archive.create_properties"></a>
@@ -348,7 +342,7 @@ not unique within the product catalogue.
 **Arguments**:
 
 - `properties` - The product properties.
-- `disable_hooks` - Do not execute any hooks (default: False).
+- `disable_hooks` - Do not execute any hooks.
 
 <a id="muninn.archive.Archive.delete_properties"></a>
 
@@ -365,8 +359,8 @@ will _not_ trigger any of the specific cascade rules.
 
 **Arguments**:
 
-- `where` - Search expression or one or more product uuid(s) or properties (default: "").
-- `parameters` - Parameters referenced in the search expression (default: empty dictionary).
+- `where` - Search expression or one or more product uuid(s) or properties.
+- `parameters` - Parameters referenced in the search expression.
   
 
 **Returns**:
@@ -433,10 +427,10 @@ retrieve one or more derived products and bundle them together with the product 
 
 **Arguments**:
 
-- `where` - Search expression or one or more product uuid(s) or properties (default: "").
-- `parameters` - Parameters referenced in the search expression (default: empty dictionary).
-- `target_path` - Directory in which the retrieved products will be stored (default: current directory).
-- `format` - Format in which the products will be exported (default: None).
+- `where` - Search expression or one or more product uuid(s) or properties.
+- `parameters` - Parameters referenced in the search expression.
+- `target_path` - Directory in which the retrieved products will be stored.
+- `format` - Format in which the products will be exported.
   
 
 **Returns**:
@@ -491,14 +485,7 @@ multi-part product).
 #### ingest
 
 ```python
-def ingest(paths,
-           product_type=None,
-           properties=None,
-           ingest_product=True,
-           use_symlinks=None,
-           verify_hash=False,
-           use_current_path=False,
-           force=False)
+def ingest(paths, product_type=None, properties=None, ingest_product=True, use_symlinks=None, verify_hash=False, use_current_path=False, force=False)
 ```
 
 Ingest a product into the archive. Multiple paths can be specified, but the set of files and/or directories
@@ -613,10 +600,7 @@ Return the path in storage to the specified product.
 #### pull
 
 ```python
-def pull(where="",
-         parameters={},
-         verify_hash=False,
-         verify_hash_download=False)
+def pull(where="", parameters={}, verify_hash=False, verify_hash_download=False)
 ```
 
 Pull one or more remote products into the archive.
@@ -654,19 +638,16 @@ tags will remain as they were.
 **Arguments**:
 
 - `uuid` - Product UUID
-- `disable_hooks` - Disable product type hooks (not meant for routine operation) (default: False).
+- `disable_hooks` - Disable product type hooks (not meant for routine operation).
 - `use_current_path` - Do not attempt to relocate the product to the location specified in the product
-  type plugin. Useful for read-only archives (default: False).
+  type plugin. Useful for read-only archives.
 
 <a id="muninn.archive.Archive.rebuild_pull_properties"></a>
 
 #### rebuild\_pull\_properties
 
 ```python
-def rebuild_pull_properties(uuid,
-                            verify_hash=False,
-                            disable_hooks=False,
-                            use_current_path=False)
+def rebuild_pull_properties(uuid, verify_hash=False, disable_hooks=False, use_current_path=False)
 ```
 
 Refresh products by re-running the pull, but using the existing products stored in the archive.
@@ -675,10 +656,10 @@ Refresh products by re-running the pull, but using the existing products stored 
 
 - `uuid` - Product UUID
 - `verify_hash` - If set to True then the product in the archive will be matched against
-  the hash from the metadata (only if the metadata contained a hash) (default: False).
-- `disable_hooks` - Disable product type hooks (not meant for routine operation) (default: False).
+  the hash from the metadata (only if the metadata contained a hash).
+- `disable_hooks` - Disable product type hooks (not meant for routine operation).
 - `use_current_path` - Do not attempt to relocate the product to the location specified in the product
-  type plugin. Useful for read-only archives (default: False).
+  type plugin. Useful for read-only archives.
 
 <a id="muninn.archive.Archive.remove"></a>
 
@@ -696,12 +677,12 @@ products being removed (or stripped) along with it. Such products are _not_ incl
 
 **Arguments**:
 
-- `where` - Search expression or one or more product uuid(s) or properties (default: "").
-- `parameters` - Parameters referenced in the search expression (default: empty dictionary).
+- `where` - Search expression or one or more product uuid(s) or properties.
+- `parameters` - Parameters referenced in the search expression.
 - `force` - If set to True, also remove partially ingested products. This affects products for which a
   failure occured during ingestion, as well as products in the process of being ingested. Use
-  this option with care (default: False).
-- `cascade` - Apply cascade rules to strip/remove dependent products (default: True).
+  this option with care.
+- `cascade` - Apply cascade rules to strip/remove dependent products.
   
 
 **Returns**:
@@ -713,22 +694,19 @@ products being removed (or stripped) along with it. Such products are _not_ incl
 #### retrieve
 
 ```python
-def retrieve(where="",
-             parameters={},
-             target_path=os.path.curdir,
-             use_symlinks=False)
+def retrieve(where="", parameters={}, target_path=os.path.curdir, use_symlinks=False)
 ```
 
 Retrieve one or more products from the archive.
 
 **Arguments**:
 
-- `where` - Search expression or one or more product uuid(s) or properties (default: "").
-- `parameters` - Parameters referenced in the search expression (default: empty dictionary).
-- `target_path` - Directory under which the retrieved products will be stored (default: current directory).
+- `where` - Search expression or one or more product uuid(s) or properties.
+- `parameters` - Parameters referenced in the search expression.
+- `target_path` - Directory under which the retrieved products will be stored.
 - `use_symlinks` - If set to True, products will be retrieved as symbolic links to the original products kept
   in the archive. If set to False, products will retrieved as copies of the original products.
-  By default, products will be retrieved as copies (default: False).
+  By default, products will be retrieved as copies.
   
 
 **Returns**:
@@ -768,26 +746,20 @@ Return the archive root path.
 #### search
 
 ```python
-def search(where="",
-           order_by=[],
-           limit=None,
-           parameters={},
-           namespaces=[],
-           property_names=[])
+def search(where="", order_by=[], limit=None, parameters={}, namespaces=[], property_names=[])
 ```
 
 Search the product catalogue for products matching the specified search expression.
 
 **Arguments**:
 
-- `where` - Search expression (default: "").
+- `where` - Search expression.
 - `order_by` - A list of property names that determines the ordering of the results. If the list is empty, the
   order of the results in undetermined and can very between calls to this function. Each property
   name in this list can be provided with a '+' or '-' prefix, or without a prefix. A '+' prefix,
-  or no prefix denotes ascending sort order, a '-' prefix denotes decending sort order
-- `(default` - empty list).
-- `limit` - Limit the maximum number of results to the specified number (default: None).
-- `parameters` - Parameters referenced in the search expression (default: empty dictionary).
+  or no prefix denotes ascending sort order, a '-' prefix denotes decending sort order.
+- `limit` - Limit the maximum number of results to the specified number.
+- `parameters` - Parameters referenced in the search expression.
 - `namespaces` - List of namespaces of which the properties should be retrieved. By default, only properties
   defined in the "core" namespace will be retrieved.
   property_names
@@ -832,12 +804,12 @@ products being stripped (or removed) along with it.
 
 **Arguments**:
 
-- `where` - Search expression or one or more product uuid(s) or properties (default: "").
-- `parameters` - Parameters referenced in the search expression (default: empty dictionary).
+- `where` - Search expression or one or more product uuid(s) or properties.
+- `parameters` - Parameters referenced in the search expression.
 - `force` - If set to True, also strip partially ingested products. This affects products for which a
   failure occured during ingestion, as well as products in the process of being ingested. Use
-  this option with care (default: False).
-- `cascade` - Apply cascade rules to strip/purge dependent products (default: True).
+  this option with care.
+- `cascade` - Apply cascade rules to strip/purge dependent products.
   
 
 **Returns**:
@@ -849,41 +821,35 @@ products being stripped (or removed) along with it.
 #### summary
 
 ```python
-def summary(where="",
-            parameters=None,
-            aggregates=None,
-            group_by=None,
-            group_by_tag=False,
-            having=None,
-            order_by=None)
+def summary(where="", parameters=None, aggregates=None, group_by=None, group_by_tag=False, having=None, order_by=None)
 ```
 
 Return a summary of the products matching the specified search expression.
 
 **Arguments**:
 
-- `where` - Search expression (default: "").
-- `parameters` - Parameters referenced in the search expression (default: None).
+- `where` - Search expression.
+- `parameters` - Parameters referenced in the search expression.
 - `aggregates` - A list of property aggregates defined as "<property_name>.<reduce_fn>".
   Properties need to be of type long, integer, real, text or timestamp.
   The reduce function can be 'min', 'max', 'sum', or 'avg'.
   'sum' and 'avg' are not possible for text and timestamp properties.
   A special property 'validity_duration' (defined as validity_stop - validity_start) can also
-  be used. (default: None)
+  be used.
 - `group_by` - A list of property names whose values are used for grouping the aggregation results.
   There will be a separate result row for each combination of group_by property values.
   Properties need to be of type long, integer, boolean, text or timestamp.
   Timestamps require a binning subscript which can be 'year', 'month', 'yearmonth', or 'date'
-  (e.g. 'validity_start.yearmonth'). (default: None)
+  (e.g. 'validity_start.yearmonth').
 - `group_by_tag` - If set to True, results will also be grouped by available tag values.
-  Note that products will be counted multiple times if they have multiple tags (default: False)
+  Note that products will be counted multiple times if they have multiple tags
 - `having` - A list of property aggregates defined as `<property_name>.<reduce_fn>`; properties need to be
   of type long, integer, real, text or timestamp; the reduce function can be 'min', 'max', 'sum',
   or 'avg'; 'sum' and 'avg' are not possible for text and timestamp properties; a special property
-  'validity_duration' (defined as validity_stop - validity_start) can also be used (default: None).
+  'validity_duration' (defined as validity_stop - validity_start) can also be used.
 - `order_by` - A list of result column names that determines the ordering of the results. If the list is
   empty, the order of the results is ordered by the `group_by` specification. Each name in the
-  list can have a '+' (ascending) or '-' (descending) prefix, or no prefix (ascending). (default: None)
+  list can have a '+' (ascending) or '-' (descending) prefix, or no prefix (ascending).
   
 
 **Returns**:
@@ -902,9 +868,9 @@ Set one or more tags on one or more product(s).
 
 **Arguments**:
 
-- `where` - Search expression or one or more product uuid(s) or properties (default: None).
-- `tags` - One or more tags (default: None).
-- `parameters` - Parameters referenced in the search expression (default: empty dictionary).
+- `where` - Search expression or one or more product uuid(s) or properties.
+- `tags` - One or more tags.
+- `parameters` - Parameters referenced in the search expression.
 
 <a id="muninn.archive.Archive.tags"></a>
 
@@ -947,9 +913,9 @@ Remove one or more tags from one or more product(s).
 
 **Arguments**:
 
-- `where` - Search expression or one or more product uuid(s) or properties (default: None).
+- `where` - Search expression or one or more product uuid(s) or properties.
 - `tags` - One or more tags (default: None, meaning all existing tags)
-- `parameters` - Parameters referenced in the search expression (default: empty dictionaryu).
+- `parameters` - Parameters referenced in the search expression.
 
 <a id="muninn.archive.Archive.update_properties"></a>
 
@@ -972,8 +938,7 @@ Argument:
 properties         -- Product properties
 uuid               -- UUID of the product to update. By default, the UUID will be taken from the "core.uuid"
                       property.
-create_namespaces  -- Test if all namespaces are already defined for the product, and create them if needed
-                      (default: False)
+create_namespaces  -- Test if all namespaces are already defined for the product, and create them if needed.
 
 <a id="muninn.archive.Archive.verify_hash"></a>
 

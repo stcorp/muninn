@@ -43,7 +43,7 @@ The package is now available in the ``dist`` directory.
 If the Python API documentation needs to be updated, commands
 similar to the following may be used:
 
-    pydoc-markdown -m muninn -m muninn.archive > docs/api.md
+    pydoc-markdown -I . -m muninn -m muninn.archive > docs/api.md
     sed -i -e 's/ | //g' docs/api.md
 
 Now add the following to the top of ``api.md``:
