@@ -18,7 +18,7 @@ class _FSConfig(Mapping):
 def create(configuration, tempdir, auth_file):
     options = config.parse(configuration.get("fs", {}), _FSConfig)
     _FSConfig.validate(options)
-    return FilesystemStorageBackend(**options, tempdir=tempdir)
+    return FilesystemStorageBackend(tempdir=tempdir, **options)
 
 
 class FilesystemStorageBackend(StorageBackend):
