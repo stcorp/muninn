@@ -42,7 +42,7 @@ def create(configuration, tempdir, auth_file):
             raise Error("'%s' not configured" % option)
 
     _SwiftConfig.validate(options)
-    return SwiftStorageBackend(**options, tempdir=tempdir)
+    return SwiftStorageBackend(tempdir=tempdir, **options)
 
 
 class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate directory, 'dir/' with contents?

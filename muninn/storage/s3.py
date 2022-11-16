@@ -55,7 +55,7 @@ def create(configuration, tempdir, auth_file):
             raise Error("'%s' not configured" % option)
 
     _S3Config.validate(options)
-    return S3StorageBackend(**options, tempdir=tempdir)
+    return S3StorageBackend(tempdir=tempdir, **options)
 
 
 class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate directory, 'dir/' with contents?
