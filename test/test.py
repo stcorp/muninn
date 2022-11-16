@@ -182,8 +182,8 @@ def do_popen(cmd, return_dict, join):
     proc = subprocess.Popen(
             cmd,
             shell=True,
-            stdout=subprocess.PIPE, # if join else subprocess.DEVNULL,
-            stderr=subprocess.PIPE, # if join else subprocess.DEVNULL,
+            stdout=subprocess.PIPE if join or not PY3 else subprocess.DEVNULL,
+            stderr=subprocess.PIPE if join or not PY3 else subprocess.DEVNULL,
     )
 
     if join:
