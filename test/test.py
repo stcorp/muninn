@@ -170,17 +170,20 @@ def _makedirs(path):
 @pytest.fixture(scope='session', autouse=True)
 def multiprocessing_context():
     global ctx, manager
-    ctx = multiprocessing.get_context('forkserver')
-    ctx.set_forkserver_preload(['subprocess'])
-    manager = ctx.Manager()
-
+    try:
+        ctx = multiprocessing.get_context('forkserver')
+        ctx.set_forkserver_preload(['subprocess'])
+        manager = ctx.Manager()
+    except AttributeError:
+        ctx = multiprocessing
+        manager = multiprocessing.Manager()
 
 def do_popen(cmd, return_dict, join):
     proc = subprocess.Popen(
             cmd,
             shell=True,
-            stdout=subprocess.PIPE if join else subprocess.DEVNULL,
-            stderr=subprocess.PIPE if join else subprocess.DEVNULL,
+            stdout=subprocess.PIPE, # if join else subprocess.DEVNULL,
+            stderr=subprocess.PIPE, # if join else subprocess.DEVNULL,
     )
 
     if join:
@@ -297,11 +300,13 @@ def _archive(database, storage, use_enclosing_directory, archive_path):
 
 @pytest.fixture
 def archive(database, storage, use_enclosing_directory, archive_path):
-    yield from _archive(database, storage, use_enclosing_directory, archive_path)
+    for a in _archive(database, storage, use_enclosing_directory, archive_path):
+        yield a
 
 @pytest.fixture
 def archive_pure(database, storage_pure, use_enclosing_directory, archive_path):
-    yield from _archive(database, storage_pure, use_enclosing_directory, archive_path)
+    for a in _archive(database, storage_pure, use_enclosing_directory, archive_path):
+        yield a
 
 
 @pytest.fixture(params=REMOTE_BACKENDS, scope='session')
@@ -1615,7 +1620,7 @@ class TestQuery:
         s = archive.search('size == %s' % hex(1015))
         assert len(s) == 3
 
-        s = archive.search('size == %s' % oct(1015))
+        s = archive.search('size == 0o1767') # py2/3 compat
         assert len(s) == 3
 
         s = archive.search('size == %s' % bin(1015))
