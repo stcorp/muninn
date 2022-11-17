@@ -2,22 +2,20 @@ from setuptools import setup
 import sys
 
 pyversion = sys.version_info
-if pyversion[0] == 2 and pyversion[1] >= 6:
-    python_req = ">=2.6"
+if pyversion[0] == 2 and pyversion[1] >= 7:
+    python_req = ">=2.7"
 elif pyversion >= (3, 6):
     python_req = ">=3.6"
 else:
     # python_requires is only availabe since setuptools 24.2.0 and pip 9.0.0
-    sys.exit("Python 2.6 (or newer) or 3.6 (or newer) is required to use this package.")
+    sys.exit("Python 2.7 (or newer) or 3.6 (or newer) is required to use this package.")
 
 
 requirements = []
-if sys.version_info[0] == 2 and sys.version_info[1] == 6:
-    requirements += ["argparse"]
 
 setup(
     name="muninn",
-    version="6.0",
+    version="6.0.1",
     description="Data product catalogue and archive system",
     url="https://github.com/stcorp/muninn",
     author="S[&]T",
@@ -45,7 +43,6 @@ setup(
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.6",
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
@@ -53,6 +50,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
         "Topic :: Scientific/Engineering",
