@@ -11,10 +11,12 @@ specific (types of) products, it is necessary to install one or more
 extensions.
 
 A muninn extension is a Python module or package that implements the muninn
-extension interface. Muninn defines three main types of extensions: namespace
+extension interface. Muninn defines four main types of extensions: namespace
 extensions (that contain namespace definitions), product type extensions
-(that contain product type plug-ins) and finally hook extensions (allowing
-functions to be executed at certain times, e.g. product creation/removal).
+(that contain product type plug-ins), hook extensions (allowing
+functions to be executed at certain times, e.g. product creation/removal), and
+remote backend extensions (to support custom URL protocols for downloads
+performed by muninn).
 
 A namespace is a named set of product properties (see
 [Namespaces](../namespaces)).
