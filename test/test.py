@@ -39,8 +39,7 @@ from muninn.geometry import Polygon, LinearRing, Point
 from muninn.extension import CascadeRule
 
 CFG = ConfigParser()
-import conftest
-CFG.read(conftest.test_config)
+CFG.read(os.environ['MUNINN_TEST_CFG'])
 
 STORAGE_BACKENDS = [s.strip() for s in CFG.get('DEFAULT', 'storage').split(',')]
 DATABASE_BACKENDS = [s.strip() for s in CFG.get('DEFAULT', 'database').split(',')]
