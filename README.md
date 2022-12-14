@@ -17,8 +17,8 @@ namespace that covers the most common properties for data products.
 Support for additional namespaces are handled through external plug-ins
 (see [Extensions](https://stcorp.github.io/muninn/extensions/)).
 
-In Norse mythology, Muninn is a raven that, together with another raven called
-Huggin, gather information for the god Odin. Muninn is Old Norse for "memory".
+In Norse mythology, Muninn is a raven who, together with another raven called
+Huginn, gathers information for the god Odin. Muninn is Old Norse for "memory".
 
 # Documentation
 
