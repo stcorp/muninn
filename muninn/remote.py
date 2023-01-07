@@ -162,7 +162,26 @@ class RemoteBackend(object):
         for extension in tar_extensions:
             if filename == product.core.physical_name + extension:
                 with tarfile.open(file_path) as tararchive:
-                    tararchive.extractall(dirname)
+                    def is_within_directory(directory, target):
+                        
+                        abs_directory = os.path.abspath(directory)
+                        abs_target = os.path.abspath(target)
+                    
+                        prefix = os.path.commonprefix([abs_directory, abs_target])
+                        
+                        return prefix == abs_directory
+                    
+                    def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+                    
+                        for member in tar.getmembers():
+                            member_path = os.path.join(path, member.name)
+                            if not is_within_directory(path, member_path):
+                                raise Exception("Attempted Path Traversal in Tar File")
+                    
+                        tar.extractall(path, members, numeric_owner) 
+                        
+                    
+                    safe_extract(tararchive, dirname)
                     paths = set([path.split('/', 1)[0] for path in tararchive.getnames()])
                     paths = [os.path.join(dirname, path) for path in sorted(paths)]
                 util.remove_path(file_path)
