@@ -161,9 +161,16 @@ class RemoteBackend(object):
         tar_extensions += [extension.upper() for extension in tar_extensions]
         for extension in tar_extensions:
             if filename == product.core.physical_name + extension:
+                absdirname = os.path.abspath(dirname)
                 with tarfile.open(file_path) as tararchive:
-                    tararchive.extractall(dirname)
-                    paths = set([path.split('/', 1)[0] for path in tararchive.getnames()])
+                    paths = []
+                    for member in tararchive.getmembers():
+                        # CVE-2007-4559: only extract tar members that end up inside the extraction target directory
+                        member_path = os.path.abspath(os.path.join(dirname, member.name))
+                        if os.path.commonprefix([absdirname, member_path]) == absdirname:
+                            paths += [os.path.relpath(member_path, dirname)]
+                            tararchive.extract(member, dirname)
+                    paths = set([path.split('/', 1)[0] for path in paths])
                     paths = [os.path.join(dirname, path) for path in sorted(paths)]
                 util.remove_path(file_path)
                 return paths
