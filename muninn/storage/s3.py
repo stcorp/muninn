@@ -215,7 +215,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             raise Error("S3 storage backend does not support symlinks")
 
         archive_path = product.core.archive_path
-        product_path = os.path.join(self._prefix, archive_path, product.core.physical_name)
+        product_path = os.path.join(archive_path, product.core.physical_name)
         prefix = self._prefix + product_path
 
         objs = list(self._resource.Bucket(self.bucket).objects.filter(Prefix=prefix))
