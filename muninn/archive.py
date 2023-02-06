@@ -468,7 +468,7 @@ class Archive(object):
         if self._storage is None or getattr(product.core, 'archive_path', None) is None:
             return None
 
-        return self._storage.product_path(product)
+        return os.path.join(product.core.archive_path, product.core.physical_name)
 
     def _purge(self, product):
         # get full product
@@ -522,7 +522,7 @@ class Archive(object):
             use_enclosing_directory = plugin.use_enclosing_directory
 
             # Symbolic link or copy the product at or to the specified target directory.
-            self._storage.get(product, product_path, target_path, use_enclosing_directory, use_symlinks)
+            self._storage.get(product, target_path, use_enclosing_directory, use_symlinks)
 
             return os.path.join(target_path, os.path.basename(product_path))
 

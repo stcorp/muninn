@@ -25,6 +25,7 @@ class FilesystemStorageBackend(StorageBackend):
     def __init__(self, root, use_symlinks=None, tempdir=None):
         super(FilesystemStorageBackend, self).__init__(tempdir)
 
+        self.global_prefix = root
         self._root = os.path.realpath(root)
         self._use_symlinks = use_symlinks or False
         self.supports_symlinks = True
@@ -43,7 +44,7 @@ class FilesystemStorageBackend(StorageBackend):
         return tmp_root
 
     def run_for_product(self, product, fn, use_enclosing_directory):
-        product_path = self.product_path(product)
+        product_path = os.path.join(self._root, product.core.archive_path, product.core.physical_name)
         if use_enclosing_directory:
             paths = [os.path.join(product_path, basename) for basename in os.listdir(product_path)]
         else:
@@ -59,9 +60,6 @@ class FilesystemStorageBackend(StorageBackend):
                 util.remove_path(self._root)
             except EnvironmentError as _error:
                 raise Error("unable to remove archive root path '%s' [%s]" % (self._root, _error))
-
-    def product_path(self, product):
-        return os.path.join(self._root, product.core.archive_path, product.core.physical_name)
 
     def current_archive_path(self, paths, properties):
         for path in paths:
@@ -169,10 +167,11 @@ class FilesystemStorageBackend(StorageBackend):
             except Exception as e:
                 raise StorageError(e, anything_stored)
 
-    # TODO product_path follows from product
-    def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=None):
+    def get(self, product, target_path, use_enclosing_directory, use_symlinks=None):
         if use_symlinks is None:
             use_symlinks = self._use_symlinks
+
+        product_path = os.path.join(self._root, product.core.archive_path, product.core.physical_name)
 
         try:
             if use_symlinks:
@@ -193,9 +192,10 @@ class FilesystemStorageBackend(StorageBackend):
                                                                        _error))
 
     def size(self, product_path):
-        return util.product_size(product_path)
+        return util.product_size(os.path.join(self._root, product_path))
 
     def delete(self, product_path, properties):
+        product_path = os.path.join(self._root, product_path)
         if not os.path.lexists(product_path):
             # If the product does not exist, do not consider this an error.
             return
@@ -224,7 +224,7 @@ class FilesystemStorageBackend(StorageBackend):
         util.make_path(abs_archive_path)
 
         # Move files there
-        product_path = self.product_path(product)
+        product_path = os.path.join(self._root, product.core.archive_path, product.core.physical_name)
         os.rename(product_path, os.path.join(abs_archive_path, product.core.physical_name))
 
         # Optionally rewrite (local) paths

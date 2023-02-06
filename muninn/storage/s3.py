@@ -139,9 +139,6 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             bucket.objects.all().delete()
             bucket.delete()
 
-    def product_path(self, product):  # TODO needed?
-        return os.path.join(product.core.archive_path, product.core.physical_name)
-
     def current_archive_path(self, paths, properties):
         raise Error("S3 storage backend does not support ingesting already archived products")
 
@@ -213,11 +210,12 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
         except Exception as e:
             raise StorageError(e, anything_stored)
 
-    def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=None):
+    def get(self, product, target_path, use_enclosing_directory, use_symlinks=None):
         if use_symlinks:
             raise Error("S3 storage backend does not support symlinks")
 
         archive_path = product.core.archive_path
+        product_path = os.path.join(self._prefix, archive_path, product.core.physical_name)
         prefix = self._prefix + product_path
 
         objs = list(self._resource.Bucket(self.bucket).objects.filter(Prefix=prefix))
@@ -254,8 +252,8 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
         if product.core.archive_path == archive_path:
             return paths
 
-        product_path = self._prefix + self.product_path(product)
-        new_product_path = self._prefix + os.path.join(archive_path, product.core.physical_name)
+        product_path = os.path.join(self._prefix, product.core.archive_path, product.core.physical_name)
+        new_product_path = os.path.join(self._prefix, archive_path, product.core.physical_name)
 
         objs = list(self._resource.Bucket(self.bucket).objects.filter(Prefix=product_path))
         if not objs:

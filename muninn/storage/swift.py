@@ -82,9 +82,6 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
                 self._conn.delete_object(self.container, data['name'])
             self._conn.delete_container(self.container)
 
-    def product_path(self, product):  # TODO needed?
-        return os.path.join(product.core.archive_path, product.core.physical_name)
-
     def current_archive_path(self, paths, properties):
         raise Error("Swift storage backend does not support ingesting already archived products")
 
@@ -145,11 +142,12 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
         except Exception as e:
             raise StorageError(e, anything_stored)
 
-    def get(self, product, product_path, target_path, use_enclosing_directory, use_symlinks=None):
+    def get(self, product, target_path, use_enclosing_directory, use_symlinks=None):
         if use_symlinks:
             raise Error("Swift storage backend does not support symlinks")
 
         archive_path = product.core.archive_path
+        product_path = os.path.join(archive_path, product.core.physical_name)
 
         keys = self._object_keys(product_path)
         if not keys:
