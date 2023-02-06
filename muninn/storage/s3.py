@@ -116,7 +116,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
                 raise
 
     def _prefix_exists(self):
-        if self._prefix:  # TODO created but still empty archive
+        if self._prefix:
             objs = list(self._resource.Bucket(self.bucket).objects.limit(count=1).filter(Prefix=self._prefix))
             return len(objs) == 1
         else:
@@ -125,6 +125,8 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
     def prepare(self):
         if not self._bucket_exists():
             self._resource.create_bucket(Bucket=self.bucket)
+        if not self._prefix_exists():
+            self._create_dir(self._prefix)
 
     def exists(self):
         return self._bucket_exists() and self._prefix_exists()
@@ -151,7 +153,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             obj.upload_file(path, ExtraArgs=self._upload_args, Config=self._transfer_config)
 
     def _create_dir(self, key):
-        # using put, as upload_file/upload_fileobj do not like the trailish slash
+        # using put, as upload_file/upload_fileobj do not like the trailing slash
         self._resource.Object(self.bucket, key+'/').put()
 
     def put(self, paths, properties, use_enclosing_directory, use_symlinks=None,
