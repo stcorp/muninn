@@ -1225,7 +1225,7 @@ class Archive(object):
 
         archive_path = getattr(product.core, 'archive_path', None)
         remote_url = getattr(product.core, 'remote_url', None)
-        if archive_path is not None:
+        if archive_path is not None and self._storage is not None:
             product_path = self._product_path(product)
             return os.path.join(self._storage.global_prefix, product_path)
         elif remote_url is not None:
