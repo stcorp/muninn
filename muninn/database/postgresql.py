@@ -680,7 +680,8 @@ class PostgresqlBackend(object):
                 try:
                     cursor.execute(query, (uuid, tag, uuid, tag))
                 except self._connection._backend.Error as _error:
-                    self._swallow_unique_violation(_error)
+                    if not self._swallow_unique_violation(_error):
+                        raise
                 finally:
                     cursor.close()
 
