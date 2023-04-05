@@ -426,9 +426,7 @@ class Archive(object):
         if isinstance(where, basestring):
             return self.search(where, parameters=parameters, namespaces=namespaces, property_names=property_names)
 
-        if isinstance(where, UUID):
-            where = [where]
-        elif isinstance(where, Struct):
+        if isinstance(where, (UUID, Struct)):
             where = [where]
         else:
             try:
@@ -958,7 +956,7 @@ class Archive(object):
                 exported_path = self._retrieve(product, target_path, False)
                 result.append(exported_path)
 
-        if isinstance(where, UUID):
+        if isinstance(where, (UUID, Struct)):
             return result[0]
         else:
             return result
@@ -1496,7 +1494,7 @@ class Archive(object):
             else:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
 
-        if isinstance(where, UUID):
+        if isinstance(where, (UUID, Struct)):
             return result[0]
         else:
             return result
