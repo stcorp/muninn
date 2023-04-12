@@ -15,7 +15,7 @@ try:
     from multiprocessing import RLock
     RLock()  # fork off resource tracker before tqdm does it (with multiple threads running)
 except ImportError:
-    def bar(range, total=None):
+    def bar(range, total=None, disable=None):
         return range
 
 import muninn
@@ -57,12 +57,12 @@ class Processor(object):
         num_success = 0
 
         if args.parallel:
-            num_success = sum(list(bar(_POOL.imap(self, items), total=total)))
+            num_success = sum(list(bar(_POOL.imap(self, items), total=total, disable=None)))
             _POOL.close()
             _POOL.join()
 
         elif total > 1:
-            for item in bar(items):
+            for item in bar(items, disable=None):
                 num_success += self.perform_operation(archive, item)
 
         elif total == 1:

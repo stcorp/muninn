@@ -11,7 +11,7 @@ import sys
 try:
     from tqdm import tqdm as bar
 except ImportError:
-    def bar(range, total=None):
+    def bar(range, total=None, disable=None):
         return range
 
 import muninn
@@ -85,11 +85,11 @@ def update(args):
                 pool = multiprocessing.Pool(args.processes)
             else:
                 pool = multiprocessing.Pool()
-            list(bar(pool.imap(processor, products), total=len(products)))
+            list(bar(pool.imap(processor, products), total=len(products), disable=None))
             pool.close()
             pool.join()
         else:
-            for product in bar(products):
+            for product in bar(products, disable=None):
                 processor.perform_operation(archive, product)
 
     return 0
