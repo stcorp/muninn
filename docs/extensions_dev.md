@@ -74,7 +74,7 @@ can also use ``.`` to access the value bound to a specific product property.
 A ``muninn.Struct`` can be initialized with a python dictionary. This will also
 convert all members that are dictionaries into ``muninn.Struct`` objects.
 
-By convention, product properties are named <namespace name>.<property name>.
+By convention, product properties are named `<namespace name>.<property name>`.
 This means you usually have a single top-level Struct instance, that contains a
 separate Struct instance for each namespace. For example:
 
@@ -317,9 +317,9 @@ considered a bug.
 >   That is, this method uses the product properties passed in to generate a
 >   relative path inside the archive where the product will be stored.
 >
->   A commonly used implementation is to return <product type>/<year>/<month>/
->   <day>/<physical product name>, where the date corresponds to the validity
->   start of the product.
+>   A commonly used implementation is to return
+>   `<product type>/<year>/<month>/<day>/<physical product name>`,
+>   where the date corresponds to the validity start of the product.
 >
 >   In some cases, a different implementation is required. For example, when
 >   products cannot be said to cover a time range, as is the case for some
@@ -348,8 +348,8 @@ considered a bug.
 >
 >   The target path is a path to the directory in which the exported product
 >   should be stored. The export method is free to create additional
->   directories under this path, for example to create a <year>/<month>/<day>
->   structure.
+>   directories under this path, for example to create a
+>   `<year>/<month>/<day>` structure.
 >
 >   These methods are optional.
 
