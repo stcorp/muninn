@@ -1690,7 +1690,7 @@ class Archive(object):
         retrieve_properties() or search(), change the properties, and then use this function to update the product
         catalogue.
 
-        Argument:
+        Arguments:
         properties         -- Product properties
         uuid               -- UUID of the product to update. By default, the UUID will be taken from the "core.uuid"
                               property.
