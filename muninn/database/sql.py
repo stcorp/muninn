@@ -413,7 +413,7 @@ class SQLBuilder(object):
                 sql = sql + " " + "NOT NULL"
             column_sql.append(sql)
 
-        return "CREATE TABLE %s (%s)" % (self._table_name(namespace), ", ".join(column_sql))
+        return "CREATE TABLE %s (%s);" % (self._table_name(namespace), ", ".join(column_sql))
 
     def build_count_query(self, where="", parameters={}):
         join_set = set()

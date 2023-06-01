@@ -303,10 +303,10 @@ class PostgresqlBackend(object):
         result = []
         # Create the table for the core namespace.
         result.append(self._sql_builder.build_create_table_query("core"))
-        result.append("ALTER TABLE %s ADD PRIMARY KEY (uuid)" % self._core_table_name)
-        result.append("ALTER TABLE %s ADD CONSTRAINT %s_archive_path_uniq UNIQUE (archive_path, physical_name)" %
+        result.append("ALTER TABLE %s ADD PRIMARY KEY (uuid);" % self._core_table_name)
+        result.append("ALTER TABLE %s ADD CONSTRAINT %s_archive_path_uniq UNIQUE (archive_path, physical_name);" %
                       (self._core_table_name, self._core_table_name))
-        result.append("ALTER TABLE %s ADD CONSTRAINT %s_product_name_uniq UNIQUE (product_type, product_name)" %
+        result.append("ALTER TABLE %s ADD CONSTRAINT %s_product_name_uniq UNIQUE (product_type, product_name);" %
                       (self._core_table_name, self._core_table_name))
 
         schema = self._namespace_schema("core")
@@ -314,10 +314,10 @@ class PostgresqlBackend(object):
             if schema.has_index(name):
                 if schema[name] == Geometry:
                     # For the geospatial footprint we need to use a special GIST index
-                    result.append("CREATE INDEX idx_%s_%s ON %s USING GIST (%s)" %
+                    result.append("CREATE INDEX idx_%s_%s ON %s USING GIST (%s);" %
                                   (self._core_table_name, name, self._core_table_name, name))
                 else:
-                    result.append("CREATE INDEX idx_%s_%s ON %s (%s)" %
+                    result.append("CREATE INDEX idx_%s_%s ON %s (%s);" %
                                   (self._core_table_name, name, self._core_table_name, name))
 
         # Create the tables for all non-core namespaces.
@@ -327,44 +327,44 @@ class PostgresqlBackend(object):
 
             result.append(self._sql_builder.build_create_table_query(namespace))
 
-            result.append("ALTER TABLE %s ADD COLUMN uuid UUID PRIMARY KEY" % self._table_name(namespace))
+            result.append("ALTER TABLE %s ADD COLUMN uuid UUID PRIMARY KEY;" % self._table_name(namespace))
             result.append("ALTER TABLE %s ADD CONSTRAINT %s_uuid_fkey FOREIGN KEY (uuid) REFERENCES %s (uuid) ON "
-                          "DELETE CASCADE" % (self._table_name(namespace), self._table_name(namespace),
+                          "DELETE CASCADE;" % (self._table_name(namespace), self._table_name(namespace),
                                               self._core_table_name))
 
             schema = self._namespace_schema(namespace)
             for name in schema:
                 if schema.has_index(name):
                     if schema[name] == Geometry:
-                        result.append("CREATE INDEX idx_%s_%s ON %s USING GIST (%s)" %
+                        result.append("CREATE INDEX idx_%s_%s ON %s USING GIST (%s);" %
                                       (self._table_name(namespace), name, self._table_name(namespace), name))
                     else:
-                        result.append("CREATE INDEX idx_%s_%s ON %s (%s)" %
+                        result.append("CREATE INDEX idx_%s_%s ON %s (%s);" %
                                       (self._table_name(namespace), name, self._table_name(namespace), name))
 
         # We use explicit 'id' primary keys for the links and tags tables so the entries can be managed using
         # other front-ends that may not support tuples as primary keys.
 
         # Create the table for links.
-        result.append("CREATE TABLE %s (id SERIAL PRIMARY KEY, uuid UUID NOT NULL, source_uuid UUID NOT NULL)" %
+        result.append("CREATE TABLE %s (id SERIAL PRIMARY KEY, uuid UUID NOT NULL, source_uuid UUID NOT NULL);" %
                       self._link_table_name)
-        result.append("ALTER TABLE %s ADD CONSTRAINT %s_link_uuid_source_uuid_uniq UNIQUE (uuid, source_uuid)" %
+        result.append("ALTER TABLE %s ADD CONSTRAINT %s_link_uuid_source_uuid_uniq UNIQUE (uuid, source_uuid);" %
                       (self._link_table_name, self._link_table_name))
         result.append("ALTER TABLE %s ADD CONSTRAINT %s_uuid_fkey FOREIGN KEY (uuid) REFERENCES %s (uuid) ON "
-                      "DELETE CASCADE" % (self._link_table_name, self._link_table_name, self._core_table_name))
-        result.append("CREATE INDEX idx_%s_uuid ON %s (uuid)" % (self._link_table_name, self._link_table_name))
-        result.append("CREATE INDEX idx_%s_source_uuid ON %s (source_uuid)" %
+                      "DELETE CASCADE;" % (self._link_table_name, self._link_table_name, self._core_table_name))
+        result.append("CREATE INDEX idx_%s_uuid ON %s (uuid);" % (self._link_table_name, self._link_table_name))
+        result.append("CREATE INDEX idx_%s_source_uuid ON %s (source_uuid);" %
                       (self._link_table_name, self._link_table_name))
 
         # Create the table for tags.
-        result.append("CREATE TABLE %s (id SERIAL PRIMARY KEY, uuid UUID NOT NULL, tag TEXT NOT NULL)" %
+        result.append("CREATE TABLE %s (id SERIAL PRIMARY KEY, uuid UUID NOT NULL, tag TEXT NOT NULL);" %
                       self._tag_table_name)
-        result.append("ALTER TABLE %s ADD CONSTRAINT %s_tag_uuid_tag_uniq UNIQUE (uuid, tag)" %
+        result.append("ALTER TABLE %s ADD CONSTRAINT %s_tag_uuid_tag_uniq UNIQUE (uuid, tag);" %
                       (self._tag_table_name, self._tag_table_name))
         result.append("ALTER TABLE %s ADD CONSTRAINT %s_uuid_fkey FOREIGN KEY (uuid) REFERENCES %s (uuid) ON "
-                      "DELETE CASCADE" % (self._tag_table_name, self._tag_table_name, self._core_table_name))
-        result.append("CREATE INDEX idx_%s_uuid ON %s (uuid)" % (self._tag_table_name, self._tag_table_name))
-        result.append("CREATE INDEX idx_%s_tag ON %s (tag)" % (self._tag_table_name, self._tag_table_name))
+                      "DELETE CASCADE;" % (self._tag_table_name, self._tag_table_name, self._core_table_name))
+        result.append("CREATE INDEX idx_%s_uuid ON %s (uuid);" % (self._tag_table_name, self._tag_table_name))
+        result.append("CREATE INDEX idx_%s_tag ON %s (tag);" % (self._tag_table_name, self._tag_table_name))
         return result
 
     def _delete_product_properties(self, uuid):

@@ -249,18 +249,18 @@ class SQLiteBackend(object):
         column_sql.append("PRIMARY KEY (uuid)")
         column_sql.append("UNIQUE (archive_path, physical_name)")
         column_sql.append("UNIQUE (product_type, product_name)")
-        result.append("CREATE TABLE %s (%s)" % (self._core_table_name, ", ".join(column_sql)))
+        result.append("CREATE TABLE %s (%s);" % (self._core_table_name, ", ".join(column_sql)))
         for name in schema:
             if self._type_map()[schema[name]] == "GEOMETRY":
-                result.append("SELECT AddGeometryColumn('%s', '%s', 4326, 'GEOMETRY', 2)" %
+                result.append("SELECT AddGeometryColumn('%s', '%s', 4326, 'GEOMETRY', 2);" %
                               (self._core_table_name, name,))
         for name in schema:
             if schema.has_index(name):
                 if schema[name] == Geometry:
                     # For the geospatial footprint we need to use a special spatial index
-                    result.append("SELECT CreateSpatialIndex('%s', '%s')" % (self._core_table_name, name))
+                    result.append("SELECT CreateSpatialIndex('%s', '%s');" % (self._core_table_name, name))
                 else:
-                    result.append("CREATE INDEX idx_%s_%s ON %s (%s)" %
+                    result.append("CREATE INDEX idx_%s_%s ON %s (%s);" %
                                   (self._core_table_name, name, self._core_table_name, name))
 
         # Create the tables for all non-core namespaces.
@@ -279,17 +279,17 @@ class SQLiteBackend(object):
                     column_sql.append(sql)
             column_sql.append("uuid UUID PRIMARY KEY REFERENCES %s(uuid) ON DELETE CASCADE" %
                               self._core_table_name)
-            result.append("CREATE TABLE %s (%s)" % (self._table_name(namespace), ", ".join(column_sql)))
+            result.append("CREATE TABLE %s (%s);" % (self._table_name(namespace), ", ".join(column_sql)))
             for name in schema:
                 if self._type_map()[schema[name]] == "GEOMETRY":
-                    result.append("SELECT AddGeometryColumn('%s', '%s', 4326, 'GEOMETRY', 2)" %
+                    result.append("SELECT AddGeometryColumn('%s', '%s', 4326, 'GEOMETRY', 2);" %
                                   (self._table_name(namespace), name))
             for name in schema:
                 if schema.has_index(name):
                     if schema[name] == Geometry:
-                        result.append("SELECT CreateSpatialIndex('%s', '%s')" % (self._table_name(namespace), name))
+                        result.append("SELECT CreateSpatialIndex('%s', '%s');" % (self._table_name(namespace), name))
                     else:
-                        result.append("CREATE INDEX idx_%s_%s ON %s (%s)" %
+                        result.append("CREATE INDEX idx_%s_%s ON %s (%s);" %
                                       (self._table_name(namespace), name, self._table_name(namespace), name))
 
         # We use explicit 'id' primary keys for the links and tags tables so the entries can be managed using
@@ -298,18 +298,18 @@ class SQLiteBackend(object):
         # Create the table for links.
         result.append("CREATE TABLE %s (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
                       "uuid UUID REFERENCES %s(uuid) ON DELETE CASCADE, "
-                      "source_uuid UUID NOT NULL, UNIQUE (uuid, source_uuid))" %
+                      "source_uuid UUID NOT NULL, UNIQUE (uuid, source_uuid));" %
                       (self._link_table_name, self._core_table_name))
-        result.append("CREATE INDEX idx_%s_uuid ON %s (uuid)" % (self._link_table_name, self._link_table_name))
-        result.append("CREATE INDEX idx_%s_source_uuid ON %s (source_uuid)" %
+        result.append("CREATE INDEX idx_%s_uuid ON %s (uuid);" % (self._link_table_name, self._link_table_name))
+        result.append("CREATE INDEX idx_%s_source_uuid ON %s (source_uuid);" %
                       (self._link_table_name, self._link_table_name))
 
         # Create the table for tags.
         result.append("CREATE TABLE %s (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
                       "uuid UUID REFERENCES %s(uuid) ON DELETE CASCADE, "
-                      "tag TEXT NOT NULL, UNIQUE (uuid, tag))" % (self._tag_table_name, self._core_table_name))
-        result.append("CREATE INDEX idx_%s_uuid ON %s (uuid)" % (self._tag_table_name, self._tag_table_name))
-        result.append("CREATE INDEX idx_%s_tag ON %s (tag)" % (self._tag_table_name, self._tag_table_name))
+                      "tag TEXT NOT NULL, UNIQUE (uuid, tag));" % (self._tag_table_name, self._core_table_name))
+        result.append("CREATE INDEX idx_%s_uuid ON %s (uuid);" % (self._tag_table_name, self._tag_table_name))
+        result.append("CREATE INDEX idx_%s_tag ON %s (tag);" % (self._tag_table_name, self._tag_table_name))
         return result
 
     def _delete_product_properties(self, uuid):
