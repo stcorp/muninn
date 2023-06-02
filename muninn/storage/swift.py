@@ -181,7 +181,7 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
         if product.core.archive_path == archive_path:
             return paths
 
-        product_path = self.product_path(product)
+        product_path = os.path.join(product.core.archive_path, product.core.physical_name)
         new_product_path = os.path.join(archive_path, product.core.physical_name)
 
         keys = self._object_keys(product_path)
