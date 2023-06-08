@@ -261,7 +261,10 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
 
         for obj in objs:
             new_key = os.path.normpath(os.path.join(new_product_path, os.path.relpath(obj.key, product_path)))
-            self._resource.Object(self.bucket, new_key).copy(CopySource={'Bucket': self.bucket, 'Key': obj.key},
+            if obj.key.endswith('/'):
+                self._create_dir(new_key)
+            else:
+                self._resource.Object(self.bucket, new_key).copy(CopySource={'Bucket': self.bucket, 'Key': obj.key},
                                                              ExtraArgs=self._copy_args, Config=self._transfer_config)
             self._resource.Object(self.bucket, obj.key).delete()
 

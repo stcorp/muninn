@@ -190,7 +190,11 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
 
         for key in keys:
             new_key = os.path.normpath(os.path.join(new_product_path, os.path.relpath(key, product_path)))
-            self._conn.copy_object(self.container, key, os.path.join(self.container, new_key))
+            if key.endswith('/'):
+                self._conn.put_object(self.container, new_key+'/', contents=b'')
+            else:
+                self._conn.copy_object(self.container, key, os.path.join(self.container, new_key))
+
             self._conn.delete_object(self.container, key)
 
         return paths
