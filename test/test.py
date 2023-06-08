@@ -80,8 +80,13 @@ class FSChecker(BaseChecker):
     def exists(self, path, size=None):
         path = os.path.join(self.root, path)
 
-        if not os.path.isfile(path):
-            return False
+        if path.endswith('/'):
+            if not os.path.isdir(path[:-1]):
+                return False
+        else:
+            if not os.path.isfile(path):
+                return False
+
         if size is not None and os.path.getsize(path) != size:
             return False
 
@@ -1087,6 +1092,9 @@ class TestArchive:
                     name
                 )
                 assert archive._checker.exists(path)
+
+            assert archive._checker.exists('bicycle/multi/emptydir/')
+            assert archive._checker.exists('bicycle/multi/dir/emptydir/')
 
             for name in names:
                 oldpath = os.path.join(
