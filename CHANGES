@@ -1,3 +1,21 @@
+* The S3 bucket prefix is now created as a 'directory object' so its existence
+  can be explicitly checked.
+
+* muninn-prepare --dry-run now adds a ';' at the end of each line.
+
+* Command line tools no longer show a progress bar if there is no tty.
+
+* Fixed issue where failing to set/unset a tag did not result in an error.
+
+* Fixed issue with relocating products in an S3 archive when the product
+  contained an empty subdirectory.
+
+* Fixed issue where muninn-summary could not group by core.physical_name or
+  core.archive_path.
+
+* Fixed issue where archive.retrieve() and archive.export() were returning a
+  list if a single properties Struct was given as parameter.
+
 6.0.1 2022-11-17
 ~~~~~~~~~~~~~~~~
 
