@@ -18,6 +18,7 @@ from muninn.function import Prototype
 from muninn.language import parse_and_analyze, Literal, Name, Identifier
 from muninn.schema import *
 from muninn.visitor import Visitor
+from muninn.core import Basename, ArchivePath
 
 
 AGGREGATE_FUNCTIONS = collections.OrderedDict([
@@ -38,6 +39,8 @@ GROUP_BY_FUNCTIONS = collections.OrderedDict([
     # (Real, []),
     (Boolean, [None, ]),
     (Text, [None, 'length']),
+    (Basename, [None, 'length']),
+    (ArchivePath, [None, 'length']),
     (Timestamp, ['year', 'month', 'yearmonth', 'date', 'day', 'hour', 'minute', 'second', 'time']),
     # (UUID, []),
     # (Geometry, []),

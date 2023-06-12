@@ -1778,6 +1778,8 @@ class TestTools:  # TODO more result checking, preferrably using tools
 
     def test_summary(self, archive):
         output = self._run('ingest', 'data/pi.txt')
+        output = self._run('summary', '"" -g physical_name')
+        assert len(output) == 3
         output = self._run('summary', '"" -f csv -H')
         assert len(output) == 2
         assert output[1].split(',')[0] == '"1"'
