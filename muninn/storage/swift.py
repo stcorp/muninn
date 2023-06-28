@@ -161,7 +161,7 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
             if key.endswith('/'):
                 util.make_path(target)
             else:
-                util.make_path(os.path.dirname(target))
+                util.make_path(os.path.dirname(os.path.abspath(target)))
                 binary = self._conn.get_object(self.container, key)[1]
                 with open(target, 'wb') as f:
                     f.write(binary)

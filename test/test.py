@@ -934,6 +934,12 @@ class TestArchive:
                     assert os.path.isfile(path)
                     assert os.path.getsize(path) == os.path.getsize('data/multi/%s' % name)
 
+            # copy to '.'
+            archive.retrieve(target_path='.')
+            for name in ('1.txt', '2.txt'):
+                assert os.path.isfile(name)
+                assert os.path.getsize(name) == os.path.getsize('data/multi/%s' % name)
+
             # symlink
             if archive._params['storage'] == 'fs':
                 with muninn.util.TemporaryDirectory() as tmp_path:

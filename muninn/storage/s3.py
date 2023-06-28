@@ -231,7 +231,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             if obj.key.endswith('/'):
                 util.make_path(target)
             else:
-                util.make_path(os.path.dirname(target))
+                util.make_path(os.path.dirname(os.path.abspath(target)))
                 self._resource.Object(self.bucket, obj.key).download_file(target, ExtraArgs=self._download_args,
                                                                           Config=self._transfer_config)
 
