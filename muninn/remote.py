@@ -45,16 +45,25 @@ def download_http_oath2(url, target_dir, credentials, timeout=60):
                         password=credentials['password'], client_id=credentials['client_id'],
                         client_secret=credentials['client_secret'])
     try:
-        r = session.get(url, timeout=timeout, stream=True)
-        r.raise_for_status()
-        local_file = os.path.join(target_dir, os.path.basename(urlparse(r.url).path))
-        if "content-disposition" in [k.lower() for k in r.headers.keys()]:
-            matches = re.findall("filename=\"?([^\"]+)\"?", r.headers["content-disposition"])
-            if len(matches) > 0:
-                local_file = os.path.join(target_dir, matches[-1])
-        with open(local_file, 'wb') as output:
-            for block in r.iter_content(1048576):  # use 1MB blocks
-                output.write(block)
+        retry = 1
+        while True:
+            try:
+                r = session.get(url, timeout=timeout, stream=True)
+                r.raise_for_status()
+                local_file = os.path.join(target_dir, os.path.basename(urlparse(r.url).path))
+                if "content-disposition" in [k.lower() for k in r.headers.keys()]:
+                    matches = re.findall("filename=\"?([^\"]+)\"?", r.headers["content-disposition"])
+                    if len(matches) > 0:
+                        local_file = os.path.join(target_dir, matches[-1])
+                with open(local_file, 'wb') as output:
+                    for block in r.iter_content(1048576):  # use 1MB blocks
+                        output.write(block)
+            except requests.exceptions.ReadTimeout:
+                if retry <= 0:
+                    raise
+                retry -= 1
+            else:
+                break
     except Exception as e:
         raise DownloadError('Error downloading %s (Reason: %s)' % (url, e))
     return local_file
@@ -66,16 +75,25 @@ def download_http(url, target_dir, credentials=None, timeout=60):
     if credentials is not None:
         auth = (credentials['username'], credentials['password'])
     try:
-        r = requests.get(url, timeout=timeout, stream=True, auth=auth)
-        r.raise_for_status()
-        local_file = os.path.join(target_dir, os.path.basename(urlparse(r.url).path))
-        if "content-disposition" in [k.lower() for k in r.headers.keys()]:
-            matches = re.findall("filename=\"?([^\"]+)\"?", r.headers["content-disposition"])
-            if len(matches) > 0:
-                local_file = os.path.join(target_dir, matches[-1])
-        with open(local_file, 'wb') as output:
-            for block in r.iter_content(1048576):  # use 1MB blocks
-                output.write(block)
+        retry = 1
+        while True:
+            try:
+                r = requests.get(url, timeout=timeout, stream=True, auth=auth)
+                r.raise_for_status()
+                local_file = os.path.join(target_dir, os.path.basename(urlparse(r.url).path))
+                if "content-disposition" in [k.lower() for k in r.headers.keys()]:
+                    matches = re.findall("filename=\"?([^\"]+)\"?", r.headers["content-disposition"])
+                    if len(matches) > 0:
+                        local_file = os.path.join(target_dir, matches[-1])
+                with open(local_file, 'wb') as output:
+                    for block in r.iter_content(1048576):  # use 1MB blocks
+                        output.write(block)
+            except requests.exceptions.ReadTimeout:
+                if retry <= 0:
+                    raise
+                retry -= 1
+            else:
+                break
     except Exception as e:
         raise DownloadError('Error downloading %s (Reason: %s)' % (url, e))
     return local_file

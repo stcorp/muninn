@@ -1,6 +1,8 @@
 * The S3 bucket prefix is now created as a 'directory object' so its existence
   can be explicitly checked.
 
+* muninn-pull for http/https will now retry once in case of a timeout error.
+
 * muninn-prepare --dry-run now adds a ';' at the end of each line.
 
 * Command line tools no longer show a progress bar if there is no tty.
