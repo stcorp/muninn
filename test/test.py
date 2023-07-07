@@ -881,19 +881,31 @@ class TestArchive:
         name = 'pi.txt'
         size = os.path.getsize('data/pi.txt')
 
-        # copy
+        # copy (query)
         with muninn.util.TemporaryDirectory() as tmp_path:
-            archive.retrieve(target_path=tmp_path)
+            result = archive.retrieve(target_path=tmp_path)
+
+            if archive._params['use_enclosing_directory']:
+                assert result == [[os.path.join(tmp_path, name)]]
+            else:
+                assert result == [os.path.join(tmp_path, name)]
 
             path = os.path.join(tmp_path, name)
             assert os.path.isfile(path)
             assert os.path.getsize(path) == size
 
-            archive.retrieve(props.core.uuid, target_path=tmp_path)
+        # copy (uuid)
+        with muninn.util.TemporaryDirectory() as tmp_path:
+            result = archive.retrieve(props.core.uuid, target_path=tmp_path)
 
-            with pytest.raises(muninn.exceptions.Error) as excinfo:
-                archive.retrieve(uuid.uuid4())
-            assert 'No product found' in str(excinfo)
+            if archive._params['use_enclosing_directory']:
+                assert result == [os.path.join(tmp_path, name)]
+            else:
+                assert result == os.path.join(tmp_path, name)
+
+            path = os.path.join(tmp_path, name)
+            assert os.path.isfile(path)
+            assert os.path.getsize(path) == size
 
         # symlink
         if archive._params['storage'] == 'fs':
@@ -921,18 +933,36 @@ class TestArchive:
                     archive.retrieve(target_path=tmp_path, use_symlinks=True)
             assert 'storage backend does not support symlinks' in str(excinfo)
 
+        # error
+        with muninn.util.TemporaryDirectory() as tmp_path:
+            with pytest.raises(muninn.exceptions.Error) as excinfo:
+                archive.retrieve(uuid.uuid4())
+            assert 'No product found' in str(excinfo)
+
+
     def test_retrieve_multi_file(self, archive):
         if archive._params['use_enclosing_directory'] is True:
-            self._ingest_multi_file(archive)
+            props = self._ingest_multi_file(archive)
 
-            # copy
+            # copy (query)
             with muninn.util.TemporaryDirectory() as tmp_path:
-                archive.retrieve(target_path=tmp_path)
+                result = archive.retrieve(target_path=tmp_path)
 
                 for name in ('1.txt', '2.txt'):
                     path = os.path.join(tmp_path, name)
                     assert os.path.isfile(path)
                     assert os.path.getsize(path) == os.path.getsize('data/multi/%s' % name)
+
+                assert len(result) == 1
+                assert os.path.join(tmp_path, '1.txt') in result[0]
+                assert os.path.join(tmp_path, '2.txt') in result[0]
+
+            # copy (uuid)
+            with muninn.util.TemporaryDirectory() as tmp_path:
+                result = archive.retrieve(props.core.uuid, target_path=tmp_path)
+
+                assert os.path.join(tmp_path, '1.txt') in result
+                assert os.path.join(tmp_path, '2.txt') in result
 
             # copy to '.'
             archive.retrieve(target_path='.')

@@ -522,14 +522,19 @@ class Archive(object):
             # Symbolic link or copy the product at or to the specified target directory.
             self._storage.get(product, target_path, use_enclosing_directory, use_symlinks)
 
-            return os.path.join(target_path, os.path.basename(product_path))
+            if use_enclosing_directory:
+                result = [os.path.join(target_path, filename) for filename in os.listdir(target_path)]
+            else:
+                result = os.path.join(target_path, os.path.basename(product_path))
 
         elif 'remote_url' in product.core:
             retrieve_files = remote.retrieve_function(self, product, True)
-            retrieve_files(target_path)
+            result = retrieve_files(target_path)
 
         else:
             raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
+
+        return result
 
     def _run_hooks(self, hook_name, properties, reverse=False, paths=None):
         plugins = list(self._hook_extensions.values())
