@@ -272,7 +272,7 @@ class TokenStream(object):
 
     def _types_to_string(self, types):
         try:
-            strings = map(TokenType.to_string, types)
+            strings = [TokenType.to_string(t) for t in types]
         except TypeError:
             return TokenType.to_string(types)
 

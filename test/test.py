@@ -1696,6 +1696,10 @@ class TestQuery:
             s = archive.search('size in [] xyz')
         assert 'extra characters after expression' in str(excinfo)
 
+        with pytest.raises(muninn.exceptions.Error) as excinfo:
+            s = archive.search('covers(core.footprint, POINT (1.0, 3.0))')
+        assert 'char 34: expected one of: INTEGER, REAL, got ","' in str(excinfo)
+
 class TestTools:  # TODO more result checking, preferrably using tools
     def _run(self, tool, args='', action='', archive='my_arch', should_fail=False):
         python_path = 'PYTHONPATH=%s:.:$PYTHONPATH' % PARENT_DIR
