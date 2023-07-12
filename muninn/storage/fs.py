@@ -168,28 +168,37 @@ class FilesystemStorageBackend(StorageBackend):
                 raise StorageError(e, anything_stored)
 
     def get(self, product, target_path, use_enclosing_directory, use_symlinks=None):
+        paths = []
+
         if use_symlinks is None:
             use_symlinks = self._use_symlinks
 
         product_path = os.path.join(self._root, product.core.archive_path, product.core.physical_name)
+        product_basename = os.path.basename(product_path)
 
         try:
             if use_symlinks:
                 if use_enclosing_directory:
                     for basename in os.listdir(product_path):
                         os.symlink(os.path.join(product_path, basename), os.path.join(target_path, basename))
+                        paths.append(os.path.join(target_path, basename))
                 else:
-                    os.symlink(product_path, os.path.join(target_path, os.path.basename(product_path)))
+                    os.symlink(product_path, os.path.join(target_path, product_basename))
+                    paths.append(os.path.join(target_path, product_basename))
             else:
                 if use_enclosing_directory:
                     for basename in os.listdir(product_path):
                         util.copy_path(os.path.join(product_path, basename), target_path, resolve_root=True)
+                        paths.append(os.path.join(target_path, basename))
                 else:
                     util.copy_path(product_path, target_path, resolve_root=True)
+                    paths.append(os.path.join(target_path, product_basename))
 
         except EnvironmentError as _error:
             raise Error("unable to retrieve product '%s' (%s) [%s]" % (product.core.product_name, product.core.uuid,
                                                                        _error))
+
+        return paths
 
     def size(self, product_path):
         return util.product_size(os.path.join(self._root, product_path))

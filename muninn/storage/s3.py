@@ -211,6 +211,8 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             raise StorageError(e, anything_stored)
 
     def get(self, product, target_path, use_enclosing_directory, use_symlinks=None):
+        paths = []
+
         if use_symlinks:
             raise Error("S3 storage backend does not support symlinks")
 
@@ -236,6 +238,9 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
                     util.make_path(dirname)
                 self._resource.Object(self.bucket, obj.key).download_file(target, ExtraArgs=self._download_args,
                                                                           Config=self._transfer_config)
+                paths.append(target)
+
+        return paths
 
     def delete(self, product_path, properties):
         prefix = self._prefix + product_path
