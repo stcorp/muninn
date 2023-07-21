@@ -5,6 +5,8 @@
 
 * muninn-prepare --dry-run now adds a ';' at the end of each line.
 
+* Added --verify-hash option to muninn-retrieve.
+
 * Command line tools no longer show a progress bar if there is no tty.
 
 * Fixed issue where failing to set/unset a tag did not result in an error.
