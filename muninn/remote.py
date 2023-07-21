@@ -35,6 +35,7 @@ def get_credentials(archive, url):
 
 
 def download_http_oath2(url, target_dir, credentials, timeout=60):
+    import requests
     from requests_oauthlib import OAuth2Session
     from oauthlib.oauth2 import LegacyApplicationClient
 
