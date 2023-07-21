@@ -263,7 +263,7 @@ def retrieve_function(archive, product, verify_hash_download):
                 hash_type = 'sha1'
             calc_hash = util.product_hash(paths, hash_type=hash_type)
             if calc_hash != stored_hash:
-                raise DownloadError("hash mismatch when pulling product '%s' (%s)" %
+                raise DownloadError("hash mismatch when retrieving product '%s' (%s)" %
                                     (product.core.product_name, product.core.uuid))
 
         return paths

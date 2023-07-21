@@ -26,7 +26,7 @@ class RetrieveProcessor(Processor):
         self.target_path = target_path
 
     def perform_operation(self, archive, product):
-        archive.retrieve(product.core.uuid, target_path=self.target_path, use_symlinks=self.args.link)
+        archive.retrieve(product.core.uuid, target_path=self.target_path, use_symlinks=self.args.link, verify_hash=self.args.verify_hash)
         return 1
 
 
@@ -44,6 +44,8 @@ def main():
     parser.add_argument("-d", "--directory", type=directory, help="directory in which retrieved products will be"
                         " stored; by default, retrieved products will be stored in the current working directory")
     parser.add_argument("-l", "--link", action="store_true", help="retrieve using symbolic links instead of copy")
+    parser.add_argument("--verify-hash", action="store_true",
+                        help="verify the hash of the product after it has been retrieved")
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
     parser.add_argument("expression", metavar="EXPRESSION", help="expression used to search for products to retrieve")
     return parse_args_and_run(parser, retrieve)

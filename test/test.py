@@ -1829,7 +1829,7 @@ class TestTools:  # TODO more result checking, preferrably using tools
     def test_retrieve(self, archive):  # TODO nprocesses setting & fixture?
         with muninn.util.TemporaryDirectory() as tmp_path:
             output = self._run('ingest', 'data/pi.txt')
-            output = self._run('retrieve', '"" -d %s' % tmp_path)
+            output = self._run('retrieve', '"" -d %s --verify-hash' % tmp_path)
             assert os.listdir(tmp_path) == ['pi.txt']
         archive.remove()
 

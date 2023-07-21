@@ -510,7 +510,7 @@ class Archive(object):
         # Remove the data associated with the product from storage.
         self._storage.delete(product_path, product)
 
-    def _retrieve(self, product, target_path, use_symlinks=False):
+    def _retrieve(self, product, target_path, use_symlinks=False, verify_hash=False):
         if 'archive_path' in product.core:
             # Determine the path of the product in storage.
             product_path = self._product_path(product)
@@ -522,11 +522,15 @@ class Archive(object):
             # Symbolic link or copy the product at or to the specified target directory.
             paths = self._storage.get(product, target_path, use_enclosing_directory, use_symlinks)
 
+            if verify_hash and 'hash' in product.core and not self._verify_hash(product, paths):
+                raise Error("retrieved product '%s' (%s) has incorrect hash" %
+                            (product.core.product_name, product.core.uuid))
+
             if not use_enclosing_directory:
                 paths = paths[0]
 
         elif 'remote_url' in product.core:
-            retrieve_files = remote.retrieve_function(self, product, True)
+            retrieve_files = remote.retrieve_function(self, product, verify_hash)
             paths = retrieve_files(target_path)
 
         else:
@@ -1471,7 +1475,7 @@ class Archive(object):
 
         return len(products)
 
-    def retrieve(self, where="", parameters={}, target_path=os.path.curdir, use_symlinks=False):
+    def retrieve(self, where="", parameters={}, target_path=os.path.curdir, use_symlinks=False, verify_hash=False):
         """Retrieve one or more products from the archive.
 
         Arguments:
@@ -1481,6 +1485,8 @@ class Archive(object):
         use_symlinks    --  If set to True, products will be retrieved as symbolic links to the original products kept
                             in the archive. If set to False, products will retrieved as copies of the original products.
                             By default, products will be retrieved as copies.
+        verify_hash     --  If set to True then, after the retrieval, the product will be matched against the hash
+                            from the metadata (only if the metadata contained a hash).
 
         Returns:
         Either a list containing the target paths for the
@@ -1493,7 +1499,7 @@ class Archive(object):
         result = []
         for product in products:
             if product.core.active and ('archive_path' in product.core or 'remote_url' in product.core):
-                result.append(self._retrieve(product, target_path, use_symlinks))
+                result.append(self._retrieve(product, target_path, use_symlinks, verify_hash))
             else:
                 raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))
 
