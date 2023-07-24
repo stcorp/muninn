@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2014-2022 S[&]T, The Netherlands.
+# Copyright (C) 2014-2023 S[&]T, The Netherlands.
 #
 from __future__ import absolute_import, division, print_function
 

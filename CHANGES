@@ -1,3 +1,6 @@
+6.1 2023-07-24
+~~~~~~~~~~~~~~
+
 * The S3 bucket prefix is now created as a 'directory object' so its existence
   can be explicitly checked.
 
@@ -17,8 +20,13 @@
 * Fixed issue where muninn-summary could not group by core.physical_name or
   core.archive_path.
 
+* Fixed issue where muninn was incorrectly using subdirectories in the
+  temporary directory if the 'tempdir' archive configuration option was set.
+
 * Fixed issue where archive.retrieve() and archive.export() were returning a
-  list if a single properties Struct was given as parameter.
+  list if a single properties Struct was given as parameter and
+  `use_enclosing_directory` was not set. Additionally, each entry for a
+  product where `use_enclosing_directory` _is_ set will now always be a list.
 
 6.0.1 2022-11-17
 ~~~~~~~~~~~~~~~~
