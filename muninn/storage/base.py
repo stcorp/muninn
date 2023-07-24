@@ -17,9 +17,8 @@ class StorageBackend(object):
 
     def get_tmp_root(self, product):
         if self._tmp_root is not None:
-            tmp_root = os.path.join(self._tmp_root, product.core.archive_path)
-            util.make_path(tmp_root)
-            return tmp_root
+            util.make_path(self._tmp_root)
+            return self._tmp_root
 
     def run_for_product(self, product, fn, use_enclosing_directory):
         tmp_root = self.get_tmp_root(product)
