@@ -28,7 +28,7 @@
 * Fixed issue where muninn was incorrectly using subdirectories in the
   temporary directory if the 'tempdir' archive configuration option was set.
 
-* Fixed issue where archive.retrieve() and archive.export() were returning a
+* Fixed issue where Archive.retrieve() and Archive.export() were returning a
   list if a single properties Struct was given as parameter and
   `use_enclosing_directory` was not set. Additionally, each entry for a
   product where `use_enclosing_directory` _is_ set will now always be a list.
@@ -100,8 +100,8 @@
 5.4 2022-02-22
 ~~~~~~~~~~~~~~
 
-* Added muninn-attach/archive.attach() which acts as the inverse of
-  muninn-strip/archive.strip().
+* Added muninn-attach/Archive.attach() which acts as the inverse of
+  muninn-strip/Archive.strip().
 
 * Fixed grand_type -> grant_type keyword typo for oauth2 entries in auth_file.
 
@@ -201,7 +201,7 @@
 * Added basic 'in' and 'not in' operators (so that e.g. the following works:
  `physical_name not in ["a", "b"]`)
 
-* Namespace records can now be removed with archive.update_properties() by
+* Namespace records can now be removed with Archive.update_properties() by
   passing: `Struct({'mynamespace': None})`
 
 5.0 2020-07-30
