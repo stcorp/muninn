@@ -160,6 +160,8 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
             if use_enclosing_directory:
                 rel_path = '/'.join(rel_path.split('/')[1:])
             target = os.path.normpath(os.path.join(target_path, rel_path))
+            if os.path.dirname(rel_path) == '':
+                paths.append(target)
             if key.endswith('/'):
                 util.make_path(target)
             else:
@@ -169,7 +171,6 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
                 binary = self._conn.get_object(self.container, key)[1]
                 with open(target, 'wb') as f:
                     f.write(binary)
-                paths.append(target)
 
         return paths
 

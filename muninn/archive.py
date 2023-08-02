@@ -527,11 +527,14 @@ class Archive(object):
                             (product.core.product_name, product.core.uuid))
 
             if not use_enclosing_directory:
-                paths = paths[0]
+                if len(paths) == 1:
+                    paths = paths[0]
 
         elif 'remote_url' in product.core:
             retrieve_files = remote.retrieve_function(self, product, verify_hash)
             paths = retrieve_files(target_path)
+            if len(paths) == 1:
+                paths = paths[0]
 
         else:
             raise Error("product '%s' (%s) not available" % (product.core.product_name, product.core.uuid))

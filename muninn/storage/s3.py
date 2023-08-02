@@ -229,6 +229,8 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             if use_enclosing_directory:
                 rel_path = '/'.join(rel_path.split('/')[1:])
             target = os.path.normpath(os.path.join(target_path, rel_path))
+            if os.path.dirname(rel_path) == '':
+                paths.append(target)
 
             if obj.key.endswith('/'):
                 util.make_path(target)
@@ -238,7 +240,6 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
                     util.make_path(dirname)
                 self._resource.Object(self.bucket, obj.key).download_file(target, ExtraArgs=self._download_args,
                                                                           Config=self._transfer_config)
-                paths.append(target)
 
         return paths
 

@@ -183,6 +183,7 @@ def multiprocessing_context():
         ctx = multiprocessing
         manager = multiprocessing.Manager()
 
+
 def do_popen(cmd, return_dict, join):
     proc = subprocess.Popen(
             cmd,
@@ -226,6 +227,7 @@ def database(request):
 @pytest.fixture(params=[s for s in STORAGE_BACKENDS if s != 'none'])
 def storage(request):
     return request.param
+
 
 @pytest.fixture(params=[s for s in STORAGE_BACKENDS if s == 'none'])
 def storage_pure(request):
@@ -307,6 +309,7 @@ def _archive(database, storage, use_enclosing_directory, archive_path):
 def archive(database, storage, use_enclosing_directory, archive_path):
     for a in _archive(database, storage, use_enclosing_directory, archive_path):
         yield a
+
 
 @pytest.fixture
 def archive_pure(database, storage_pure, use_enclosing_directory, archive_path):
@@ -855,7 +858,7 @@ class TestArchive:
                 uuid_c = archive.ingest(['data/c.txt']).core.uuid
                 uuid_pi = archive.ingest(['data/pi.txt']).core.uuid
 
-                time.sleep(2) # grace period # TODO use >= 0 in sql instead of > 0?
+                time.sleep(2)  # grace period # TODO use >= 0 in sql instead of > 0?
 
                 archive.link(uuid_pi, [uuid_pi])  # TODO otherwise no source, so deleted?
 
@@ -939,43 +942,55 @@ class TestArchive:
                 archive.retrieve(uuid.uuid4())
             assert 'No product found' in str(excinfo)
 
-
     def test_retrieve_multi_file(self, archive):
-        if archive._params['use_enclosing_directory'] is True:
+        if archive._params['use_enclosing_directory']:
             props = self._ingest_multi_file(archive)
 
             # copy (query)
             with muninn.util.TemporaryDirectory() as tmp_path:
                 result = archive.retrieve(target_path=tmp_path)
 
-                for name in ('1.txt', '2.txt'):
+                for name in ('1.txt', '2.txt', 'emptyfile'):
                     path = os.path.join(tmp_path, name)
                     assert os.path.isfile(path)
                     assert os.path.getsize(path) == os.path.getsize('data/multi/%s' % name)
+                for name in ('dir', 'emptydir'):
+                    path = os.path.join(tmp_path, name)
+                    assert os.path.isdir(path)
 
                 assert len(result) == 1
+                assert len(result[0]) == 5
                 assert os.path.join(tmp_path, '1.txt') in result[0]
                 assert os.path.join(tmp_path, '2.txt') in result[0]
+                assert os.path.join(tmp_path, 'dir') in result[0]
+                assert os.path.join(tmp_path, 'emptydir') in result[0]
+                assert os.path.join(tmp_path, 'emptyfile') in result[0]
 
             # copy (uuid)
             with muninn.util.TemporaryDirectory() as tmp_path:
                 result = archive.retrieve(props.core.uuid, target_path=tmp_path)
 
+                assert len(result) == 5
                 assert os.path.join(tmp_path, '1.txt') in result
                 assert os.path.join(tmp_path, '2.txt') in result
+                assert os.path.join(tmp_path, 'dir') in result
+                assert os.path.join(tmp_path, 'emptydir') in result
+                assert os.path.join(tmp_path, 'emptyfile') in result
 
             # copy to '.'
             archive.retrieve(target_path='.')
-            for name in ('1.txt', '2.txt'):
+            for name in ('1.txt', '2.txt', 'emptyfile'):
                 assert os.path.isfile(name)
                 assert os.path.getsize(name) == os.path.getsize('data/multi/%s' % name)
+            for name in ('dir', 'emptydir'):
+                assert os.path.isdir(name)
 
             # symlink
             if archive._params['storage'] == 'fs':
                 with muninn.util.TemporaryDirectory() as tmp_path:
                     archive.retrieve(target_path=tmp_path, use_symlinks=True)
 
-                    for name in ('1.txt', '2.txt'):
+                    for name in ('1.txt', '2.txt', 'dir', 'emptydir', 'emptyfile'):
                         path = os.path.join(tmp_path, name)
                         assert os.path.islink(path)
 
@@ -988,7 +1003,10 @@ class TestArchive:
 
                         target_path = os.path.realpath(target_path)
 
-                        assert os.path.isfile(target_path)
+                        if name.endswith('dir'):
+                            assert os.path.isdir(target_path)
+                        else:
+                            assert os.path.isfile(target_path)
                         assert os.readlink(path) == target_path
             else:
                 with pytest.raises(muninn.exceptions.Error) as excinfo:
@@ -1000,7 +1018,12 @@ class TestArchive:
         self._ingest_dir(archive)
 
         with muninn.util.TemporaryDirectory() as tmp_path:
-            archive.retrieve(target_path=tmp_path)
+            result = archive.retrieve(target_path=tmp_path)
+
+            if archive._params['use_enclosing_directory']:
+                assert result == [[os.path.join(tmp_path, 'dir')]]
+            else:
+                assert result == [os.path.join(tmp_path, 'dir')]
 
             for name in ('dir/pi.txt', 'dir/multi/1.txt', 'dir/multi/2.txt'):
                 path = os.path.join(tmp_path, name)
@@ -1181,7 +1204,7 @@ class TestArchive:
         product = self._ingest_file(archive)
 
         for create_namespaces in (True, False):
-            props = muninn.Struct({'mynamespace': {'myjson': {'bla': 14, 'mylist': [1,2,3]}}})
+            props = muninn.Struct({'mynamespace': {'myjson': {'bla': 14, 'mylist': [1, 2, 3]}}})
             archive.update_properties(props, product.core.uuid, create_namespaces)
 
             props = archive.retrieve_properties(uuid=product.core.uuid, namespaces=['mynamespace'])
@@ -1189,7 +1212,7 @@ class TestArchive:
 
             assert isinstance(myjson, dict)
             assert myjson['bla'] == 14
-            assert myjson['mylist'] == [1,2,3]
+            assert myjson['mylist'] == [1, 2, 3]
 
     def test_verify_hash(self, archive):
         product = self._ingest_file(archive)
@@ -1275,8 +1298,7 @@ class TestArchive:
                                             aggregates=['core.archive_date.min', 'core.archive_date.max'],
                                             where='size > 0',
                                             order_by=['core.product_name'],
-                                            having='%s >= 2020-02-02 and count >= 1' % having,
-                                           )
+                                            having='%s >= 2020-02-02 and count >= 1' % having)
             assert len(data) == 2
 
     def test_broken_plugin(self, archive):
@@ -1332,17 +1354,17 @@ class TestArchivePureCatalogue:  # TODO merge with TestArchive?
             ['data/a.txt'],
         )
         with muninn.util.TemporaryDirectory() as tmp_path:
-            archive_pure.retrieve(target_path=tmp_path)
+            result = archive_pure.retrieve(target_path=tmp_path)
+            assert result == [os.path.join(tmp_path, 'a.txt')]
             assert os.listdir(tmp_path) == ['a.txt']
 
-    def test_retrieve_multi(self, archive_pure):
-        if archive_pure._params['use_enclosing_directory']:  # TODO fix archive to accept?
-            properties = archive_pure.ingest(
-                ['data/dir/multi/1.txt', 'data/dir/multi/2.txt'],  # TODO does this cause other files under multi to be included?
-            )
-            with muninn.util.TemporaryDirectory() as tmp_path:
-                archive_pure.retrieve(target_path=tmp_path)
-                assert set(os.listdir(os.path.join(tmp_path, 'multi'))) == set(['1.txt', '2.txt'])
+    def test_retrieve_dir(self, archive_pure):
+        properties = archive_pure.ingest(
+            ['data/dir'],
+        )
+        with muninn.util.TemporaryDirectory() as tmp_path:
+            result = archive_pure.retrieve(target_path=tmp_path)
+            assert result == [os.path.join(tmp_path, 'dir')]
 
     def test_rebuild_properties(self, archive_pure):
         properties = archive_pure.ingest(
@@ -1392,6 +1414,7 @@ class TestArchivePureCatalogue:  # TODO merge with TestArchive?
         with pytest.raises(muninn.exceptions.Error) as excinfo:
             s = archive_pure.strip()
         assert '"strip" operation not available for storage=none' in str(excinfo)
+
 
 class TestQuery:
     def _prep_data(self, archive):
@@ -1664,7 +1687,7 @@ class TestQuery:
         s = archive.search('size == %s' % hex(1015))
         assert len(s) == 3
 
-        s = archive.search('size == 0o1767') # py2/3 compat
+        s = archive.search('size == 0o1767')  # py2/3 compat
         assert len(s) == 3
 
         s = archive.search('size == %s' % bin(1015))
@@ -1700,6 +1723,7 @@ class TestQuery:
             s = archive.search('covers(core.footprint, POINT (1.0, 3.0))')
         assert 'char 34: expected one of: INTEGER, REAL, got ","' in str(excinfo)
 
+
 class TestTools:  # TODO more result checking, preferrably using tools
     def _run(self, tool, args='', action='', archive='my_arch', should_fail=False):
         python_path = 'PYTHONPATH=%s:.:$PYTHONPATH' % PARENT_DIR
@@ -1722,7 +1746,7 @@ class TestTools:  # TODO more result checking, preferrably using tools
 
     def test_search(self, archive):
         output = self._run('search', '""')
-        assert len(output) == 2 # header
+        assert len(output) == 2  # header
         output = self._run('ingest', 'data/pi.txt')
         output = self._run('search', '"" -p \\*')
         assert len(output) == 3
