@@ -1,3 +1,6 @@
+* Fixed issue where is_defined(<namespace>) did not work for the sqlite
+  backend when using a table prefix.
+
 6.1.1 2023-08-02
 ~~~~~~~~~~~~~~~~
 

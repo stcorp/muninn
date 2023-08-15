@@ -571,7 +571,7 @@ class SQLiteBackend(object):
             namespace_name = arg.split('.')
             if len(namespace_name) == 1:
                 return 'EXISTS (SELECT 1 FROM %s WHERE uuid = %s.uuid)' % \
-                    (arg, self._core_table_name)
+                    (self._table_name(arg), self._core_table_name)
             else:
                 return "(%s) IS NOT NULL" % arg
 
