@@ -39,3 +39,7 @@ def main():
     parser = create_parser(description="Display generic information about the archive.")
     parser.add_argument("archive", metavar="ARCHIVE", help="identifier of the archive to use")
     return parse_args_and_run(parser, run)
+
+
+if __name__ == '__main__':
+    main()
