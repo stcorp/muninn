@@ -42,12 +42,19 @@ def create(configuration, tempdir, auth_file):
             'host' in options and
             'bucket' in options):
         credentials = json.loads(open(auth_file).read())
-        for key, value in credentials.items():
-            if value.get('auth_type') == 'S3' and key == options['host'] and value.get('bucket') == options['bucket']:
-                for option in ('access_key', 'secret_access_key', 'port', 'bucket', 'region'):
-                    if option in value and option not in options:
-                        options[option] = value[option]
-                break
+        s3url = "s3://" + options['bucket']
+        if options['host'] in credentials:
+            record = credentials[options['host']]
+            if record.get('auth_type') == 'S3' and record.get('bucket') == options['bucket']:
+                for option in ('access_key', 'secret_access_key', 'port', 'region'):
+                    if option in record and option not in options:
+                        options[option] = record[option]
+        elif s3url in credentials:
+            record = credentials[s3url]
+            if record.get('host') == options['host']:
+                for option in ('access_key', 'secret_access_key', 'port', 'region'):
+                    if option in record and option not in options:
+                        options[option] = record[option]
 
     # check that mandatory options are configured
     for option in ('access_key', 'secret_access_key'):

@@ -1,3 +1,8 @@
+* Add S3 remote backend to allow performing a muninn pull from an object store.
+
+* Add support for s3://bucket entries in the credentials authorization file.
+  These entries can be used by the S3 storage backend and S3 remote backend.
+
 * Fixed issue where is_defined(<namespace>) did not work for the sqlite
   backend when using a table prefix.
 

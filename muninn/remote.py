@@ -28,8 +28,8 @@ def get_credentials(archive, url):
         for key in credentials:
             if url.startswith(key):
                 return credentials[key]
-        hostname = urlparse(url).hostname
-        if hostname in credentials:
+        url = urlparse(url)
+        if url.scheme != 's3' and url.hostname in credentials:
             return credentials[hostname]
     return None
 
@@ -123,6 +123,57 @@ def download_ftp(url, target_dir, credentials=None, timeout=60):
     except Exception as e:
         raise DownloadError('Error downloading %s (Reason: %s)' % (url.geturl(), e))
     return local_file
+
+
+def download_s3(url, target_dir, credentials=None):
+    import boto3
+    url = urlparse(url)
+    bucket = url.hostname
+    access_key = None
+    secrete_access_key = None
+    endpoint_url = None
+    region = None
+    paths = []
+
+    if credentials is not None:
+        if 'host' in credentials:
+            endpoint_url = credentials['host']
+        if 'region' in credentials:
+            region = credentials['region']
+        if 'access_key' in credentials:
+            access_key = credentials['access_key']
+        if 'secret_access_key' in credentials:
+            secret_access_key = credentials['secret_access_key']
+
+    s3_path = url.path[1:]  # ignore leading '/'
+    try:
+        resource = boto3.resource(service_name="s3", region_name=region, endpoint_url=endpoint_url,
+                                  aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
+        objs = list(resource.Bucket(bucket).objects.filter(Prefix=s3_path))
+    except Exception as e:
+        raise DownloadError('Error downloading %s (Reason: %s)' % (url.geturl(), e))
+
+    if not objs:
+        raise DownloadError('Error downloading %s (no objects found)' % url.geturl())
+
+    try:
+        basepath = os.path.dirname(s3_path)
+        for obj in objs:
+            rel_path = os.path.relpath(obj.key, basepath)
+            target = os.path.normpath(os.path.join(target_dir, rel_path))
+            if os.path.dirname(rel_path) == '':
+                paths.append(target)
+            if obj.key.endswith('/'):
+                util.make_path(target)
+            else:
+                dirname = os.path.dirname(target)
+                if dirname != '':
+                    util.make_path(dirname)
+                resource.Object(bucket, obj.key).download_file(target)
+    except Exception as e:
+        raise DownloadError('Error downloading %s (Reason: %s)' % (url.geturl(), e))
+
+    return paths
 
 
 def download_sftp(url, target_dir, credentials=None, timeout=60):
@@ -222,6 +273,15 @@ class FTPBackend(RemoteBackend):
         return self.auto_extract(file_path, product)
 
 
+class S3Backend(RemoteBackend):
+    def pull(self, archive, product, target_dir):
+        credentials = get_credentials(archive, product.core.remote_url)
+        paths = download_s3(product.core.remote_url, target_dir, credentials=credentials)
+        if len(paths) == 1:
+            return self.auto_extract(paths[0], product)
+        return paths
+
+
 class SFTPBackend(RemoteBackend):
     def pull(self, archive, product, target_dir):
         credentials = get_credentials(archive, product.core.remote_url)
@@ -234,6 +294,7 @@ REMOTE_BACKENDS = {
     'https': HTTPBackend(prefix='https://'),
     'file': FileBackend(prefix='file://'),
     'ftp': FTPBackend(prefix='ftp://'),
+    's3': S3Backend(prefix='s3://'),
     'sftp': SFTPBackend(prefix='sftp://'),
 }
 

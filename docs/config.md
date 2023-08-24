@@ -188,19 +188,24 @@ connection_string = dbname=foo user=alice password=wonderland host=192.168.0.1
      "client_id": "thisclient",
      "client_secret": "somesecret",
      "token_url": "https://authentication-server.com/token/endpoint"
-  }
+  },
+  "s3://some-bucket": {
+     "host": "https://s3-provider.com/",
+     "access_key": "XXXXXXXXXXXXXXXXXXXX",
+     "secret_access_key": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+  },
   "https://s3-provider.com/": {
      "auth_type": "S3",
      "bucket": "my-bucket",
      "access_key": "XXXXXXXXXXXXXXXXXXXX",
      "secret_access_key": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-  }
+  },
   "another-s3-provider.com": {
      "auth_type": "S3",
      "bucket": "another-bucket",
      "port": 443,
      "access_key": "XXXXXXXXXXXXXXXXXXXX",
      "secret_access_key": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-  }
+  },
 }
 ```
