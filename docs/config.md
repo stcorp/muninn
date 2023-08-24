@@ -206,6 +206,6 @@ connection_string = dbname=foo user=alice password=wonderland host=192.168.0.1
      "port": 443,
      "access_key": "XXXXXXXXXXXXXXXXXXXX",
      "secret_access_key": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-  },
+  }
 }
 ```
