@@ -30,7 +30,7 @@ def get_credentials(archive, url):
                 return credentials[key]
         url = urlparse(url)
         if url.scheme != 's3' and url.hostname in credentials:
-            return credentials[hostname]
+            return credentials[url.hostname]
     return None
 
 
