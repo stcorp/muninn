@@ -1288,6 +1288,14 @@ class Archive(object):
                 product_path = self._product_path(product)
                 size = self._storage.size(product_path)
                 metadata = {'active': True, 'archive_date': self._database.server_time_utc(), 'size': size}
+                if product.core.hash is None:
+                    hash_type = self._plugin_hash_type(plugin)
+                    if hash_type is not None:
+                        try:
+                            hash = util.product_hash(paths, hash_type=hash_type)
+                        except EnvironmentError as _error:
+                            raise Error("cannot determine product hash [%s]" % (_error,))
+                        metadata['hash'] = hash
                 self.update_properties(Struct({'core': metadata}), product.core.uuid)
 
                 # verify product hash.
