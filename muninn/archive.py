@@ -1288,7 +1288,7 @@ class Archive(object):
                 product_path = self._product_path(product)
                 size = self._storage.size(product_path)
                 metadata = {'active': True, 'archive_date': self._database.server_time_utc(), 'size': size}
-                if product.core.hash is None:
+                if 'hash' not in product.core or product.core.hash is None:
                     hash_type = self._plugin_hash_type(plugin)
                     if hash_type is not None:
                         try:
