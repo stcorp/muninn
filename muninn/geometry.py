@@ -29,6 +29,33 @@ class Geometry(object):
     def max_y(self):
         return 0
 
+    @staticmethod
+    def from_geojson(geojson):
+        type_ = geojson['type']
+        coordinates = geojson['coordinates']
+
+        if type_ == 'Point':
+            return as_point(coordinates)
+
+        elif type_ == 'LineString':
+            return as_line_string(coordinates)
+
+        elif type_ == 'Polygon':
+            return as_polygon(coordinates)
+
+        elif type_ == 'MultiPoint':
+            return as_multi_point(coordinates)
+
+        elif type_ == 'MultiLineString':
+            return as_multi_line_string(coordinates)
+
+        elif type_ == 'MultiPolygon':
+            return as_multi_polygon(coordinates)
+
+        else:
+            # TODO GeometryCollection?
+            raise Error('cannot convert geojson type: %s' % type_)
+
 
 class Point(Geometry):
     def __init__(self, x, y):
@@ -81,6 +108,12 @@ class Point(Geometry):
     @latitude.setter
     def latitude(self, value):
         self._coordinates[1] = value
+
+    def as_geojson(self):
+        return {
+            'type': 'Point',
+            'coordinates': [self.x, self.y],
+        }
 
     def as_wkt(self, tagged=True):
         wkt = "(%f %f)" % (self.x, self.y)
@@ -166,6 +199,12 @@ class LineString(GeometrySequence):
     def is_closed(self):
         return not self or self[0] == self[-1]
 
+    def as_geojson(self):
+        return {
+            'type': 'LineString',
+            'coordinates': [[point.x, point.y] for point in self],
+        }
+
     def as_wkt(self, tagged=True):
         wkt = "(" + ", ".join(["%f %f" % (point.x, point.y) for point in self]) + ")" if self else "EMPTY"
         return "LINESTRING " + wkt if tagged else wkt
@@ -216,6 +255,12 @@ class Polygon(GeometrySequence):
         wkt = "(" + ", ".join([geometry.as_wkt(False) for geometry in self]) + ")" if self else "EMPTY"
         return "POLYGON " + wkt if tagged else wkt
 
+    def as_geojson(self):
+        return {
+            'type': 'Polygon',
+            'coordinates': [[[point.x, point.y] for point in ring] for ring in self],
+        }
+
     def __repr__(self):
         return "Polygon(rings=%r)" % self._geometries
 
@@ -226,6 +271,12 @@ class Polygon(GeometrySequence):
 class MultiPoint(GeometrySequence):
     def point(self, index):
         return self[index]
+
+    def as_geojson(self):
+        return {
+            'type': 'MultiPoint',
+            'coordinates': [[point.x, point.y] for point in self],
+        }
 
     def as_wkt(self, tagged=True):
         wkt = "(" + ", ".join([geometry.as_wkt(False) for geometry in self]) + ")" if self else "EMPTY"
@@ -241,6 +292,12 @@ class MultiPoint(GeometrySequence):
 class MultiLineString(GeometrySequence):
     def line_string(self, index):
         return self[index]
+
+    def as_geojson(self):
+        return {
+            'type': 'MultiLineString',
+            'coordinates': [[[point.x, point.y] for point in linestring] for linestring in self],
+        }
 
     def as_wkt(self, tagged=True):
         wkt = "(" + ", ".join([geometry.as_wkt(False) for geometry in self]) + ")" if self else "EMPTY"
@@ -260,6 +317,12 @@ class MultiPolygon(GeometrySequence):
     def as_wkt(self, tagged=True):
         wkt = "(" + ", ".join([geometry.as_wkt(False) for geometry in self]) + ")" if self else "EMPTY"
         return "MULTIPOLYGON " + wkt if tagged else wkt
+
+    def as_geojson(self):
+        return {
+            'type': 'MultiPolygon',
+            'coordinates': [[[[point.x, point.y] for point in ring] for ring in polygon] for polygon in self],
+        }
 
     def __repr__(self):
         return "MultiPolygon(polygons=%r)" % self._geometries

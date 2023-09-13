@@ -35,7 +35,7 @@ os.environ['MUNINN_CONFIG_PATH'] = '.'
 
 import shutil
 
-from muninn.geometry import Polygon, LinearRing, Point
+from muninn.geometry import Geometry, Point, LineString, Polygon, MultiPoint, MultiLineString, MultiPolygon, LinearRing
 from muninn.extension import CascadeRule
 
 CFG = ConfigParser()
@@ -1954,3 +1954,55 @@ class TestTools:  # TODO more result checking, preferrably using tools
 
     def test_destroy(self, archive):
         self._run('destroy', '-y')
+
+
+class TestGeometry:  # TODO test_wkt? (and add from_wkt?)
+    def _prep_data(self, archive):
+        self.uuid_a = archive.ingest(['data/a.txt']).core.uuid
+
+    def test_geojson(self, archive):  # TODO GeometryCollection?
+        self._prep_data(archive)
+
+        # examples from rfc7946 appendix A
+        for class_, geojson in [
+            (Point,{
+                "type": "Point",
+                "coordinates": [100.0, 0.0],
+            }),
+            (LineString, {
+                "type": "LineString",
+                "coordinates": [[100.0, 0.0], [101.0, 1.0]],
+            }),
+            (Polygon, {
+                "type": "Polygon",
+                "coordinates": [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]]], # one ring (no holes)
+            }),
+            (Polygon, {
+                "type": "Polygon",
+                "coordinates": [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]], # exterior ring
+                                [[100.8, 0.8], [100.8, 0.2], [100.2, 0.2], [100.2, 0.8], [100.8, 0.8]]], # interior ring (hole)
+            }),
+            (MultiPoint, {
+                "type": "MultiPoint",
+                "coordinates": [[100.0, 0.0], [101.0, 1.0]],
+            }),
+            (MultiLineString, {
+                "type": "MultiLineString",
+                "coordinates": [[[100.0, 0.0], [101.0, 1.0] ], [ [102.0, 2.0], [103.0, 3.0]]],
+            }),
+            (MultiPolygon, {
+                "type": "MultiPolygon",
+                "coordinates": [[[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0], [102.0, 2.0]]],
+                                [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]],
+                                 [[100.2, 0.2], [100.2, 0.8], [100.8, 0.8], [100.8, 0.2], [100.2, 0.2]]]],
+            }),
+        ]:
+            # geojson to Geometry
+            geometry = Geometry.from_geojson(geojson)
+
+            # update catalogue
+            archive.update_properties(muninn.Struct({'core': {'footprint': geometry}}), self.uuid_a, True)
+            footprint = archive.retrieve_properties(self.uuid_a).core.footprint
+
+            # Geometry to geojson
+            assert footprint.as_geojson() == geojson
