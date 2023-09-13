@@ -53,7 +53,6 @@ class Geometry(object):
             return as_multi_polygon(coordinates)
 
         else:
-            # TODO GeometryCollection?
             raise Error('cannot convert geojson type: %s' % type_)
 
 

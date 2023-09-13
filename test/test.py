@@ -1956,11 +1956,11 @@ class TestTools:  # TODO more result checking, preferrably using tools
         self._run('destroy', '-y')
 
 
-class TestGeometry:  # TODO test_wkt? (and add from_wkt?)
+class TestGeometry:
     def _prep_data(self, archive):
         self.uuid_a = archive.ingest(['data/a.txt']).core.uuid
 
-    def test_geojson(self, archive):  # TODO GeometryCollection?
+    def test_geojson(self, archive):
         self._prep_data(archive)
 
         # examples from rfc7946 appendix A
