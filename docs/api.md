@@ -135,7 +135,9 @@ def product_type_plugin(product_type)
 
 Return a reference to the specified product type plugin.
 
-product_type -- Product type name.
+**Arguments**:
+
+ - `product_type` - Product type name.
 
 <a id="muninn.archive.Archive.product_types"></a>
 
@@ -335,8 +337,8 @@ provided dictionary of properties) in the product catalogue.
 An important side effect of this operation is that it will
 fail if:
 
-1. The core.uuid is not unique within the product catalogue.
-2. The combination of core.archive_path and core.physical_name is
+1. The `core.uuid` is not unique within the product catalogue.
+2. The combination of `core.archive_path` and `core.physical_name` is
 not unique within the product catalogue.
 
 **Arguments**:
@@ -513,12 +515,12 @@ try to copy/symlink it.
   instead of a copy of the original product. If set to None, the value of the corresponding
   archive wide configuration option will be used. By default, the archive configuration will
   be used.
-  This option is ignored if use_current_path=True.
+  This option is ignored if `use_current_path` is True.
 - `verify_hash` - If set to True then, after the ingestion, the product in the archive will be matched against
   the hash from the metadata (only if the metadata contained a hash).
 - `use_current_path` - Ingest the product by keeping the file(s) at the current path (which must be inside the
   root directory of the archive).
-  This option is ignored if ingest_product=False.
+  This option is ignored if `ingest_product` is False.
 - `force` - If set to True then any existing product with the same type and name (unique constraint)
   will be removed before ingestion, including partially ingested products.
   NB. Depending on product type specific cascade rules, removing a product can result in one
@@ -729,7 +731,7 @@ Return properties for the specified product.
 
 - `uuid` - Product UUID
 - `namespaces` - List of namespaces of which the properties should be retrieved. By default, only properties
-  defined in the "core" namespace will be retrieved.
+  defined in the `core` namespace will be retrieved.
 
 <a id="muninn.archive.Archive.root"></a>
 
@@ -761,14 +763,13 @@ Search the product catalogue for products matching the specified search expressi
 - `limit` - Limit the maximum number of results to the specified number.
 - `parameters` - Parameters referenced in the search expression.
 - `namespaces` - List of namespaces of which the properties should be retrieved. By default, only properties
-  defined in the "core" namespace will be retrieved.
-  property_names
-  --  List of property names that should be returned. By default all properties of the "core"
+  defined in the `core` namespace will be retrieved.
+- `property_names` -  List of property names that should be returned. By default all properties of the `core`
   namespace and those of the namespaces in the namespaces argument are included.
   If this parameter is a non-empty list then only the referenced properties will be returned.
-  Properties are specified as '<namespace>.<identifier>'
-  (the namespace can be omitted for the 'core' namespace).
-  If the property_names parameter is provided then the namespaces parameter is ignored.
+  Properties are specified as `<namespace>.<identifier>`
+  (the namespace can be omitted for the `core` namespace).
+  If the `property_names` parameter is provided then the namespaces parameter is ignored.
   
 
 **Returns**:
@@ -830,26 +831,26 @@ Return a summary of the products matching the specified search expression.
 
 - `where` - Search expression.
 - `parameters` - Parameters referenced in the search expression.
-- `aggregates` - A list of property aggregates defined as "<property_name>.<reduce_fn>".
+- `aggregates` - A list of property aggregates defined as `<property_name>.<reduce_fn>`.
   Properties need to be of type long, integer, real, text or timestamp.
-  The reduce function can be 'min', 'max', 'sum', or 'avg'.
-  'sum' and 'avg' are not possible for text and timestamp properties.
-  A special property 'validity_duration' (defined as validity_stop - validity_start) can also
+  The reduce function can be `min`, `max`, `sum`, or `avg`.
+  `sum` and `avg` are not possible for text and timestamp properties.
+  A special property `validity_duration` (defined as `validity_stop` - `validity_start`) can also
   be used.
 - `group_by` - A list of property names whose values are used for grouping the aggregation results.
-  There will be a separate result row for each combination of group_by property values.
+  There will be a separate result row for each combination of `group_by` property values.
   Properties need to be of type long, integer, boolean, text or timestamp.
-  Timestamps require a binning subscript which can be 'year', 'month', 'yearmonth', or 'date'
-  (e.g. 'validity_start.yearmonth').
+  Timestamps require a binning subscript which can be `year`, `month`, `yearmonth`, or `date`
+  (e.g. `validity_start.yearmonth`).
 - `group_by_tag` - If set to True, results will also be grouped by available tag values.
   Note that products will be counted multiple times if they have multiple tags
 - `having` - A list of property aggregates defined as `<property_name>.<reduce_fn>`; properties need to be
-  of type long, integer, real, text or timestamp; the reduce function can be 'min', 'max', 'sum',
-  or 'avg'; 'sum' and 'avg' are not possible for text and timestamp properties; a special property
-  'validity_duration' (defined as validity_stop - validity_start) can also be used.
+  of type long, integer, real, text or timestamp; the reduce function can be `min`, `max`, `sum`,
+  or `avg`; `sum` and `avg` are not possible for text and timestamp properties; a special property
+  `validity_duration` (defined as `validity_stop` - `validity_start`) can also be used.
 - `order_by` - A list of result column names that determines the ordering of the results. If the list is
   empty, the order of the results is ordered by the `group_by` specification. Each name in the
-  list can have a '+' (ascending) or '-' (descending) prefix, or no prefix (ascending).
+  list can have a `+` (ascending) or `-` (descending prefix, or no prefix (ascending).
   
 
 **Returns**:
@@ -926,19 +927,20 @@ def update_properties(properties, uuid=None, create_namespaces=False)
 ```
 
 Update product properties in the product catalogue. The UUID of the product to update will be taken from the
-"core.uuid" property if it is present in the specified properties. Otherwise, the UUID should be provided
+`core.uuid` property if it is present in the specified properties. Otherwise, the UUID should be provided
 separately.
 
 This function allows any property to be changed with the exception of the product UUID, and therefore needs to
 be used with care. The recommended way to update product properties is to first retrieve them using either
-retrieve_properties() or search(), change the properties, and then use this function to update the product
+`retrieve_properties()` or `search()`, change the properties, and then use this function to update the product
 catalogue.
 
-Argument:
-properties         -- Product properties
-uuid               -- UUID of the product to update. By default, the UUID will be taken from the "core.uuid"
-                      property.
-create_namespaces  -- Test if all namespaces are already defined for the product, and create them if needed.
+Arguments:
+
+ - `properties`   - Product properties
+ - `uuid`         - UUID of the product to update. By default, the UUID will be taken from the `core.uuid`
+                     property.
+ - `create_namespaces`  - Test if all namespaces are already defined for the product, and create them if needed.
 
 <a id="muninn.archive.Archive.verify_hash"></a>
 
