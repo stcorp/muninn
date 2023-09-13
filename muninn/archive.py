@@ -1547,8 +1547,7 @@ class Archive(object):
         parameters  --  Parameters referenced in the search expression.
         namespaces  --  List of namespaces of which the properties should be retrieved. By default, only properties
                         defined in the "core" namespace will be retrieved.
-        property_names
-                    --  List of property names that should be returned. By default all properties of the "core"
+        property_names --  List of property names that should be returned. By default all properties of the "core"
                         namespace and those of the namespaces in the namespaces argument are included.
                         If this parameter is a non-empty list then only the referenced properties will be returned.
                         Properties are specified as '<namespace>.<identifier>'
