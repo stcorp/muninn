@@ -1,10 +1,13 @@
-* Add S3 remote backend to allow performing a muninn pull from an object store.
+* Added S3 remote backend to allow performing a muninn pull from an object
+  store.
 
 * A muninn pull will now set core.hash (if it did not yet have a value) similar
   to muninn ingest.
 
-* Add support for s3://bucket entries in the credentials authorization file.
+* Added support for s3://bucket entries in the credentials authorization file.
   These entries can be used by the S3 storage backend and S3 remote backend.
+
+* Added from_geojson() and as_geojson() methods to muninn.geometry data types.
 
 * Fixed issue where is_defined(<namespace>) did not work for the sqlite
   backend when using a table prefix.
