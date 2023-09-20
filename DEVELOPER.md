@@ -2,7 +2,7 @@
 
 This document contains specific instructions for muninn developers.
 
-##General
+## General
 
 The muninn distribution consists of a single setuptools package.
 
