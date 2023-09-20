@@ -4,8 +4,61 @@ title: Python API
 permalink: /api/
 ---
 
-* toc
-{:toc}
+# Table of Contents
+
+* [muninn](#muninn)
+  * [config\_path](#muninn.config_path)
+  * [open](#muninn.open)
+* [muninn.archive](#muninn.archive)
+  * [Archive](#muninn.archive.Archive)
+    * [register\_namespace](#muninn.archive.Archive.register_namespace)
+    * [namespace\_schema](#muninn.archive.Archive.namespace_schema)
+    * [namespaces](#muninn.archive.Archive.namespaces)
+    * [register\_product\_type](#muninn.archive.Archive.register_product_type)
+    * [product\_type\_plugin](#muninn.archive.Archive.product_type_plugin)
+    * [product\_types](#muninn.archive.Archive.product_types)
+    * [register\_remote\_backend](#muninn.archive.Archive.register_remote_backend)
+    * [remote\_backend](#muninn.archive.Archive.remote_backend)
+    * [remote\_backends](#muninn.archive.Archive.remote_backends)
+    * [register\_hook\_extension](#muninn.archive.Archive.register_hook_extension)
+    * [hook\_extension](#muninn.archive.Archive.hook_extension)
+    * [hook\_extensions](#muninn.archive.Archive.hook_extensions)
+    * [attach](#muninn.archive.Archive.attach)
+    * [auth\_file](#muninn.archive.Archive.auth_file)
+    * [cleanup\_derived\_products](#muninn.archive.Archive.cleanup_derived_products)
+    * [close](#muninn.archive.Archive.close)
+    * [count](#muninn.archive.Archive.count)
+    * [create\_properties](#muninn.archive.Archive.create_properties)
+    * [delete\_properties](#muninn.archive.Archive.delete_properties)
+    * [derived\_products](#muninn.archive.Archive.derived_products)
+    * [destroy](#muninn.archive.Archive.destroy)
+    * [destroy\_catalogue](#muninn.archive.Archive.destroy_catalogue)
+    * [export](#muninn.archive.Archive.export)
+    * [export\_formats](#muninn.archive.Archive.export_formats)
+    * [generate\_uuid](#muninn.archive.Archive.generate_uuid)
+    * [identify](#muninn.archive.Archive.identify)
+    * [ingest](#muninn.archive.Archive.ingest)
+    * [link](#muninn.archive.Archive.link)
+    * [prepare](#muninn.archive.Archive.prepare)
+    * [prepare\_catalogue](#muninn.archive.Archive.prepare_catalogue)
+    * [product\_path](#muninn.archive.Archive.product_path)
+    * [pull](#muninn.archive.Archive.pull)
+    * [rebuild\_properties](#muninn.archive.Archive.rebuild_properties)
+    * [rebuild\_pull\_properties](#muninn.archive.Archive.rebuild_pull_properties)
+    * [remove](#muninn.archive.Archive.remove)
+    * [retrieve](#muninn.archive.Archive.retrieve)
+    * [retrieve\_properties](#muninn.archive.Archive.retrieve_properties)
+    * [root](#muninn.archive.Archive.root)
+    * [search](#muninn.archive.Archive.search)
+    * [source\_products](#muninn.archive.Archive.source_products)
+    * [strip](#muninn.archive.Archive.strip)
+    * [summary](#muninn.archive.Archive.summary)
+    * [tag](#muninn.archive.Archive.tag)
+    * [tags](#muninn.archive.Archive.tags)
+    * [unlink](#muninn.archive.Archive.unlink)
+    * [untag](#muninn.archive.Archive.untag)
+    * [update\_properties](#muninn.archive.Archive.update_properties)
+    * [verify\_hash](#muninn.archive.Archive.verify_hash)
 
 <a id="muninn"></a>
 
@@ -137,7 +190,7 @@ Return a reference to the specified product type plugin.
 
 **Arguments**:
 
- - `product_type` - Product type name.
+- `product_type` - Product type name
 
 <a id="muninn.archive.Archive.product_types"></a>
 
@@ -263,7 +316,7 @@ The existing metadata record is found by performing a search based on product_ty
   against the metadata hash (if it exists).
 - `use_current_path` - Ingest the product by keeping the file(s) at the current path (which must be inside the
   root directory of the archive).
-  This option is ignored if ingest_product=False.
+  This option is ignored if `ingest_product` is False.
 - `force` - If set to True, then skip default size check between product and existing metadata.
   
 
@@ -696,7 +749,7 @@ products being removed (or stripped) along with it. Such products are _not_ incl
 #### retrieve
 
 ```python
-def retrieve(where="", parameters={}, target_path=os.path.curdir, use_symlinks=False)
+def retrieve(where="", parameters={}, target_path=os.path.curdir, use_symlinks=False, verify_hash=False)
 ```
 
 Retrieve one or more products from the archive.
@@ -709,6 +762,8 @@ Retrieve one or more products from the archive.
 - `use_symlinks` - If set to True, products will be retrieved as symbolic links to the original products kept
   in the archive. If set to False, products will retrieved as copies of the original products.
   By default, products will be retrieved as copies.
+- `verify_hash` - If set to True then, after the retrieval, the product will be matched against the hash
+  from the metadata (only if the metadata contained a hash).
   
 
 **Returns**:
@@ -764,7 +819,7 @@ Search the product catalogue for products matching the specified search expressi
 - `parameters` - Parameters referenced in the search expression.
 - `namespaces` - List of namespaces of which the properties should be retrieved. By default, only properties
   defined in the `core` namespace will be retrieved.
-- `property_names` -  List of property names that should be returned. By default all properties of the `core`
+- `property_names` - List of property names that should be returned. By default all properties of the `core`
   namespace and those of the namespaces in the namespaces argument are included.
   If this parameter is a non-empty list then only the referenced properties will be returned.
   Properties are specified as `<namespace>.<identifier>`
@@ -835,8 +890,8 @@ Return a summary of the products matching the specified search expression.
   Properties need to be of type long, integer, real, text or timestamp.
   The reduce function can be `min`, `max`, `sum`, or `avg`.
   `sum` and `avg` are not possible for text and timestamp properties.
-  A special property `validity_duration` (defined as `validity_stop` - `validity_start`) can also
-  be used.
+  A special property `validity_duration` (defined as `validity_stop` - `validity_start`)
+  can also be used.
 - `group_by` - A list of property names whose values are used for grouping the aggregation results.
   There will be a separate result row for each combination of `group_by` property values.
   Properties need to be of type long, integer, boolean, text or timestamp.
@@ -845,12 +900,13 @@ Return a summary of the products matching the specified search expression.
 - `group_by_tag` - If set to True, results will also be grouped by available tag values.
   Note that products will be counted multiple times if they have multiple tags
 - `having` - A list of property aggregates defined as `<property_name>.<reduce_fn>`; properties need to be
-  of type long, integer, real, text or timestamp; the reduce function can be `min`, `max`, `sum`,
-  or `avg`; `sum` and `avg` are not possible for text and timestamp properties; a special property
-  `validity_duration` (defined as `validity_stop` - `validity_start`) can also be used.
+  of type long, integer, real, text or timestamp; the reduce function can be `min`, `max`,
+  `sum`, or `avg`; `sum` and `avg` are not possible for text and timestamp properties; a
+  special property `validity_duration` (defined as `validity_stop` - `validity_start`) can also
+  be used.
 - `order_by` - A list of result column names that determines the ordering of the results. If the list is
   empty, the order of the results is ordered by the `group_by` specification. Each name in the
-  list can have a `+` (ascending) or `-` (descending prefix, or no prefix (ascending).
+  list can have a `+` (ascending) or `-` (descending) prefix, or no prefix (ascending).
   
 
 **Returns**:
@@ -935,12 +991,12 @@ be used with care. The recommended way to update product properties is to first 
 `retrieve_properties()` or `search()`, change the properties, and then use this function to update the product
 catalogue.
 
-Arguments:
+**Arguments**:
 
- - `properties`   - Product properties
- - `uuid`         - UUID of the product to update. By default, the UUID will be taken from the `core.uuid`
-                     property.
- - `create_namespaces`  - Test if all namespaces are already defined for the product, and create them if needed.
+- `properties` - Product properties
+- `uuid` - UUID of the product to update. By default, the UUID will be taken from the `core.uuid`
+  property.
+- `create_namespaces` - Test if all namespaces are already defined for the product, and create them if needed.
 
 <a id="muninn.archive.Archive.verify_hash"></a>
 
