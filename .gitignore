@@ -1,0 +1,11 @@
+*.pyc
+__pycache__
+*.egg-info
+/build
+/dist
+/test/1.txt
+/test/2.txt
+/test/dir
+/test/emptyfile
+/test/my_arch.cfg
+/test/product_type.py
