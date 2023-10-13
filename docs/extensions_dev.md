@@ -323,6 +323,10 @@ modules to propagate outside of the extension, this should be considered a bug.
 >   The function should return the full path(s) to the file(s) that are
 >   downloaded.
 
+``identify(self, url)``
+>   Returns ``True`` if the plug-in is designed to handle the specified URL,
+>   ``False`` otherwise.
+
 # Hook extension API
 
 ## Global functions
