@@ -50,5 +50,5 @@ extension is specifically for muninn-pull and can introduce support for
 retrieving data using protocols other than the built-in support that muninn
 already has for http/https/ftp/file.
 
-Details concerning the actual implementation of extensions can be found in a
-separate EXTENSIONS document.
+For details concerning the actual implementation of extensions see
+[here](../extensions_dev).
