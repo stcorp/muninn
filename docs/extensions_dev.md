@@ -20,6 +20,8 @@ extensions (that contain namespace definitions), product type extensions
 (that contain product type plug-ins) and remote backend extensions (that
 contain remote backend plug-ins).
 
+## Namespaces
+
 A namespace is a set of related properties, i.e. a set of (key, value) pairs.
 The namespace definition specifies the keys (field names) available within the
 namespace, their type, and whether or not they are optional.
@@ -59,6 +61,8 @@ implicit primary key called ``uuid`` added that will act as a foreign key to
 ``core.uuid``. This ``uuid`` field should not be explicitly defined in
 namespace extensions.
 
+## Product Types
+
 A product type plug-in is an instance of a class that handles all product type
 specific details. The most important function of a product type plug-in is to
 extract properties from a product and return them in a form the archiving
@@ -89,6 +93,8 @@ properties.xml_pi.startTime = datetime.datetime.utcnow()
 ... more of the same ...
 ```
 
+## Hooks
+
 A hook extension is an instance of a class that defines methods to be
 executed at certain times, such as product ingestion or removal. When multiple
 extensions or product type plug-ins define the same hooks, they are run for any
@@ -96,21 +102,25 @@ plug-in first, then in the order of the extensions as they are listed in the
 configuration file. For the post_remove_hook hook, they are run in reverse
 order.
 
+## Remote Backends
+
 A remote backend plug-in adds the ability of an archive to pull products
 from remote sources using a protocol beyond the basic file/ftp/http/https
 protocols.
 
-# Exceptions
+## Extension API
+
+All attributes, functions, and methods described in the below sections are
+mandatory, unless explicitly stated otherwise.
+
+### Exceptions
 
 Extensions are only allowed to raise muninn.Error or instances of exception
 classes derived from ``muninn.Error``. If an extension raises an exception that
 does not derive from ``muninn.Error``, or allows exceptions from underlying
 modules to propagate outside of the extension, this should be considered a bug.
 
-# Extension Types
-
-All attributes, functions, and methods described in the below sections are
-mandatory, unless explicitly stated otherwise.
+### Extension Types
 
 [Product Type Extensions](../ext_product_types)
 
