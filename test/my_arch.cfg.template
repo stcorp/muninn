@@ -4,3 +4,4 @@ database = {database}
 product_type_extensions = product_type
 hook_extensions = hook_extension
 namespace_extensions = mynamespaces
+remote_backend_extensions = myremoteext
