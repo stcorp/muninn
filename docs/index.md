@@ -31,6 +31,15 @@ data product catalogues and archives. [More information](about)
 
 # Developer documentation:
 
+[Python API](api)
+
 [Extensions](extensions_dev)
 
-[Python API](api)
+[Product Type Extensions](ext_product_types)
+
+[Namespace Extensions](ext_namespaces)
+
+[Remote Backend Extensions](ext_remote)
+
+[Hook Extensions](ext_hooks)
+
