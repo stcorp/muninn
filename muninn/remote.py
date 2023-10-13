@@ -206,7 +206,7 @@ class RemoteBackend(object):
     def __init__(self, prefix):
         self.prefix = prefix
 
-    def indentify(self, url):
+    def identify(self, url):
         result = False
         if self.prefix:
             result = url.startswith(self.prefix)
@@ -308,7 +308,7 @@ def retrieve_function(archive, product, verify_hash_download):
     url = product.core.remote_url
     for prot in archive.remote_backends():
         _backend = archive.remote_backend(prot)
-        if _backend.indentify(url):
+        if _backend.identify(url):
             backend = _backend
     if backend is None:
         raise Error("The protocol of '%s' is not supported" % url)
