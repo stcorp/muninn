@@ -282,6 +282,10 @@ class Archive(object):
             if not hasattr(plugin, method):
                 raise Error("missing '%s' method in plugin for product type \"%s\"" % (method, product_type))
 
+        config_section = self._configuration.get('extension:' + plugin.__module__)
+        if config_section is not None and hasattr(plugin, 'set_configuration'):
+            plugin.set_configuration(config_section)
+
         self._product_type_plugins[product_type] = plugin
         self._update_export_formats(plugin)
 
@@ -351,6 +355,10 @@ class Archive(object):
         """
         if hook_extension in self._hook_extensions:
             raise Error("redefinition of hook extension: \"%s\"" % hook_extension)
+
+        config_section = self._configuration.get('extension:' + plugin.__module__)
+        if config_section is not None and hasattr(plugin, 'set_configuration'):
+            plugin.set_configuration(config_section)
 
         self._hook_extensions[hook_extension] = plugin
 

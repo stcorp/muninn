@@ -6,7 +6,7 @@ class MyRemoteExtension:
         assert False
 
     def set_configuration(self, configuration):
-        pass
+        assert int(configuration['timeout']) == 17
 
 
 _remote_extensions = {
