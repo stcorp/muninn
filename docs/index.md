@@ -35,11 +35,11 @@ data product catalogues and archives. [More information](about)
 
 [Extensions](extensions_dev)
 
-[Product Type Extensions](ext_product_types)
+[Product Type Extension API](ext_product_types)
 
-[Namespace Extensions](ext_namespaces)
+[Namespace Extension API](ext_namespaces)
 
-[Remote Backend Extensions](ext_remote)
+[Remote Backend Extension API](ext_remote)
 
-[Hook Extensions](ext_hooks)
+[Hook Extension API](ext_hooks)
 
