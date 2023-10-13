@@ -151,7 +151,8 @@ class Archive(object):
         product_type_extensions = options.pop("product_type_extensions", [])
         remote_backend_extensions = options.pop("remote_backend_extensions", [])
         hook_extensions = options.pop("hook_extensions", [])
-        archive = Archive(database=database, storage=storage, id=id, **options)
+        archive = Archive(database=database, storage=storage, id=id, **options,
+                          configuration=configuration)
 
         # Register core namespace.
         archive.register_namespace("core", Core)
@@ -195,7 +196,10 @@ class Archive(object):
         return archive
 
     def __init__(self, database, storage, cascade_grace_period=0,
-                 max_cascade_cycles=25, auth_file=None, id=None, tempdir=None):
+                 max_cascade_cycles=25, auth_file=None, id=None, tempdir=None,
+                 configuration=None):
+        self._configuration = configuration
+
         self._cascade_grace_period = datetime.timedelta(minutes=cascade_grace_period)
         self._max_cascade_cycles = max_cascade_cycles
         self._auth_file = auth_file
@@ -314,6 +318,10 @@ class Archive(object):
         for method in ['identify', 'pull']:
             if not hasattr(plugin, method):
                 raise Error("missing '%s' method in plugin for remote backend \"%s\"" % (method, remote_backend))
+
+        config_section = self._configuration.get('extension:' + plugin.__module__)
+        if config_section is not None and hasattr(plugin, 'set_configuration'):
+            plugin.set_configuration(config_section)
 
         self._remote_backend_plugins[remote_backend] = plugin
 

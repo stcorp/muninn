@@ -5,6 +5,9 @@ class MyRemoteExtension:
     def pull(self, archive, product, target_dir):
         assert False
 
+    def set_configuration(self, configuration):
+        pass
+
 
 _remote_extensions = {
     'myremote': MyRemoteExtension()
