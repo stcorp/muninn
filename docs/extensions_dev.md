@@ -4,10 +4,7 @@ title: Extensions
 permalink: /extensions_dev/
 ---
 
-Extension developer documentation
-
-* toc
-{:toc}
+# Extension developer documentation
 
 This document is intended for muninn extension developers. Muninn is a generic
 archiving framework. To be able to use it to archive specific (types of)
