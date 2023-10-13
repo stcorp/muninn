@@ -103,17 +103,17 @@ A remote backend plug-in adds the ability of an archive to pull products
 from remote sources using a protocol beyond the basic file/ftp/http/https
 protocols.
 
-# Namespace extension API
-
 All attributes, functions, and methods described in this section are mandatory,
 unless explicitly stated otherwise.
 
-## Exceptions
+# Exceptions
 
 Extensions are only allowed to raise muninn.Error or instances of exception
 classes derived from ``muninn.Error``. If an extension raises an exception that
 does not derive from ``muninn.Error``, or allows exceptions from underlying
 modules to propagate outside of the extension, this should be considered a bug.
+
+# Namespace extension API
 
 ## Global functions
 
@@ -128,16 +128,6 @@ modules to propagate outside of the extension, this should be considered a bug.
 
 # Product type extension API
 
-All attributes, functions, and methods described in this section are mandatory,
-unless explicitly stated otherwise.
-
-## Exceptions
-
-Extensions are only allowed to raise ``muninn.Error`` or instances of exception
-classes derived from ``muninn.Error``. If an extension raises an exception that
-does not derive from ``muninn.Error``, or allows exceptions from underlying
-modules to propagate outside of the extension, this should be considered a bug.
-
 ## Global functions
 
 ``product_types()``
@@ -149,47 +139,6 @@ modules to propagate outside of the extension, this should be considered a bug.
 >   (see below) and that implements this interface for the specified product
 >   type. An exception should be raised if the extension does not support the
 >   specified product type.
-
-
-# Remote backend extension API
-
-All attributes, functions, and methods described in this section are mandatory,
-unless explicitly stated otherwise.
-
-## Exceptions
-
-Extensions are only allowed to raise muninn.Error or instances of exception
-classes derived from ``muninn.Error``. If an extension raises an exception that
-does not derive from ``muninn.Error``, or allows exceptions from underlying
-modules to propagate outside of the extension, this should be considered a bug.
-
-## Global functions
-
-``remote_backends()``
->   Return a list containing the names of all remote backends defined by the
->   extension.
-
-``remote_backend(name)``
->   Return the remote backend definition of the specified remote backend. An
->   exception should be raised if the specified remote backend is not defined
->   by the extension.
-
-
-# Product type plug-in API
-
-A product type plug-in is an instance of a class that implements the interface
-defined in this section.
-
-All attributes, functions, and methods described in this section are mandatory,
-unless explicitly stated otherwise.
-
-## Exceptions
-
-Product type plug-ins are only allowed to raise ``muninn.Error`` or instances
-of exception classes derived from ``muninn.Error``. If an extension raises an
-exception that does not derive from ``muninn.Error``, or allows exceptions from
-underlying modules to propagate outside of the extension, this should be
-considered a bug.
 
 ## Attributes
 
@@ -353,18 +302,38 @@ considered a bug.
 >
 >   These methods are optional.
 
+# Remote backend extension API
+
+## Global functions
+
+``remote_backends()``
+>   Return a list containing the names of all remote backends defined by the
+>   extension.
+
+``remote_backend(name)``
+>   Return the remote backend definition of the specified remote backend. An
+>   exception should be raised if the specified remote backend is not defined
+>   by the extension.
+
+## Methods
+
+``pull(self, archive, product, target_path)``
+>   Download the product specified.
+>   The product should be downloaded in the path indicated by ``target_path``.
+>   The function should return the full path(s) to the file(s) that are
+>   downloaded.
+
 # Hook extension API
 
-A hook extension is an instance of a class that implements the interface
-defined in this section.
+## Global functions
 
-## Exceptions
+``hook_extensions()``
+>   Return a list containing the names of all hooks defined by the extension.
 
-Hook extensions are only allowed to raise ``muninn.Error`` or instances
-of exception classes derived from ``muninn.Error``. If an extension raises an
-exception that does not derive from ``muninn.Error``, or allows exceptions from
-underlying modules to propagate outside of the extension, this should be
-considered a bug.
+``hook_extension(name)``
+>   Return an instance of a class that implements one or more hook methods
+>   (see above). An exception should be raised if the extension does not
+>   support the specified hook.
 
 ## Methods
 
@@ -384,39 +353,3 @@ property, it is not automatically saved.
 
 ``post_remove_hook(self, archive, product)``
 >   Executed after a product removal.
-
-## Global functions
-
-``hook_extensions()``
->   Return a list containing the names of all hooks defined by the extension.
-
-``hook_extension(name)``
->   Return an instance of a class that implements one or more hook methods
->   (see above). An exception should be raised if the extension does not
->   support the specified hook.
-
-
-# Remote backend plug-in API
-
-A Remote backend plug-in is an instance of a class that implements the
-interface defined in this section.
-
-All attributes, functions, and methods described in this section are mandatory,
-unless explicitly stated otherwise.
-
-## Exceptions
-
-Remote backend plug-ins are only allowed to raise ``muninn.Error`` or instances
-of exception classes derived from ``muninn.Error``. If an extension raises an
-exception that does not derive from ``muninn.Error``, or allows exceptions from
-underlying modules to propagate outside of the extension, this should be
-considered a bug.
-
-## Methods
-
-``pull(self, archive, product, target_path)``
->   Download the product specified.
->   The product should be downloaded in the path indicated by ``target_path``.
->   The function should return the full path(s) to the file(s) that are
->   downloaded.
->
