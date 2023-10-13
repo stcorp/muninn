@@ -115,10 +115,10 @@ modules to propagate outside of the extension, this should be considered a bug.
 All attributes, functions, and methods described in the below sections are
 mandatory, unless explicitly stated otherwise.
 
-[Product Type Extensions](ext_product_types)
+[Product Type Extensions](../ext_product_types)
 
-[Namespace Extensions](ext_namespaces)
+[Namespace Extensions](../ext_namespaces)
 
-[Remote Backend Extensions](ext_remote)
+[Remote Backend Extensions](../ext_remote)
 
-[Hook Extensions](ext_hooks)
+[Hook Extensions](../ext_hooks)
