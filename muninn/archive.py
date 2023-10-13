@@ -311,6 +311,10 @@ class Archive(object):
         if remote_backend in self._remote_backend_plugins:
             raise Error("redefinition of remote backend: \"%s\"" % remote_backend)
 
+        for method in ['identify', 'pull']:
+            if not hasattr(plugin, method):
+                raise Error("missing '%s' method in plugin for remote backend \"%s\"" % (method, remote_backend))
+
         self._remote_backend_plugins[remote_backend] = plugin
 
     def remote_backend(self, remote_backend):
