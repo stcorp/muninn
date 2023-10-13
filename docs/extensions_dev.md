@@ -15,10 +15,11 @@ Readers of this document are assumed to be familiar with
 [Namespaces](../namespaces) and [Links](../links).
 
 A muninn extension is a Python module or package that implements the muninn
-extension interface. Muninn defines three types of extensions: namespace
+extension interface. Muninn defines four types of extensions: namespace
 extensions (that contain namespace definitions), product type extensions
-(that contain product type plug-ins) and remote backend extensions (that
-contain remote backend plug-ins).
+(that contain product type plug-ins), remote backend extensions (that
+contain remote backend plug-ins) and hook extensions (that allow for
+specific functionality to run at certain times).
 
 ## Namespaces
 
