@@ -192,7 +192,7 @@ class Archive(object):
 
         for name in product_type_extensions:
             extension = _load_extension(name)
-            _register_extension(archive, extension, name, 'product_type', get_name='product_type_plugin')  # TODO remove '_plugin'?
+            _register_extension(archive, extension, name, 'product_type', get_name='product_type_plugin')
 
         for name in remote_backend_extensions:
             extension = _load_extension(name)
