@@ -260,7 +260,8 @@ class HTTPBackend(RemoteBackend):
     def pull(self, archive, product, target_dir):
         credentials = get_credentials(archive, product.core.remote_url)
         if credentials and 'auth_type' in credentials and credentials['auth_type'] == "oauth2":
-            file_path = download_http_oath2(product.core.remote_url, target_dir, credentials, self.timeout, self.retries)
+            file_path = download_http_oath2(product.core.remote_url, target_dir, credentials, self.timeout,
+                                            self.retries)
         else:
             file_path = download_http(product.core.remote_url, target_dir, credentials, self.timeout, self.retries)
         return self.auto_extract(file_path, product)
