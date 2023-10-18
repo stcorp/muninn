@@ -19,6 +19,12 @@ permalink: /ext_remote/
 
 ## Methods
 
+``set_configuration(self, config)``
+>   Optionally receives muninn configuration options under the section
+>   ``[extension:module_name]``, where module_name is the import name/path for
+>   the extension module. The options are passed as a key-value dictionary,
+>   containing only strings.
+
 ``pull(self, archive, product, target_path)``
 >   Download the product specified.
 >   The product should be downloaded in the path indicated by ``target_path``.
