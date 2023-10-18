@@ -213,7 +213,8 @@ def safe_popen(cmd, join=False):
         proc.join()
         return return_dict['returncode'], return_dict['stdout'], return_dict['stderr']
     else:
-        time.sleep(1)
+        while 'pid' not in return_dict:
+            time.sleep(0.1)
         return proc, return_dict['pid']
 
 
