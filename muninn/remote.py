@@ -292,12 +292,12 @@ class SFTPBackend(RemoteBackend):
 
 
 REMOTE_BACKENDS = {
-    'http': HTTPBackend(prefix='http://'),
-    'https': HTTPBackend(prefix='https://'),
-    'file': FileBackend(prefix='file://'),
-    'ftp': FTPBackend(prefix='ftp://'),
-    's3': S3Backend(prefix='s3://'),
-    'sftp': SFTPBackend(prefix='sftp://'),
+    'http':  (HTTPBackend, 'http://'),
+    'https': (HTTPBackend, 'https://'),
+    'file':  (FileBackend, 'file://'),
+    'ftp':   (FTPBackend,  'ftp://'),
+    's3':    (S3Backend,   's3://'),
+    'sftp':  (SFTPBackend, 'sftp://'),
 }
 
 
@@ -340,6 +340,7 @@ def remote_backends():
 
 
 def remote_backend(name, configuration):
-    backend = REMOTE_BACKENDS[name]
+    backend_cl, prefix = REMOTE_BACKENDS[name]
+    backend = backend_cl(prefix=prefix)
     backend.set_configuration(configuration)
     return backend
