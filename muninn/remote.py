@@ -34,7 +34,7 @@ def get_credentials(archive, url):
     return None
 
 
-def download_http_oath2(url, target_dir, credentials, timeout=60):
+def download_http_oath2(url, target_dir, credentials, timeout, retries):
     import requests
     from requests_oauthlib import OAuth2Session
     from oauthlib.oauth2 import LegacyApplicationClient
@@ -46,7 +46,6 @@ def download_http_oath2(url, target_dir, credentials, timeout=60):
                         password=credentials['password'], client_id=credentials['client_id'],
                         client_secret=credentials['client_secret'])
     try:
-        retry = 1
         while True:
             try:
                 r = session.get(url, timeout=timeout, stream=True)
@@ -60,9 +59,9 @@ def download_http_oath2(url, target_dir, credentials, timeout=60):
                     for block in r.iter_content(1048576):  # use 1MB blocks
                         output.write(block)
             except requests.exceptions.ReadTimeout:
-                if retry <= 0:
+                if retries <= 0:
                     raise
-                retry -= 1
+                retries -= 1
             else:
                 break
     except Exception as e:
@@ -70,13 +69,12 @@ def download_http_oath2(url, target_dir, credentials, timeout=60):
     return local_file
 
 
-def download_http(url, target_dir, credentials=None, timeout=60):
+def download_http(url, target_dir, credentials, timeout, retries):
     import requests
     auth = None
     if credentials is not None:
         auth = (credentials['username'], credentials['password'])
     try:
-        retry = 1
         while True:
             try:
                 r = requests.get(url, timeout=timeout, stream=True, auth=auth)
@@ -90,9 +88,9 @@ def download_http(url, target_dir, credentials=None, timeout=60):
                     for block in r.iter_content(1048576):  # use 1MB blocks
                         output.write(block)
             except requests.exceptions.ReadTimeout:
-                if retry <= 0:
+                if retries <= 0:
                     raise
-                retry -= 1
+                retries -= 1
             else:
                 break
     except Exception as e:
@@ -100,7 +98,7 @@ def download_http(url, target_dir, credentials=None, timeout=60):
     return local_file
 
 
-def download_ftp(url, target_dir, credentials=None, timeout=60):
+def download_ftp(url, target_dir, credentials, timeout):
     url = urlparse(url)
     if url.username:
         username = url.username
@@ -176,7 +174,7 @@ def download_s3(url, target_dir, credentials=None):
     return paths
 
 
-def download_sftp(url, target_dir, credentials=None, timeout=60):
+def download_sftp(url, target_dir, credentials, timeout):
     import paramiko
     logging.getLogger("paramiko").setLevel(logging.WARNING)
     url = urlparse(url)
@@ -205,6 +203,10 @@ def download_sftp(url, target_dir, credentials=None, timeout=60):
 class RemoteBackend(object):
     def __init__(self, prefix):
         self.prefix = prefix
+
+    def set_configuration(self, config):
+        self.timeout = int(config.get('timeout', 60))
+        self.retries = int(config.get('retries', 1))
 
     def identify(self, url):
         result = False
@@ -260,16 +262,16 @@ class HTTPBackend(RemoteBackend):
     def pull(self, archive, product, target_dir):
         credentials = get_credentials(archive, product.core.remote_url)
         if credentials and 'auth_type' in credentials and credentials['auth_type'] == "oauth2":
-            file_path = download_http_oath2(product.core.remote_url, target_dir, credentials)
+            file_path = download_http_oath2(product.core.remote_url, target_dir, credentials, self.timeout, self.retries)
         else:
-            file_path = download_http(product.core.remote_url, target_dir, credentials=credentials)
+            file_path = download_http(product.core.remote_url, target_dir, credentials, self.timeout, self.retries)
         return self.auto_extract(file_path, product)
 
 
 class FTPBackend(RemoteBackend):
     def pull(self, archive, product, target_dir):
         credentials = get_credentials(archive, product.core.remote_url)
-        file_path = download_ftp(product.core.remote_url, target_dir, credentials=credentials)
+        file_path = download_ftp(product.core.remote_url, target_dir, credentials, self.timeout)
         return self.auto_extract(file_path, product)
 
 
@@ -285,7 +287,7 @@ class S3Backend(RemoteBackend):
 class SFTPBackend(RemoteBackend):
     def pull(self, archive, product, target_dir):
         credentials = get_credentials(archive, product.core.remote_url)
-        file_path = download_sftp(product.core.remote_url, target_dir, credentials=credentials)
+        file_path = download_sftp(product.core.remote_url, target_dir, credentials, self.timeout)
         return self.auto_extract(file_path, product)
 
 

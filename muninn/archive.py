@@ -206,7 +206,7 @@ class Archive(object):
 
         self._namespace_schemas = {}
         self._product_type_plugins = {}
-        self._remote_backend_plugins = copy.copy(remote.REMOTE_BACKENDS)
+        self._remote_backend_plugins = {}
         self._hook_extensions = collections.OrderedDict()
 
         self._export_formats = set()
@@ -217,6 +217,9 @@ class Archive(object):
         self._storage = storage
         self._tempdir = tempdir
         self.id = id  # Archive id (usually name of configuration file)
+
+        for remote_backend, plugin in remote.REMOTE_BACKENDS.items():
+            self.register_remote_backend(remote_backend, plugin)
 
     def __enter__(self):
         return self
