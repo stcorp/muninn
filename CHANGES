@@ -1,3 +1,10 @@
+* Added support for extension-specific configuration sections in archive
+  configuration files.
+
+* Introduced `timeout` and `retries` options for the
+  `extension:muninn.remote` section in an archive configuration.
+  The number of retries now defaults back to 0.
+
 6.2 2023-09-20
 ~~~~~~~~~~~~~~
 
