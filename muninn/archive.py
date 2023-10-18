@@ -238,10 +238,6 @@ class Archive(object):
         if namespace in self._namespace_schemas:
             raise Error("redefinition of namespace: \"%s\"" % namespace)
 
-        config_section = self._configuration.get('extension:' + schema.__module__)
-        if config_section is not None and hasattr(schema, 'set_configuration'):
-            schema.set_configuration(config_section)
-
         self._namespace_schemas[namespace] = schema
 
     def namespace_schema(self, namespace):
