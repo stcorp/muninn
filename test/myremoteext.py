@@ -5,8 +5,6 @@ class MyRemoteExtension:
     def pull(self, archive, product, target_dir):
         assert False
 
-    def set_configuration(self, configuration):
-        assert int(configuration['timeout']) == 17
 
 
 _remote_extensions = {
@@ -16,5 +14,7 @@ _remote_extensions = {
 def remote_backends():
     return _remote_extensions.keys()
 
-def remote_backend(name):
+def remote_backend(name, configuration):
+    assert int(configuration['timeout']) == 17
+
     return _remote_extensions[name]

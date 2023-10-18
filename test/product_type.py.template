@@ -113,8 +113,6 @@ class MyTypePlugin(object):
     def post_remove_hook(self, archive, product):
         assert product.mynamespace2.counter == 28
 
-    def set_configuration(self, configuration):
-        assert configuration['product_prefix'] == 'S5P_'
 
 
 _plugin = MyTypePlugin()
@@ -125,7 +123,9 @@ _product_type_plugins = \
 }
 
 
-def product_types():
+def product_types(configuration):
+    assert configuration['product_prefix'] == 'S5P_'
+
     return _product_type_plugins.keys()
 
 

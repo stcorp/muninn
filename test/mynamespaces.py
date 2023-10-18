@@ -9,9 +9,6 @@ class MyNamespace(Mapping):
 class MyNamespace2(Mapping):
     counter = optional(Integer)
 
-    def set_configuration(configuration):
-        pass
-
 NAMESPACES = {
         'mynamespace': MyNamespace,
         'mynamespace2': MyNamespace2,

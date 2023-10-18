@@ -100,6 +100,34 @@ def _inspect_nargs(func):
     return len(getargspec(func).args)
 
 
+def _register_extension(archive, extension, name, plugin_type, list_name=None, get_name=None):
+    if list_name is None:
+        list_name = plugin_type + 's'
+    if get_name is None:
+        get_name = plugin_type
+
+    try:
+        list_function = getattr(extension, list_name)
+        get_function = getattr(extension, get_name)
+    except AttributeError:
+        raise Error("extension %r does not implement the namespace extension API" % name)
+
+    config_section = archive._configuration.get('extension:' + extension.__name__)
+
+    list_args = []
+    if _inspect_nargs(list_function) == 1:
+        list_args.append(config_section)
+
+    for plugin_name in list_function(*list_args):
+
+        get_args = [plugin_name]
+        if _inspect_nargs(get_function) == 2:
+            get_args.append(config_section)
+
+        plugin = get_function(*get_args)
+        getattr(archive, 'register_' + plugin_type)(plugin_name, plugin)
+
+
 _CORE_PROP_NAMES = [
     'uuid',
     'active',
@@ -157,41 +185,22 @@ class Archive(object):
         # Register core namespace.
         archive.register_namespace("core", Core)
 
-        # Register custom namespaces.
+        # Register custom extensions.
         for name in namespace_extensions:
             extension = _load_extension(name)
-            try:
-                for namespace in extension.namespaces():
-                    archive.register_namespace(namespace, extension.namespace(namespace))
-            except AttributeError:
-                raise Error("extension %r does not implement the namespace extension API" % name)
+            _register_extension(archive, extension, name, 'namespace')
 
-        # Register product types.
         for name in product_type_extensions:
             extension = _load_extension(name)
-            try:
-                for product_type in extension.product_types():
-                    archive.register_product_type(product_type, extension.product_type_plugin(product_type))
-            except AttributeError:
-                raise Error("extension %r does not implement the product type extension API" % name)
+            _register_extension(archive, extension, name, 'product_type', get_name='product_type_plugin')  # TODO remove '_plugin'?
 
-        # Register custom remote backends.
         for name in remote_backend_extensions:
             extension = _load_extension(name)
-            try:
-                for remote_backend in extension.remote_backends():
-                    archive.register_remote_backend(remote_backend, extension.remote_backend(remote_backend))
-            except AttributeError:
-                raise Error("extension %r does not implement the remote backend extension API" % name)
+            _register_extension(archive, extension, name, 'remote_backend')
 
-        # Register hook extensions.
         for name in hook_extensions:
             extension = _load_extension(name)
-            try:
-                for hook_extension in extension.hook_extensions():
-                    archive.register_hook_extension(hook_extension, extension.hook_extension(hook_extension))
-            except AttributeError:
-                raise Error("extension %r does not implement the hook extension API" % name)
+            _register_extension(archive, extension, name, 'hook_extension')
 
         return archive
 
@@ -218,8 +227,7 @@ class Archive(object):
         self._tempdir = tempdir
         self.id = id  # Archive id (usually name of configuration file)
 
-        for remote_backend, plugin in remote.REMOTE_BACKENDS.items():
-            self.register_remote_backend(remote_backend, plugin)
+        _register_extension(self, remote, 'muninn.remote', 'remote_backend')
 
     def __enter__(self):
         return self
@@ -285,10 +293,6 @@ class Archive(object):
             if not hasattr(plugin, method):
                 raise Error("missing '%s' method in plugin for product type \"%s\"" % (method, product_type))
 
-        config_section = self._configuration.get('extension:' + plugin.__module__)
-        if config_section is not None and hasattr(plugin, 'set_configuration'):
-            plugin.set_configuration(config_section)
-
         self._product_type_plugins[product_type] = plugin
         self._update_export_formats(plugin)
 
@@ -326,10 +330,6 @@ class Archive(object):
             if not hasattr(plugin, method):
                 raise Error("missing '%s' method in plugin for remote backend \"%s\"" % (method, remote_backend))
 
-        config_section = self._configuration.get('extension:' + plugin.__module__)
-        if config_section is not None and hasattr(plugin, 'set_configuration'):
-            plugin.set_configuration(config_section)
-
         self._remote_backend_plugins[remote_backend] = plugin
 
     def remote_backend(self, remote_backend):
@@ -358,10 +358,6 @@ class Archive(object):
         """
         if hook_extension in self._hook_extensions:
             raise Error("redefinition of hook extension: \"%s\"" % hook_extension)
-
-        config_section = self._configuration.get('extension:' + plugin.__module__)
-        if config_section is not None and hasattr(plugin, 'set_configuration'):
-            plugin.set_configuration(config_section)
 
         self._hook_extensions[hook_extension] = plugin
 

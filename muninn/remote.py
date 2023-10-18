@@ -333,3 +333,13 @@ def retrieve_function(archive, product, verify_hash_download):
         return paths
 
     return retrieve_files
+
+
+def remote_backends():
+    return list(REMOTE_BACKENDS)
+
+
+def remote_backend(name, configuration):
+    backend = REMOTE_BACKENDS[name]
+    backend.set_configuration(configuration)
+    return backend

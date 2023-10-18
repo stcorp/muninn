@@ -92,12 +92,6 @@ permalink: /ext_product_types/
 
 ## Methods
 
-``set_configuration(self, config)``
->   Optionally receives muninn configuration options under the section
->   ``[extension:module_name]``, where module_name is the import name/path for
->   the extension module. The options are passed as a key-value dictionary,
->   containing only strings.
-
 ``identify(self, paths)``
 >   Returns ``True`` if the specified list of paths constitutes a product of
 >   the product type the plug-in is designed to handle, ``False`` otherwise.

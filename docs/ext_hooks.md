@@ -21,12 +21,6 @@ permalink: /ext_hooks/
 All methods described here are optional. When a method changes a product
 property, it is not automatically saved.
 
-``set_configuration(self, config)``
->   Optionally receives muninn configuration options under the section
->   ``[extension:module_name]``, where module_name is the import name/path for
->   the extension module. The options are passed as a key-value dictionary,
->   containing only strings.
-
 ``post_ingest_hook(self, archive, product, paths)``
 >   Executed after a product is ingested via archive.ingest, but not
 >   catalogue-only (ingest_product == True).
