@@ -201,12 +201,10 @@ def download_sftp(url, target_dir, credentials, timeout):
 
 
 class RemoteBackend(object):
-    def __init__(self, prefix):
+    def __init__(self, prefix, config):
         self.prefix = prefix
-
-    def set_configuration(self, config):
         self.timeout = int(config.get('timeout', 60))
-        self.retries = int(config.get('retries', 1))
+        self.retries = int(config.get('retries', 0))
 
     def identify(self, url):
         result = False
@@ -340,7 +338,5 @@ def remote_backends():
 
 
 def remote_backend(name, configuration):
-    backend_cl, prefix = REMOTE_BACKENDS[name]
-    backend = backend_cl(prefix=prefix)
-    backend.set_configuration(configuration)
-    return backend
+    backend, prefix = REMOTE_BACKENDS[name]
+    return backend(prefix, configuration)
