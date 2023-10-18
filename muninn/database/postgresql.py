@@ -330,7 +330,7 @@ class PostgresqlBackend(object):
             result.append("ALTER TABLE %s ADD COLUMN uuid UUID PRIMARY KEY;" % self._table_name(namespace))
             result.append("ALTER TABLE %s ADD CONSTRAINT %s_uuid_fkey FOREIGN KEY (uuid) REFERENCES %s (uuid) ON "
                           "DELETE CASCADE;" % (self._table_name(namespace), self._table_name(namespace),
-                                              self._core_table_name))
+                                               self._core_table_name))
 
             schema = self._namespace_schema(namespace)
             for name in schema:

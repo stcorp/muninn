@@ -152,7 +152,7 @@ class FilesystemStorageBackend(StorageBackend):
                         if use_enclosing_directory:
                             os.rename(tmp_path, abs_product_path)
                         else:
-                            assert(len(paths) == 1 and os.path.basename(paths[0]) == physical_name)
+                            assert len(paths) == 1 and os.path.basename(paths[0]) == physical_name
                             tmp_product_path = os.path.join(tmp_path, physical_name)
                             os.rename(tmp_product_path, abs_product_path)
                         anything_stored = True

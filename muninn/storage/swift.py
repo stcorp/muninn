@@ -97,7 +97,7 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
             physical_name = properties.core.physical_name
 
             if not use_enclosing_directory and retrieve_files is None:
-                assert(len(paths) == 1 and os.path.basename(paths[0]) == physical_name)
+                assert len(paths) == 1 and os.path.basename(paths[0]) == physical_name
 
             tmp_root = self.get_tmp_root(properties)
             with util.TemporaryDirectory(dir=tmp_root, prefix=".put-",
