@@ -528,19 +528,20 @@ class TestArchive:
         self._ingest_file(archive)
         archive.remove()
 
-        # symlink
-        if archive._params['storage'] == 'fs':
-            self._ingest_file(archive, use_symlinks=True)
-        else:
-            with pytest.raises(muninn.exceptions.Error) as excinfo:
+        if sys.platform != 'windows':
+            # symlink
+            if archive._params['storage'] == 'fs':
                 self._ingest_file(archive, use_symlinks=True)
-            assert 'storage backend does not support symlinks' in str(excinfo)
-        archive.remove()
+            else:
+                with pytest.raises(muninn.exceptions.Error) as excinfo:
+                    self._ingest_file(archive, use_symlinks=True)
+                assert 'storage backend does not support symlinks' in str(excinfo)
+            archive.remove()
 
-        # intra-archive symlink
-        if archive._params['storage'] == 'fs':
-            self._ingest_file(archive, use_symlinks=True, intra=True)
-        archive.remove()
+            # intra-archive symlink
+            if archive._params['storage'] == 'fs':
+                self._ingest_file(archive, use_symlinks=True, intra=True)
+            archive.remove()
 
         # post hook/hash verification failure: check that active=True
         with pytest.raises(ZeroDivisionError):  # hook raises exception for pi2.txt
@@ -598,20 +599,21 @@ class TestArchive:
         self._ingest_multi_file(archive)
         archive.remove()
 
-        # symlink
-        if archive._params['storage'] == 'fs':
-            self._ingest_multi_file(archive, use_symlinks=True)
-
-        elif archive._params['use_enclosing_directory']:
-            with pytest.raises(muninn.exceptions.Error) as excinfo:
+        if sys.platform != 'windows':
+            # symlink
+            if archive._params['storage'] == 'fs':
                 self._ingest_multi_file(archive, use_symlinks=True)
-            assert 'storage backend does not support symlinks' in str(excinfo)
 
-        archive.remove()
+            elif archive._params['use_enclosing_directory']:
+                with pytest.raises(muninn.exceptions.Error) as excinfo:
+                    self._ingest_multi_file(archive, use_symlinks=True)
+                assert 'storage backend does not support symlinks' in str(excinfo)
 
-        # intra-archive symlinks
-        if archive._params['storage'] == 'fs':
-            self._ingest_multi_file(archive, use_symlinks=True, intra=True)
+            archive.remove()
+
+            # intra-archive symlinks
+            if archive._params['storage'] == 'fs':
+                self._ingest_multi_file(archive, use_symlinks=True, intra=True)
 
     def test_remove_multi_file(self, archive):
         if archive._params['use_enclosing_directory']:
@@ -911,31 +913,32 @@ class TestArchive:
             assert os.path.isfile(path)
             assert os.path.getsize(path) == size
 
-        # symlink
-        if archive._params['storage'] == 'fs':
-            with muninn.util.TemporaryDirectory() as tmp_path:
-                archive.retrieve(target_path=tmp_path, use_symlinks=True)
-
-                path = os.path.join(tmp_path, name)
-                assert os.path.islink(path)
-
-                target_path = os.path.join(
-                    archive._checker.root,
-                    archive._params['archive_path'],
-                    'pi.txt'
-                )
-                if archive._params['use_enclosing_directory']:
-                    target_path = os.path.join(target_path, 'pi.txt')
-
-                target_path = os.path.realpath(target_path)
-
-                assert os.path.isfile(target_path)
-                assert os.readlink(path) == target_path
-        else:
-            with pytest.raises(muninn.exceptions.Error) as excinfo:
+        if sys.platform != 'windows':
+            # symlink
+            if archive._params['storage'] == 'fs':
                 with muninn.util.TemporaryDirectory() as tmp_path:
                     archive.retrieve(target_path=tmp_path, use_symlinks=True)
-            assert 'storage backend does not support symlinks' in str(excinfo)
+
+                    path = os.path.join(tmp_path, name)
+                    assert os.path.islink(path)
+
+                    target_path = os.path.join(
+                        archive._checker.root,
+                        archive._params['archive_path'],
+                        'pi.txt'
+                    )
+                    if archive._params['use_enclosing_directory']:
+                        target_path = os.path.join(target_path, 'pi.txt')
+
+                    target_path = os.path.realpath(target_path)
+
+                    assert os.path.isfile(target_path)
+                    assert os.readlink(path) == target_path
+            else:
+                with pytest.raises(muninn.exceptions.Error) as excinfo:
+                    with muninn.util.TemporaryDirectory() as tmp_path:
+                        archive.retrieve(target_path=tmp_path, use_symlinks=True)
+                assert 'storage backend does not support symlinks' in str(excinfo)
 
         # error
         with muninn.util.TemporaryDirectory() as tmp_path:
@@ -987,33 +990,34 @@ class TestArchive:
                 assert os.path.isdir(name)
 
             # symlink
-            if archive._params['storage'] == 'fs':
-                with muninn.util.TemporaryDirectory() as tmp_path:
-                    archive.retrieve(target_path=tmp_path, use_symlinks=True)
-
-                    for name in ('1.txt', '2.txt', 'dir', 'emptydir', 'emptyfile'):
-                        path = os.path.join(tmp_path, name)
-                        assert os.path.islink(path)
-
-                        target_path = os.path.join(
-                            archive._checker.root,
-                            archive._params['archive_path'],
-                            'multi',
-                            name
-                        )
-
-                        target_path = os.path.realpath(target_path)
-
-                        if name.endswith('dir'):
-                            assert os.path.isdir(target_path)
-                        else:
-                            assert os.path.isfile(target_path)
-                        assert os.readlink(path) == target_path
-            else:
-                with pytest.raises(muninn.exceptions.Error) as excinfo:
+            if sys.platform != 'windows':
+                if archive._params['storage'] == 'fs':
                     with muninn.util.TemporaryDirectory() as tmp_path:
                         archive.retrieve(target_path=tmp_path, use_symlinks=True)
-                assert 'storage backend does not support symlinks' in str(excinfo)
+
+                        for name in ('1.txt', '2.txt', 'dir', 'emptydir', 'emptyfile'):
+                            path = os.path.join(tmp_path, name)
+                            assert os.path.islink(path)
+
+                            target_path = os.path.join(
+                                archive._checker.root,
+                                archive._params['archive_path'],
+                                'multi',
+                                name
+                            )
+
+                            target_path = os.path.realpath(target_path)
+
+                            if name.endswith('dir'):
+                                assert os.path.isdir(target_path)
+                            else:
+                                assert os.path.isfile(target_path)
+                            assert os.readlink(path) == target_path
+                else:
+                    with pytest.raises(muninn.exceptions.Error) as excinfo:
+                        with muninn.util.TemporaryDirectory() as tmp_path:
+                            archive.retrieve(target_path=tmp_path, use_symlinks=True)
+                    assert 'storage backend does not support symlinks' in str(excinfo)
 
     def test_retrieve_dir(self, archive):  # TODO fs: symlink/intra
         self._ingest_dir(archive)
