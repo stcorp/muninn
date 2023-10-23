@@ -179,8 +179,8 @@ class Archive(object):
         product_type_extensions = options.pop("product_type_extensions", [])
         remote_backend_extensions = options.pop("remote_backend_extensions", [])
         hook_extensions = options.pop("hook_extensions", [])
-        archive = Archive(database=database, storage=storage, id=id, **options,
-                          configuration=configuration)
+        archive = Archive(database=database, storage=storage, id=id,
+                          configuration=configuration, **options)
 
         # Register core namespace.
         archive.register_namespace("core", Core)
