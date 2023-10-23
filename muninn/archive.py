@@ -413,7 +413,7 @@ class Archive(object):
         if len(set(basenames)) < len(basenames):
             raise Error("basename of each part should be unique for multi-part products")
 
-        return paths
+        return [path.replace('\\', '/') for path in paths]
 
     def _extract_hash_type(self, hash_value):
         prefix, middle, _ = hash_value.partition(':')
@@ -1552,7 +1552,7 @@ class Archive(object):
     def root(self):
         """Return the archive root path."""
         if self._storage is not None:
-            return self._storage._root
+            return self._storage._root.replace('\\', '/')
 
     def search(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], property_names=[]):
         """Search the product catalogue for products matching the specified search expression.
