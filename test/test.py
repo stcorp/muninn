@@ -179,7 +179,7 @@ def multiprocessing_context():
         ctx = multiprocessing.get_context('forkserver')
         ctx.set_forkserver_preload(['subprocess'])
         manager = ctx.Manager()
-    except AttributeError:
+    except (AttributeError, ValueError):
         ctx = multiprocessing
         manager = multiprocessing.Manager()
 
