@@ -528,7 +528,7 @@ class TestArchive:
         self._ingest_file(archive)
         archive.remove()
 
-        if sys.platform != 'windows':
+        if sys.platform != 'win32':
             # symlink
             if archive._params['storage'] == 'fs':
                 self._ingest_file(archive, use_symlinks=True)
@@ -599,7 +599,7 @@ class TestArchive:
         self._ingest_multi_file(archive)
         archive.remove()
 
-        if sys.platform != 'windows':
+        if sys.platform != 'win32':
             # symlink
             if archive._params['storage'] == 'fs':
                 self._ingest_multi_file(archive, use_symlinks=True)
@@ -913,7 +913,7 @@ class TestArchive:
             assert os.path.isfile(path)
             assert os.path.getsize(path) == size
 
-        if sys.platform != 'windows':
+        if sys.platform != 'win32':
             # symlink
             if archive._params['storage'] == 'fs':
                 with muninn.util.TemporaryDirectory() as tmp_path:
@@ -990,7 +990,7 @@ class TestArchive:
                 assert os.path.isdir(name)
 
             # symlink
-            if sys.platform != 'windows':
+            if sys.platform != 'win32':
                 if archive._params['storage'] == 'fs':
                     with muninn.util.TemporaryDirectory() as tmp_path:
                         archive.retrieve(target_path=tmp_path, use_symlinks=True)

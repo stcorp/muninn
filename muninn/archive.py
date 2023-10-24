@@ -1116,7 +1116,7 @@ class Archive(object):
                         ingest_path = os.path.dirname(ingest_path)
                     current_path = self.root()
                     if existing.core.archive_path:
-                        current_path = os.path.join(current_path, existing.core.archive_path)
+                        current_path = current_path + '/' + existing.core.archive_path
                     if existing.core.archive_path != properties.core.archive_path:
                         raise Error('cannot force ingest because of archive_path mismatch')
                     if ingest_path == current_path:
