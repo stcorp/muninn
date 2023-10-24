@@ -60,6 +60,10 @@ pytestmark = pytest.mark.filterwarnings(
 )
 
 
+def fwd_join(*args):
+    return '/'.join([a for a in args if a != ''])
+
+
 class BaseChecker(object):
     def __init__(self, storage):
         self.storage = storage
@@ -500,7 +504,7 @@ class TestArchive:
         return properties
 
     def _pull(self, archive, remote_backend, extract=False):
-        URL = os.path.join(remote_backend, 'data/README')
+        URL = fwd_join(remote_backend, 'data/README')
         if extract:
             URL += '.zip'
 
@@ -515,9 +519,9 @@ class TestArchive:
 
         archive.pull("", verify_hash=True, verify_hash_download=True)
 
-        path = os.path.join(archive._params['archive_path'], 'README')
+        path = fwd_join(archive._params['archive_path'], 'README')
         if archive._params['use_enclosing_directory']:
-            path = os.path.join(path, 'README')
+            path = fwd_join(path, 'README')
 
         assert archive._checker.exists(path, size)
 
