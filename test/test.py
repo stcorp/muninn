@@ -336,7 +336,7 @@ def remote_backend(request):
         param = request.param
 
     if param == 'file':
-        yield 'file://' + os.path.realpath('.')
+        yield 'file://' + os.path.realpath('.').replace('\\', '/')
 
     elif param == 'http':
         proc, subpid = safe_popen('exec python3 -m http.server %d' % port)
