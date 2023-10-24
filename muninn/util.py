@@ -270,3 +270,7 @@ def product_size(roots, resolve_root=True, resolve_links=False):
 def quoted_list(lst, quote_text='"', join_text=", "):
     '''returns a string where all items are surrounded by quotes and joined'''
     return join_text.join([quote_text + str(x) + quote_text for x in lst])
+
+
+def fwd_join(*args):
+    return '/'.join([a for a in args if a != ''])
