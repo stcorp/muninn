@@ -4,8 +4,6 @@
 
 from __future__ import absolute_import, division, print_function
 
-from muninn._compat import dictkeys, dictvalues, is_python2_unicode
-
 import re
 import functools
 import inspect
@@ -24,6 +22,8 @@ try:
 except ImportError:
     pass
 
+from .base import DatabaseBackend
+
 import muninn.config as config
 import muninn.database.sql as sql
 import muninn.database.ewkb as ewkb
@@ -33,6 +33,8 @@ from muninn.exceptions import *
 from muninn.function import Prototype
 from muninn.schema import *
 from muninn.struct import Struct
+
+from muninn._compat import dictkeys, dictvalues, is_python2_unicode
 
 PG_UNIQUE_VIOLATION = '23505'
 
@@ -284,7 +286,7 @@ class PostgresqlConnection(object):
         return self._connection.encoding
 
 
-class PostgresqlBackend(object):
+class PostgresqlBackend(DatabaseBackend):
     def __init__(self, connection_string="", table_prefix="", library="psycopg2"):
         self._connection = PostgresqlConnection(connection_string, library)
         self._library = library

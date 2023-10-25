@@ -4,13 +4,16 @@
 
 from __future__ import absolute_import, division, print_function
 
-from muninn._compat import dictkeys, dictvalues
 import os
 import re
 import datetime
 import functools
 import json
 import uuid
+
+from .base import DatabaseBackend
+
+from muninn._compat import dictkeys, dictvalues
 
 # Select a version of dbapi2 that's available.
 # Since we need the spatialite module, we need a version of sqlite3 that supports extensions.
