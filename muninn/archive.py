@@ -1151,6 +1151,7 @@ class Archive(object):
                     properties.core.remote_url = 'file://' + os.path.realpath(paths[0])
                 else:
                     properties.core.remote_url = 'file://' + os.path.realpath(os.path.dirname(paths[0]))  # TODO test
+                properties.core.remote_url = properties.core.remote_url.replace('\\', '/')
                 self.update_properties(Struct({'core': {'remote_url': properties.core.remote_url}}),
                                        properties.core.uuid)
 

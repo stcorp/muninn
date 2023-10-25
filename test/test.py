@@ -1346,7 +1346,7 @@ class TestArchivePureCatalogue:  # TODO merge with TestArchive?
             ['data/a.txt'],
         )
         assert properties.core.archive_path is None
-        assert properties.core.remote_url == 'file://' + os.path.realpath('data/a.txt')
+        assert properties.core.remote_url == 'file://' + os.path.realpath('data/a.txt').replace('\\', '/')
         assert len(archive_pure.search()) == 1
 
         assert archive_pure.product_path(properties).startswith('file://')
