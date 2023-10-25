@@ -143,7 +143,7 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
             raise StorageError(e, anything_stored)
 
     def get(self, product, target_path, use_enclosing_directory, use_symlinks=None):
-        paths = []
+        paths = set()
 
         if use_symlinks:
             raise Error("Swift storage backend does not support symlinks")
@@ -159,9 +159,8 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
             rel_path = os.path.relpath(key, archive_path)
             if use_enclosing_directory:
                 rel_path = '/'.join(rel_path.split('/')[1:])
+            paths.add(os.path.normpath(os.path.join(target_path, rel_path.split('/')[0])))
             target = os.path.normpath(os.path.join(target_path, rel_path))
-            if os.path.dirname(rel_path) == '':
-                paths.append(target)
             if key.endswith('/'):
                 util.make_path(target)
             else:
@@ -172,7 +171,7 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
                 with open(target, 'wb') as f:
                     f.write(binary)
 
-        return paths
+        return list(paths)
 
     def delete(self, product_path, properties):
         for key in self._object_keys(product_path):
