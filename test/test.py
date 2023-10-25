@@ -568,7 +568,7 @@ class TestArchive:
             # reingest without force, should raise unique constraint error
             with pytest.raises(muninn.exceptions.Error) as excinfo:
                 properties = archive.ingest(['data/pi.txt'])
-            assert 'unique constraint' in str(excinfo).lower()
+            assert 'duplicate key value violates unique' in str(excinfo).lower()
 
             # force reingest _from archive_ (should not remove product!)
             product_path = archive.product_path(properties)
