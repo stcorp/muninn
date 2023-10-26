@@ -1053,8 +1053,8 @@ class TestArchive:
                                    'pi.txt.tgz'
                                )
 
-                tf = tarfile.open(tarfile_path)
-                assert tf.getmember('pi.txt/pi.txt').size == 1015
+                with tarfile.open(tarfile_path) as tf:
+                    assert tf.getmember('pi.txt/pi.txt').size == 1015
 
     def test_export_multi_file(self, archive):
         if archive._params['use_enclosing_directory']:
@@ -1069,9 +1069,9 @@ class TestArchive:
                                    'multi.tgz'
                                )
 
-                tf = tarfile.open(tarfile_path)
-                assert tf.getmember('multi/1.txt').size == 209
-                assert tf.getmember('multi/2.txt').size == 229
+                with tarfile.open(tarfile_path) as tf:
+                    assert tf.getmember('multi/1.txt').size == 209
+                    assert tf.getmember('multi/2.txt').size == 229
 
     def test_export_default(self, archive):
         if archive._params['use_enclosing_directory']:
