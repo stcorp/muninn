@@ -77,7 +77,7 @@ def geometry_send_hex(geometry):
 def _connect_pg8000(connection_string):
     kwargs = dict(arg.split('=') for arg in connection_string.split(' '))
     if 'dbname' in kwargs:
-        kwargs['database'] = kwargs['dbname']
+        kwargs['database'] = kwargs.pop('dbname')
     _connection = pg8000.connect(**kwargs)
 
     geography_oid = _get_db_type_id(_connection, "geography")
