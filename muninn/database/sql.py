@@ -455,6 +455,7 @@ class SQLBuilder(object):
 
         join_set = set()
         result_fields = []
+
         for field in group_by + ['count'] + aggregates:
             ident = Identifier(field, self._namespace_schemas)
             result_fields.append(ident.resolve)
