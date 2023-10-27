@@ -1901,7 +1901,7 @@ class TestTools:  # TODO more result checking, preferrably using tools
         uuid = archive.ingest(['data/README'], ingest_product=False).core.uuid  # TODO get uuid via tools
 
         metadata = {
-            'remote_url': 'file://' + os.path.realpath('data/README')
+            'remote_url': 'file://' + os.path.realpath('data/README').replace('\\', '/')
         }
         archive.update_properties(muninn.Struct({'core': metadata}), uuid)
         output = self._run('pull', '""')  # TODO check
@@ -1912,7 +1912,7 @@ class TestTools:  # TODO more result checking, preferrably using tools
         uuids = [archive.ingest('data/'+name, ingest_product=False).core.uuid for name in files]
         for name, uuid in zip(files, uuids):
             metadata = {
-                'remote_url': 'file://' + os.path.realpath('data/'+name)
+                'remote_url': 'file://' + os.path.realpath('data/'+name).replace('\\', '/')
             }
             archive.update_properties(muninn.Struct({'core': metadata}), uuid)
 
