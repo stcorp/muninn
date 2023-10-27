@@ -189,6 +189,11 @@ def multiprocessing_context():
 
 
 def do_popen(cmd, return_dict, join):
+    if sys.platform == 'win32':
+        os.environ['PYTHONPATH'] = '%s;.' % PARENT_DIR
+    else:
+        os.environ['PYTHONPATH'] = '%s:.' % PARENT_DIR
+
     proc = subprocess.Popen(
             cmd,
             shell=True,
@@ -1735,9 +1740,9 @@ class TestQuery:
 
 class TestTools:  # TODO more result checking, preferrably using tools
     def _run(self, tool, args='', action='', archive='my_arch', should_fail=False):
-        python_path = 'PYTHONPATH=%s:.:$PYTHONPATH' % PARENT_DIR
-        cmd = '%s python%s ../muninn/tools/%s.py %s %s %s 2>&1' % \
-              (python_path, '3' if PY3 else '', tool, action, archive, args)
+
+        cmd = 'python ../muninn/tools/%s.py %s %s %s 2>&1' % \
+              (tool, action, archive, args)
 
         returncode, output, errs = safe_popen(cmd, join=True)
 
@@ -1757,7 +1762,7 @@ class TestTools:  # TODO more result checking, preferrably using tools
         output = self._run('search', '""')
         assert len(output) == 2  # header
         output = self._run('ingest', 'data/pi.txt')
-        output = self._run('search', '"" -p \\*')
+        output = self._run('search', '"" -p "*"')
         assert len(output) == 3
         output = self._run('search', '"" -c')
         assert output == ['1']
