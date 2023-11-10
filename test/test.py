@@ -128,6 +128,7 @@ class S3Checker(BaseChecker):
         )
 
     def exists(self, path, size=None):
+        path = path.replace('\\', '/')
         try:
             self._resource.Object(self.bucket, path).load()
         except botocore.exceptions.ClientError as e:
@@ -151,6 +152,7 @@ class SwiftChecker(BaseChecker):
         )
 
     def exists(self, path, size=None):
+        path = path.replace('\\', '/')
         try:
             obj = self._conn.get_object(self.container, path)
         except swiftclient.exceptions.ClientException as e:

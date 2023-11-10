@@ -86,7 +86,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
                     endpoint_url += ':%d' % port
         elif port is not None:
             endpoint_url += ':%d' % port
-        self.global_prefix = os.path.join(endpoint_url, bucket, prefix)
+        self.global_prefix = util.fwd_join(endpoint_url, bucket, prefix)
 
         self._root = bucket
 
@@ -150,6 +150,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
         raise Error("S3 storage backend does not support ingesting already archived products")
 
     def _upload_file(self, key, path):
+        key = key.replace('\\', '/')
         obj = self._resource.Object(self.bucket, key)
         if os.path.getsize(path) == 0:  # upload_file can hang on empty files
             self._resource.Object(self.bucket, key).put()
@@ -158,6 +159,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
 
     def _create_dir(self, key):
         # using put, as upload_file/upload_fileobj do not like the trailing slash
+        key = key.replace('\\', '/')
         self._resource.Object(self.bucket, key+'/').put()
 
     def put(self, paths, properties, use_enclosing_directory, use_symlinks=None,
@@ -183,11 +185,11 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
 
                 # Upload file(s)
                 for path in paths:
-                    key = self._prefix + os.path.join(archive_path, physical_name)
+                    key = self._prefix + util.fwd_join(archive_path, physical_name)
 
                     # Add enclosing dir
                     if use_enclosing_directory:
-                        key = os.path.join(key, os.path.basename(path))
+                        key = util.fwd_join(key, os.path.basename(path))
 
                     if os.path.isdir(path):
                         self._create_dir(key)
@@ -203,7 +205,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
 
                             for filename in files:
                                 filekey = os.path.normpath(os.path.join(key, rel_root, filename))
-                                filepath = os.path.join(root, filename)
+                                filepath = util.fwd_join(root, filename)
                                 self._upload_file(filekey, filepath)
                                 anything_stored = True
 
@@ -224,7 +226,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             raise Error("S3 storage backend does not support symlinks")
 
         archive_path = product.core.archive_path
-        product_path = os.path.join(archive_path, product.core.physical_name)
+        product_path = util.fwd_join(archive_path, product.core.physical_name)
         prefix = self._prefix + product_path
 
         objs = list(self._resource.Bucket(self.bucket).objects.filter(Prefix=prefix))
@@ -232,7 +234,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
             raise Error("no data for product '%s' (%s)" % (product.core.product_name, product.core.uuid))
 
         for obj in objs:
-            rel_path = os.path.relpath(obj.key, self._prefix + archive_path)
+            rel_path = os.path.relpath(obj.key, self._prefix + archive_path).replace('\\', '/')
             if use_enclosing_directory:
                 rel_path = '/'.join(rel_path.split('/')[1:])
             paths.add(os.path.normpath(os.path.join(target_path, rel_path.split('/')[0])))
@@ -251,12 +253,14 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
 
     def delete(self, product_path, properties):
         prefix = self._prefix + product_path
+        prefix = prefix.replace('\\', '/')
         for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=prefix):
             obj.delete()
 
     def size(self, product_path):
         total = 0
         prefix = self._prefix + product_path
+        prefix = prefix.replace('\\', '/')
         for obj in self._resource.Bucket(self.bucket).objects.filter(Prefix=prefix):
             total += obj.size
         return total
@@ -266,8 +270,8 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
         if product.core.archive_path == archive_path:
             return paths
 
-        product_path = os.path.join(self._prefix, product.core.archive_path, product.core.physical_name)
-        new_product_path = os.path.join(self._prefix, archive_path, product.core.physical_name)
+        product_path = util.fwd_join(self._prefix, product.core.archive_path, product.core.physical_name)
+        new_product_path = util.fwd_join(self._prefix, archive_path, product.core.physical_name)
 
         objs = list(self._resource.Bucket(self.bucket).objects.filter(Prefix=product_path))
         if not objs:
@@ -275,6 +279,7 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
 
         for obj in objs:
             new_key = os.path.normpath(os.path.join(new_product_path, os.path.relpath(obj.key, product_path)))
+            new_key = new_key.replace('\\', '/')
             if obj.key.endswith('/'):
                 self._create_dir(new_key)
             else:
