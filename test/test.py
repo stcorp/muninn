@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 import atexit
 try:
     from configparser import ConfigParser
@@ -215,6 +215,9 @@ def do_popen(cmd, return_dict, join):
 
 
 def safe_popen(cmd, join=False):
+    if sys.platform == 'win32' and cmd.startswith('exec '):
+        cmd = cmd[5:]
+
     return_dict = manager.dict()
 
     proc = ctx.Process(target=do_popen, args=(cmd, return_dict, join))
@@ -346,12 +349,12 @@ def remote_backend(request):
         yield 'file://' + os.path.realpath('.').replace('\\', '/')
 
     elif param == 'http':
-        proc, subpid = safe_popen('exec python3 -m http.server %d' % port)
+        proc, subpid = safe_popen('exec python -m http.server %d' % port)
         time.sleep(1)
         yield 'http://localhost:%d' % port
 
     elif param == 'ftp':
-        proc, subpid = safe_popen('exec python3 -m pyftpdlib -p %d' % port)
+        proc, subpid = safe_popen('exec python -m pyftpdlib -p %d' % port)
         time.sleep(1)
         yield 'ftp://localhost:%d' % port
 
