@@ -1396,7 +1396,7 @@ class TestArchivePureCatalogue:  # TODO merge with TestArchive?
             ['data/a.txt'],
         )
 
-        remote_url = os.path.join(remote_backend, 'data/a.txt')
+        remote_url = fwd_join(remote_backend, 'data/a.txt')
         archive_pure.update_properties(muninn.Struct({'core': {'remote_url': remote_url}}), properties.core.uuid, True)
 
         with muninn.util.TemporaryDirectory() as tmp_path:
@@ -1412,7 +1412,7 @@ class TestArchivePureCatalogue:  # TODO merge with TestArchive?
             ['data/a.txt'],
         )
 
-        remote_url = os.path.join(remote_backend, 'data/a.txt')
+        remote_url = fwd_join(remote_backend, 'data/a.txt')
         archive_pure.update_properties(muninn.Struct({'core': {'remote_url': remote_url}}), properties.core.uuid, True)
 
         archive_pure.verify_hash()
