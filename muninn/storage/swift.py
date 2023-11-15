@@ -59,6 +59,7 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
         )
 
     def _object_keys(self, product_path):
+        product_path = product_path.replace('\\', '/')
         sub_objects = self._conn.get_container(self.container, prefix=product_path)[1]
         return [sub_object['name'] for sub_object in sub_objects]
 
@@ -107,11 +108,11 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
 
                 # Upload file(s)
                 for path in paths:
-                    key = os.path.join(archive_path, physical_name)
+                    key = util.fwd_join(archive_path, physical_name)
 
                     # Add enclosing dir
                     if use_enclosing_directory:
-                        key = os.path.join(key, os.path.basename(path))
+                        key = util.fwd_join(key, os.path.basename(path))
 
                     if os.path.isdir(path):
                         self._conn.put_object(self.container, key+'/', contents=b'')
@@ -122,12 +123,14 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
 
                             for subdir in subdirs:
                                 dirkey = os.path.normpath(os.path.join(key, rel_root, subdir))+'/'
+                                dirkey = dirkey.replace('\\', '/')
                                 self._conn.put_object(self.container, dirkey, contents=b'')
                                 anything_stored = True
 
                             for filename in files:
                                 filekey = os.path.normpath(os.path.join(key, rel_root, filename))
-                                filepath = os.path.join(root, filename)
+                                filekey = filekey.replace('\\', '/')
+                                filepath = util.fwd_join(root, filename)
                                 with open(filepath, 'rb') as f:
                                     self._conn.put_object(self.container, filekey, contents=f.read())
                                     anything_stored = True
@@ -149,14 +152,14 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
             raise Error("Swift storage backend does not support symlinks")
 
         archive_path = product.core.archive_path
-        product_path = os.path.join(archive_path, product.core.physical_name)
+        product_path = util.fwd_join(archive_path, product.core.physical_name)
 
         keys = self._object_keys(product_path)
         if not keys:
             raise Error("no data for product '%s' (%s)" % (product.core.product_name, product.core.uuid))
 
         for key in keys:
-            rel_path = os.path.relpath(key, archive_path)
+            rel_path = os.path.relpath(key, archive_path).replace('\\', '/')
             if use_enclosing_directory:
                 rel_path = '/'.join(rel_path.split('/')[1:])
             paths.add(os.path.normpath(os.path.join(target_path, rel_path.split('/')[0])))
@@ -188,8 +191,8 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
         if product.core.archive_path == archive_path:
             return paths
 
-        product_path = os.path.join(product.core.archive_path, product.core.physical_name)
-        new_product_path = os.path.join(archive_path, product.core.physical_name)
+        product_path = util.fwd_join(product.core.archive_path, product.core.physical_name)
+        new_product_path = util.fwd_join(archive_path, product.core.physical_name)
 
         keys = self._object_keys(product_path)
         if not keys:
@@ -197,10 +200,11 @@ class SwiftStorageBackend(StorageBackend):  # TODO '/' in keys to indicate direc
 
         for key in keys:
             new_key = os.path.normpath(os.path.join(new_product_path, os.path.relpath(key, product_path)))
+            new_key = new_key.replace('\\', '/')
             if key.endswith('/'):
                 self._conn.put_object(self.container, new_key+'/', contents=b'')
             else:
-                self._conn.copy_object(self.container, key, os.path.join(self.container, new_key))
+                self._conn.copy_object(self.container, key, util.fwd_join(self.container, new_key))
 
             self._conn.delete_object(self.container, key)
 
