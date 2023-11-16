@@ -18,6 +18,7 @@ These tools are:
   - muninn-attach
   - muninn-destroy
   - muninn-export
+  - muninn-info
   - muninn-ingest
   - muninn-list-tags
   - muninn-prepare
