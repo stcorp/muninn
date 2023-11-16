@@ -43,6 +43,19 @@ def open(id=None, **kwargs):
 
     return Archive.create(configuration, id)
 
+def list_archives():
+    """Search locations found in the 'MUNINN_CONFIG_PATH' environment variable
+    and return names of all found archives."""
+
+    result = []
+    for path in filter(None, config_path().split(":")):
+        if _os.path.isfile(path):
+            result.append(_os.path.basename(path)[:-4])
+        else:
+            result.extend([f[:-4] for f in _os.listdir(path) if f.endswith('.cfg')])
+
+    return result
+
 
 def _read_archive_config_file(path):
     try:

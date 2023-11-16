@@ -1971,6 +1971,15 @@ class TestTools:  # TODO more result checking, preferrably using tools
             output = self._run('export', '"" --parallel -d %s' % tmp_path)
             assert set(os.listdir(tmp_path)) == set(['a.txt', 'b.txt', 'c.txt'])
 
+    def test_info(self, archive):
+        # single archive: 'my_arch'
+        output = self._run('info')
+        assert [line for line in output if 'active: boolean' in line]
+
+        # (default) all archives
+        output = self._run('info', archive='')
+        assert [line for line in output if 'my_arch' in line]
+
     def test_destroy(self, archive):
         self._run('destroy', '-y')
 
