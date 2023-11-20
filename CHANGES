@@ -1,3 +1,8 @@
+* Added option to muninn-info to show all archives if no archive parameter
+  is provided.
+
+* Added muninn.list_archives() function.
+
 * Added support for extension-specific configuration sections in archive
   configuration files.
 

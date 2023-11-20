@@ -9,6 +9,7 @@ permalink: /api/
 * [muninn](#muninn)
   * [config\_path](#muninn.config_path)
   * [open](#muninn.open)
+  * [list\_archives](#muninn.list_archives)
 * [muninn.archive](#muninn.archive)
   * [Archive](#muninn.archive.Archive)
     * [register\_namespace](#muninn.archive.Archive.register_namespace)
@@ -94,6 +95,17 @@ corresponding configuration file in the locations found in the
 **Returns**:
 
   An instance of `muninn.archive.Archive`
+
+<a id="muninn.list_archives"></a>
+
+#### list\_archives
+
+```python
+def list_archives()
+```
+
+Search locations found in the 'MUNINN_CONFIG_PATH' environment variable
+and return names of all found archives.
 
 <a id="muninn.archive"></a>
 
