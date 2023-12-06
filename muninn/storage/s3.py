@@ -160,7 +160,9 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
     def _create_dir(self, key):
         # using put, as upload_file/upload_fileobj do not like the trailing slash
         key = key.replace('\\', '/')
-        self._resource.Object(self.bucket, key+'/').put()
+        if not key.endswith('/'):
+            key = key + '/'
+        self._resource.Object(self.bucket, key).put()
 
     def put(self, paths, properties, use_enclosing_directory, use_symlinks=None,
             retrieve_files=None, run_for_product=None):
