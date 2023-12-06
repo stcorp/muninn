@@ -10,6 +10,8 @@
   `extension:muninn.remote` section in an archive configuration.
   The number of retries now defaults back to 0.
 
+* Fixed issue where S3 bucket prefix object was created with one '/' too many.
+
 6.2 2023-09-20
 ~~~~~~~~~~~~~~
 
