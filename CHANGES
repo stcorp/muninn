@@ -1,7 +1,5 @@
-* Added option to muninn-info to show all archives if no archive parameter
-  is provided.
-
-* Added muninn.list_archives() function.
+6.3 2023-12-13
+~~~~~~~~~~~~~~
 
 * Added support for extension-specific configuration sections in archive
   configuration files.
@@ -9,6 +7,14 @@
 * Introduced `timeout` and `retries` options for the
   `extension:muninn.remote` section in an archive configuration.
   The number of retries now defaults back to 0.
+
+* Added option to muninn-info to show all archives if no archive parameter
+  is provided.
+
+* Added muninn.list_archives() function.
+
+* Improved support for using muninn on Windows (e.g. '\' in paths are now
+  translated to '/' when stored as muninn metadata)
 
 * Fixed issue where S3 bucket prefix object was created with one '/' too many.
 
