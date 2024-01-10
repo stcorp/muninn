@@ -110,7 +110,7 @@ def _register_extension(archive, extension, name, plugin_type, list_name=None, g
         list_function = getattr(extension, list_name)
         get_function = getattr(extension, get_name)
     except AttributeError:
-        raise Error("extension %r does not implement the namespace extension API" % name)
+        raise Error("extension %r does not implement the %s extension API" % (name, plugin_type))
 
     config_section = archive._configuration.get('extension:' + extension.__name__)
 
