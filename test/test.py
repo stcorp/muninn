@@ -1992,38 +1992,38 @@ class TestGeometry:
         self._prep_data(archive)
 
         # examples from rfc7946 appendix A
-        for class_, geojson in [
-            (Point,{
+        for geojson in [
+            {
                 "type": "Point",
                 "coordinates": [100.0, 0.0],
-            }),
-            (LineString, {
+            },
+            {
                 "type": "LineString",
                 "coordinates": [[100.0, 0.0], [101.0, 1.0]],
-            }),
-            (Polygon, {
+            },
+            {
                 "type": "Polygon",
                 "coordinates": [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]]], # one ring (no holes)
-            }),
-            (Polygon, {
+            },
+            {
                 "type": "Polygon",
                 "coordinates": [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]], # exterior ring
                                 [[100.8, 0.8], [100.8, 0.2], [100.2, 0.2], [100.2, 0.8], [100.8, 0.8]]], # interior ring (hole)
-            }),
-            (MultiPoint, {
+            },
+            {
                 "type": "MultiPoint",
                 "coordinates": [[100.0, 0.0], [101.0, 1.0]],
-            }),
-            (MultiLineString, {
+            },
+            {
                 "type": "MultiLineString",
                 "coordinates": [[[100.0, 0.0], [101.0, 1.0] ], [ [102.0, 2.0], [103.0, 3.0]]],
-            }),
-            (MultiPolygon, {
+            },
+            {
                 "type": "MultiPolygon",
                 "coordinates": [[[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0], [102.0, 2.0]]],
                                 [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]],
                                  [[100.2, 0.2], [100.2, 0.8], [100.8, 0.8], [100.8, 0.2], [100.2, 0.2]]]],
-            }),
+            },
         ]:
             # geojson to Geometry
             geometry = Geometry.from_geojson(geojson)
@@ -2034,3 +2034,62 @@ class TestGeometry:
 
             # Geometry to geojson
             assert footprint.as_geojson() == geojson
+
+    def test_wrap(self):
+        for geojson, geojson_wrapped in [
+            ({
+                "type": "Point",
+                "coordinates": [100.0, 0.0],
+            }, {
+                "type": "Point",
+                "coordinates": [100.0, 0.0],
+            }),
+            ({
+                "type": "Point",
+                "coordinates": [200.0, 0.0],
+            }, {
+                "type": "Point",
+                "coordinates": [-160.0, 0.0],
+            }),
+            ({
+                "type": "Point",
+                "coordinates": [-200.0, 0.0],
+            }, {
+                "type": "Point",
+                "coordinates": [160.0, 0.0],
+            }),
+            ({
+                "type": "LineString",
+                "coordinates": [[160.0, -10.0], [200.0, 10.0]],
+            }, {
+                "type": "MultiLineString",
+                "coordinates": [[[160.0, -10.0], [180.0, 0.0]], [[-180.0, 0.0], [-160.0, 10.0]]],
+            }),
+            ({
+                "type": "Polygon",
+                "coordinates": [[[160.0, -10.0], [200.0, 10.0], [200.0, 20.0], [160.0, 0.0], [160.0, -10.0]]],
+            }, {
+                "type": "MultiPolygon",
+                "coordinates": [[[[180.0, 10.0], [160.0, 0.0], [160.0, -10.0], [180.0, 0.0], [180.0, 10.0]]],
+                                [[[-180.0, 0.0], [-160.0, 10.0], [-160.0, 20], [-180.0, 10.0], [-180.0, 0.0]]]],
+            }),
+            ({
+                "type": "Polygon",
+                "coordinates": [[[-10.0, -85.0], [-170.0, -85.0], [170.0, -85.0], [10.0, -85.0], [-10.0, -85.0]]],
+            }, {
+                "type": "Polygon",
+                "coordinates": [[[180.0, -85.0], [170.0, -85.0], [10.0, -85.0], [-10.0, -85.0], [-170.0, -85.0],
+                                 [-180.0, -85.0], [-180.0, -90.0], [180.0, -90], [180.0, -85.0]]],
+            }),
+            ({
+                "type": "Polygon",
+                "coordinates": [[[10.0, 85.0], [170.0, 85.0], [-170.0, 85.0], [-10.0, 85.0], [10.0, 85.0]]],
+            }, {
+                "type": "Polygon",
+                "coordinates": [[[-180.0, 85.0], [-170.0, 85.0], [-10.0, 85.0], [10.0, 85.0], [170.0, 85.0],
+                                 [180.0, 85.0], [180.0, 90.0], [-180.0, 90], [-180.0, 85.0]]],
+            }),
+        ]:
+            geometry = Geometry.from_geojson(geojson)
+            geometry_wrapped = Geometry.from_geojson(geojson_wrapped)
+            assert geometry.wrap() == geometry_wrapped

@@ -4,12 +4,29 @@
 
 from __future__ import absolute_import, division, print_function
 
+import math
 try:
     from collections.abc import MutableSequence
 except ImportError:
     from collections import MutableSequence
 
 from muninn.exceptions import Error
+
+
+def polygon_rotation(pts):
+    # return wether polygon is:
+    #  1: anti-clockwise rotation (right-hand-rule) -> use inner area
+    #  0: no rotation -> polygon is empty or invalid
+    # -1: clockwise rotation (left-hand-rule) -> use outer area
+    # this can be calculated by summing the outer products of consecutive pts (taking vectors from (0,0) to the pt)
+    prev_pt = pts[0]
+    sum = 0
+    for pt in pts[1:]:
+        sum += pt[1] * prev_pt[0] - pt[0] * prev_pt[1]
+        prev_pt = pt
+    if sum == 0:
+        return 0
+    return math.copysign(1, sum)
 
 
 class Geometry(object):
@@ -54,6 +71,14 @@ class Geometry(object):
 
         else:
             raise Error('cannot convert geojson type: %s' % type_)
+
+    def wrap(self):
+        """
+        Convert the geometry from one on a sphere to one that fits on a 2D lat/lon canvas with
+        -90 <= latitude <= 90 and -180 <= longitude <= 180.
+        This involves splitting geometries around the dateline and dealing with geometries that cover the poles
+        """
+        return self
 
 
 class Point(Geometry):
@@ -118,6 +143,14 @@ class Point(Geometry):
         wkt = "(%f %f)" % (self.x, self.y)
         return "POINT " + wkt if tagged else wkt
 
+    def wrap(self):
+        """
+        This function assumes that the longitude is already in the range [-360,360].
+        """
+        # map lon to [-180, 180]
+        lon = self.longitude
+        return Point(lon + 360 if lon < -180 else (lon - 360 if lon > 180 else lon), self.latitude)
+
     def __getitem__(self, index):
         return self._coordinates[index]
 
@@ -163,6 +196,9 @@ class GeometrySequence(Geometry, MutableSequence):
     def insert(self, index, geometry):
         self._geometries.insert(index, geometry)
 
+    def wrap(self):
+        return self.__class__([geometry.wrap() for geometry in self._geometries])
+
     def __getitem__(self, index):
         return self._geometries[index]
 
@@ -207,6 +243,37 @@ class LineString(GeometrySequence):
     def as_wkt(self, tagged=True):
         wkt = "(" + ", ".join(["%f %f" % (point.x, point.y) for point in self]) + ")" if self else "EMPTY"
         return "LINESTRING " + wkt if tagged else wkt
+
+    def wrap(self):
+        """
+        Lines will be divided into sub-lines if they cross the dateline
+        """
+        lon, lat = self[0].wrap()
+        prev_lon, prev_lat = lon, lat
+        pts = [Point(lon, lat)]
+        pts_set = [pts]
+        for point in self[1:]:
+            lon, lat = point.wrap()
+            # rel_lon = lon mapped to [prev_lon - 180, prev_lon + 180]
+            rel_lon = lon + 360 if lon < prev_lon - 180 else (lon - 360 if lon > prev_lon + 180 else lon)
+            if rel_lon < -180:
+                # crossing the dateline meridian -> split line
+                mid_lat = lat + ((-180 - rel_lon) / (prev_lon - rel_lon)) * (prev_lat - lat)
+                pts.append(Point(-180, mid_lat))
+                pts = [Point(180, mid_lat)]
+                pts_set.append(pts)
+            elif rel_lon > 180:
+                # crossing the dateline meridian -> split line
+                mid_lat = prev_lat + ((180 - prev_lon) / (rel_lon - prev_lon)) * (lat - prev_lat)
+                pts.append(Point(180, mid_lat))
+                pts = [Point(-180, mid_lat)]
+                pts_set.append(pts)
+            prev_lon, prev_lat = lon, lat
+            pts.append(Point(lon, lat))
+        if len(pts_set) > 1:
+            return MultiLineString([LineString(pts) for pts in pts_set])
+        else:
+            return LineString(pts)
 
     def __repr__(self):
         return "LineString(points=%r)" % self._geometries
@@ -260,6 +327,106 @@ class Polygon(GeometrySequence):
             'coordinates': [[[point.x, point.y] for point in ring] for ring in self],
         }
 
+    def wrap(self):
+        """
+        Polygons need to be split at the dateline. This also requires using a special 'unfolding' to make a polygon
+        that covers the North and/or South pole to still cover the whole polar region on a flat 2D area.
+
+        Any exclusion regions will be remove in the conversion.
+
+        The special situation where a polygon covers both poles _and_ runs along the dateline will result in a single
+        polygon with a wrong rotation. This type of polygon is turned into a geometry with a hole (i.e. outer polygon
+        is the full earth bounding box, and the original polygon becomes the exclusion area).
+        Input polygons should be properly oriented using the right-hand rule (= anti clockwise) or they may otherwise
+        be turned into exclusions by this algorithm.
+        """
+        # We only wrap the outer ring
+        ring = self.exterior_ring()
+        lon, lat = ring[0].wrap()
+        # current_area = {-1: lon < -180, 0: -180 <= lon <= 180, 1: lon >= 180}
+        current_area = 0
+        prev_lon, prev_lat = lon, lat
+        pts = [Point(lon, lat)]
+        pts_set = [pts]
+        crossing_lat = []
+        for point in ring[1:]:
+            lon, lat = point.wrap()
+            # rel_lon = lon mapped to [prev_lon - 180, prev_lon + 180]
+            rel_lon = lon + 360 if lon < prev_lon - 180 else (lon - 360 if lon > prev_lon + 180 else lon)
+            if rel_lon < -180:
+                if current_area == -1:
+                    # unsupported polygon
+                    return self
+                # crossing the dateline meridian -> split polygon
+                mid_lat = lat + ((-180 - rel_lon) / (prev_lon - rel_lon)) * (prev_lat - lat)
+                crossing_lat.append(mid_lat)
+                pts.append(Point(-180, mid_lat))
+                pts = [Point(180, mid_lat)]
+                pts_set.append(pts)
+                current_area -= 1
+            elif rel_lon > 180:
+                if current_area == 1:
+                    # unsupported polygon
+                    return self
+                # crossing the dateline meridian -> split polygon
+                mid_lat = prev_lat + ((180 - prev_lon) / (rel_lon - prev_lon)) * (lat - prev_lat)
+                crossing_lat.append(mid_lat)
+                pts.append(Point(180, mid_lat))
+                pts = [Point(-180, mid_lat)]
+                pts_set.append(pts)
+                current_area += 1
+            prev_lon, prev_lat = lon, lat
+            pts.append(Point(lon, lat))
+        if len(pts_set) == 1:
+            assert len(crossing_lat) == 0
+            if polygon_rotation(pts) < 0:
+                world = LinearRing([Point(-180, -90), Point(180, -90), Point(180, 90), Point(-180, 90),
+                                    Point(-180, -90)])
+                return Polygon([world, LinearRing(pts)])
+            else:
+                return Polygon([LinearRing(pts)])
+        # prepend final pts to first ring
+        if pts[-1] == pts_set[0][0]:
+            del pts[-1]
+        pts.extend(pts_set[0])
+        pts_set[0] = pts
+        del pts_set[-1]
+        # check if we need to connect via the north pole
+        if len(crossing_lat) > 0:
+            max_lat = max(crossing_lat)
+            max_index = crossing_lat.index(max_lat)
+            next_index = max_index + 1 if max_index < len(crossing_lat) - 1 else 0
+            if pts_set[max_index][-1][0] > pts_set[next_index][0][0]:
+                # connect pts via the north pole
+                pts_set[max_index].append(Point(180, 90))
+                pts_set[max_index].append(Point(-180, 90))
+                if max_index != next_index:
+                    pts_set[max_index].extend(pts_set[next_index])
+                    pts_set[next_index] = pts_set[max_index]
+                    del pts_set[max_index]
+                    del crossing_lat[max_index]
+        # check if we need to connect via the south pole
+        if len(crossing_lat) > 0:
+            min_lat = min(crossing_lat)
+            min_index = crossing_lat.index(min_lat)
+            next_index = min_index + 1 if min_index < len(crossing_lat) - 1 else 0
+            if pts_set[min_index][-1][0] < pts_set[next_index][0][0]:
+                # connect pts via the south pole
+                pts_set[min_index].append(Point(-180, -90))
+                pts_set[min_index].append(Point(180, -90))
+                if min_index != next_index:
+                    pts_set[min_index].extend(pts_set[next_index])
+                    pts_set[next_index] = pts_set[min_index]
+                    del pts_set[min_index]
+                    del crossing_lat[min_index]
+        for pts in pts_set:
+            # close ring
+            pts.append(pts[0])
+        if len(pts_set) == 1:
+            return Polygon([LinearRing(pts)])
+        else:
+            return MultiPolygon([Polygon([LinearRing(pts)]) for pts in pts_set])
+
     def __repr__(self):
         return "Polygon(rings=%r)" % self._geometries
 
@@ -302,6 +469,16 @@ class MultiLineString(GeometrySequence):
         wkt = "(" + ", ".join([geometry.as_wkt(False) for geometry in self]) + ")" if self else "EMPTY"
         return "MULTILINESTRING " + wkt if tagged else wkt
 
+    def wrap(self):
+        lines = []
+        for line in self._geometries:
+            geometry = line.wrap()
+            if type(geometry) is MultiLineString:
+                lines.extend(geometry)
+            else:
+                lines.append(geometry)
+        return MultiLineString(lines)
+
     def __repr__(self):
         return "MultiLineString(line_strings=%r)" % self._geometries
 
@@ -322,6 +499,16 @@ class MultiPolygon(GeometrySequence):
             'type': 'MultiPolygon',
             'coordinates': [[[[point.x, point.y] for point in ring] for ring in polygon] for polygon in self],
         }
+
+    def wrap(self):
+        polys = []
+        for poly in self._geometries:
+            geometry = poly.wrap()
+            if type(geometry) is MultiPolygon:
+                polys.extend(geometry)
+            else:
+                polys.append(geometry)
+        return MultiPolygon(polys)
 
     def __repr__(self):
         return "MultiPolygon(polygons=%r)" % self._geometries
