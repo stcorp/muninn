@@ -1391,6 +1391,8 @@ class Archive(object):
             if not use_current_path and 'archive_path' in product.core:
                 new_archive_path, paths = self._relocate(product, properties, paths)
                 if new_archive_path is not None:
+                    metadata = {'archive_path': new_archive_path}
+                    self.update_properties(Struct({'core': metadata}), product.core.uuid)
                     properties.core.archive_path = new_archive_path
 
             # if product type has disabled hashing, remove existing hash values
