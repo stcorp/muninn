@@ -272,8 +272,8 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
         if product.core.archive_path == archive_path:
             return paths
 
-        product_path = util.fwd_join(self._prefix, product.core.archive_path, product.core.physical_name)
-        new_product_path = util.fwd_join(self._prefix, archive_path, product.core.physical_name)
+        product_path = self._prefix + util.fwd_join(product.core.archive_path, product.core.physical_name)
+        new_product_path = self._prefix + util.fwd_join(archive_path, product.core.physical_name)
 
         objs = list(self._resource.Bucket(self.bucket).objects.filter(Prefix=product_path))
         if not objs:
