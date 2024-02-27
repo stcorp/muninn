@@ -162,7 +162,7 @@ def download_s3(url, target_dir, credentials=None):
             if os.path.dirname(rel_path) == '':
                 paths.append(target)
             else:
-                rootdir = rel_path.split(os.path.sep, maxsplit=1)[0]
+                rootdir = os.path.join(target_dir, rel_path.split(os.path.sep, maxsplit=1)[0])
                 if rootdir not in paths:
                     paths.append(rootdir)
             if obj.key.endswith('/'):
