@@ -12,7 +12,7 @@ class Struct(object):
         super(Struct, self).__init__()
         if data is not None:
             for key in data:
-                if _depth == 0 and type(data[key]) == dict:
+                if _depth == 0 and isinstance(data[key], dict):
                     self[key] = Struct(data[key], _depth=_depth+1)
                 else:
                     self[key] = data[key]
