@@ -39,7 +39,7 @@ def split_path(path):
     if not tail:
         head, tail = os.path.split(head)
 
-    if head.endswith(os.sep) or head.endswith('/'): # return e.g. '/' or 'c:/'
+    if head.endswith(os.sep) or head.endswith('/'):  # return e.g. '/' or 'c:/'
         yield head
     elif head:
         for segment in split_path(head):
