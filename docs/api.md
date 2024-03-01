@@ -86,10 +86,13 @@ def open(id=None, **kwargs)
 Open an archive for the given archive id, by searching for the
 corresponding configuration file in the locations found in the
 `MUNINN_CONFIG_PATH` environment variable.
+Alternatively, the id can be a path/url that points directly to a
+muninn archive configuration file (Python 3 only). This path/url
+should still end with a `.cfg` extension.
 
 **Arguments**:
 
-- `id` - Archive id (name of configuration file)
+- `id` - Archive id (name of configuration file) or path/url to a configuration file
   
 
 **Returns**:

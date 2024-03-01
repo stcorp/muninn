@@ -1,3 +1,6 @@
+* Allow argument to muninn.open() to be a direct url or path to a muninn
+  configuration file.
+
 * Fixed issue when pulling a product that is a directory using the S3 remote
   backend.
 
