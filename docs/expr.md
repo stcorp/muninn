@@ -121,6 +121,9 @@ range formed by the second pair of timestamps. Both time ranges are closed.
 The function ``covers(geometry, geometry)`` returns true if the first geometry
 covers the second geometry.
 
+The function ``distance(geometry, geometry)`` returns the distance between
+the two geometries with unit degrees.
+
 The function ``intersects(geometry, geometry)`` returns true if the first
 geometry intersects the second geometry.
 
@@ -148,7 +151,9 @@ UTC.
 
   ``covers(core.validity_start, core.validity_stop, @start, @stop)``
 
-  ``not covers(core.footprint, POINT (5.0 52.0))``
+  ``not covers(core.footprint, POINT(5.0 52.0))``
+
+  ``distance(core.footprint, POINT(5.0 52.0)) < 5``
 
   ``is_derived_from(32a61528-a712-427a-b28f-8ebd5b472b16)``
 

@@ -180,6 +180,7 @@ function_table.add(Prototype("-", (Timestamp, Timestamp), Real))
 #
 function_table.add(Prototype("covers", (Geometry, Geometry), Boolean))
 function_table.add(Prototype("covers", (Timestamp, Timestamp, Timestamp, Timestamp), Boolean))
+function_table.add(Prototype("distance", (Geometry, Geometry), Real))
 function_table.add(Prototype("intersects", (Geometry, Geometry), Boolean))
 function_table.add(Prototype("intersects", (Timestamp, Timestamp, Timestamp, Timestamp), Boolean))
 function_table.add(Prototype("is_defined", (Long,), Boolean))

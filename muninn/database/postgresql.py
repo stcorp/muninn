@@ -596,6 +596,10 @@ class PostgresqlBackend(DatabaseBackend):
         rewriter_table[Prototype("covers", (Geometry, Geometry), Boolean)] = \
             sql.binary_function_rewriter("ST_Covers")
 
+        # use faster non-spheroid distance calculation by passing use_spheroid = false
+        rewriter_table[Prototype("distance", (Geometry, Geometry), Real)] = \
+            lambda arg0, arg1: "ST_Distance(%s, %s, false)" % (arg0, arg1)
+
         rewriter_table[Prototype("intersects", (Geometry, Geometry), Boolean)] = \
             sql.binary_function_rewriter("ST_Intersects")
 

@@ -528,6 +528,9 @@ class SQLiteBackend(object):
         rewriter_table[Prototype("covers", (Geometry, Geometry), Boolean)] = \
             lambda arg0, arg1: "(ST_Covers(%s, %s)=1)" % (arg0, arg1)
 
+        rewriter_table[Prototype("distance", (Geometry, Geometry), Real)] = \
+            lambda arg0, arg1: "ST_Distance(%s, %s)" % (arg0, arg1)
+
         rewriter_table[Prototype("intersects", (Geometry, Geometry), Boolean)] = \
             lambda arg0, arg1: "(ST_Intersects(%s, %s)=1)" % (arg0, arg1)
 
