@@ -62,7 +62,7 @@ def update(args):
     filter = []
     if args.action in ['ingest', 'pull']:
         # only get products that are locally archived
-        filter.append("is_defined(core.archive_path)")
+        filter.append("(is_defined(archive_path) or is_defined(remote_url))")
     if args.action == 'pull':
         # only get products with a remote_url
         filter.append("is_defined(remote_url)")
