@@ -45,14 +45,14 @@ often require super user privileges.
 Using pip:
 
 ```
-$ pip install muninn-6.3.tar.gz
+$ pip install muninn-6.4.tar.gz
 ```
 
 Using setup.py:
 
 ```
-$ tar xvfz muninn-6.3.tar.gz
-$ cd muninn-6.3
+$ tar xvfz muninn-6.4.tar.gz
+$ cd muninn-6.4
 $ python setup.py install
 ```
 

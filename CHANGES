@@ -1,10 +1,20 @@
+6.4 2023-03-14
+~~~~~~~~~~~~~~
+
 * Allow argument to muninn.open() to be a direct url or path to a muninn
   configuration file.
 
 * Added 'distance(geometry,geometry)' expression function.
 
+* Added Geometry.wrap() spherical to 2d geometry wrapping functions.
+
 * Fixed issue when pulling a product that is a directory using the S3 remote
   backend.
+
+* Various fixes when using archive.rebuild_properties() with the S3 storage
+  backend.
+
+* Several minor fixes.
 
 6.3 2023-12-13
 ~~~~~~~~~~~~~~
