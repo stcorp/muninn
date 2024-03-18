@@ -75,11 +75,8 @@ def update(args):
 
     processor = UpdateProcessor(args)
     with muninn.open(args.archive) as archive:
-        if args.action in ['ingest', 'pull']:
-            # we only need the uuid and the product_name
-            products = archive.search(expression, property_names=['uuid', 'product_name'])
-        else:
-            products = archive.search(expression, namespaces=archive.namespaces())
+        # we only need the uuid and the product_name
+        products = archive.search(expression, property_names=['uuid', 'product_name'])
         if args.parallel:
             if args.processes is not None:
                 pool = multiprocessing.Pool(args.processes)
