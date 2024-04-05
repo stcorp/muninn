@@ -56,10 +56,9 @@ $ muninn-prepare myarch
 Ingest a sentinel5p product into the archive:
 
 ```
-$ curl -L --output S5P_PAL__L2__NO2____20210323T011843_20210323T030013_17829_01_020301_20211112T094255.nc \
-https://data-portal.s5p-pal.com/cat/sentinel-5p/download/14491c3e-1e15-429a-b4e1-6bab267a1a83
+$ curl -OL https://atmospherevirtuallab.org/files/S5P_OFFL_L2__NO2____20200123T004109_20200123T022240_11799_01_010302_20200126T123552.nc
 
-$ muninn-ingest myarch S5P_PAL__L2__NO2____20210323T011843_20210323T030013_17829_01_020301_20211112T094255.nc
+$ muninn-ingest myarch S5P_OFFL_L2__NO2____20200123T004109_20200123T022240_11799_01_010302_20200126T123552.nc
 ```
 
 Search all products in the archive, showing all available metadata properties:
