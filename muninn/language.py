@@ -613,7 +613,7 @@ def _literal_type(literal):
         else:
             return type
 
-    raise Error("unable to determine type of literal value: %r" % literal)
+    raise Error("unable to determine type of literal value: %r" % (literal,))
 
 
 class SemanticAnalysis(Visitor):
@@ -788,7 +788,7 @@ class Identifier(object):
             self.muninn_type = Long
 
         elif not re.match(r'[\w]+\.[\w.]+', canonical_identifier):
-            raise Error("cannot resolve identifier: %r" % canonical_identifier)
+            raise Error("cannot resolve identifier: %r" % (canonical_identifier,))
 
         else:
             segments = canonical_identifier.split('.')
@@ -808,7 +808,7 @@ class Identifier(object):
                 self.namespace, self.identifier, self.subscript = segments
 
             else:
-                raise Error("cannot resolve identifier: %r" % canonical_identifier)
+                raise Error("cannot resolve identifier: %r" % (canonical_identifier,))
 
             # check if namespace is valid
             if self.namespace not in namespace_schemas:
