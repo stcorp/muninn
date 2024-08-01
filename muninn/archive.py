@@ -413,7 +413,7 @@ class Archive(object):
         if len(set(basenames)) < len(basenames):
             raise Error("basename of each part should be unique for multi-part products")
 
-        return [path.replace('\\', '/') for path in paths]
+        return sorted([path.replace('\\', '/') for path in paths])
 
     def _extract_hash_type(self, hash_value):
         prefix, middle, _ = hash_value.partition(':')

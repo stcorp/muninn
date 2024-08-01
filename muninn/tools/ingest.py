@@ -31,7 +31,7 @@ class CheckProductListAction(argparse.Action):
 
 def expand_stem(stem):
     try:
-        return glob.glob(stem + "*")
+        return sorted(glob.glob(stem + "*"))
     except EnvironmentError as error:
         raise Error("unable to expand stem \"%s\" [%s]" % (stem, error))
 
