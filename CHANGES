@@ -1,3 +1,5 @@
+* Fixed issue where only 'dict' values could be stored as a JSON property.
+
 6.4 2024-03-14
 ~~~~~~~~~~~~~~
 

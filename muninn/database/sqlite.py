@@ -438,7 +438,9 @@ class SQLiteBackend(object):
             fields.append("uuid")
             parameters.append(uuid)
 
-        parameters = [json.dumps(p) if isinstance(p, dict) else p for p in parameters]
+        schema = self._namespace_schema(name)
+        parameters = [json.dumps(p) if f != "uuid" and issubclass(schema[f], JSON) else p for f, p in
+                      zip(fields, parameters)]
 
         # Build and execute INSERT query.
         query = "INSERT INTO %s (%s) VALUES (%s)" % (self._table_name(name), ", ".join(fields),
@@ -733,10 +735,11 @@ class SQLiteBackend(object):
             del fields[uuid_index]
             del parameters[uuid_index]
 
+        schema = self._namespace_schema(name)
+        parameters = [json.dumps(p) if issubclass(schema[f], JSON) else p for f, p in zip(fields, parameters)]
+
         # Append the uuid (value) at the end of the list of parameters (will be used in the WHERE clause).
         parameters.append(uuid)
-
-        parameters = [json.dumps(p) if isinstance(p, dict) else p for p in parameters]
 
         # Build and execute UPDATE query.
         set_clause = ", ".join(["%s = %s" % (field, self._placeholder()) for field in fields])
