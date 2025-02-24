@@ -26,7 +26,11 @@ import botocore
 logging.getLogger("boto3").setLevel(logging.CRITICAL)
 
 warnings.filterwarnings('ignore', 'distutils version classes', DeprecationWarning, 'swiftclient.client')
-import swiftclient
+try:
+    import swiftclient
+except ImportError:
+    # allow to run tests where the swift backend is not enabled
+    pass
 logging.getLogger("swiftclient").setLevel(logging.CRITICAL)
 
 sys.path.insert(0, '..')
