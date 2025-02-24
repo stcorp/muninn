@@ -96,6 +96,14 @@ def _cast_geometry(blob):
     return blobgeometry.decode_blob_geometry(blob)
 
 
+def _adapt_datetime_iso(val):
+    return val.isoformat()
+
+
+def _cast_datetime(val):
+    return datetime.datetime.fromisoformat(val.decode())
+
+
 class SQLiteConnection(object):
     """Wrapper for a sqlite database connection that defers (re)connection until an attempt is made to use the
     connection.
@@ -221,6 +229,9 @@ class SQLiteBackend(object):
         dbapi2.register_adapter(geometry.MultiPoint, _adapt_geometry)
         dbapi2.register_adapter(geometry.MultiLineString, _adapt_geometry)
         dbapi2.register_adapter(geometry.MultiPolygon, _adapt_geometry)
+
+        dbapi2.register_converter("TIMESTAMP", _cast_datetime)
+        dbapi2.register_adapter(datetime.datetime, _adapt_datetime_iso)
 
         self._connection_string = connection_string
         self._connection = SQLiteConnection(connection_string, mod_spatialite_path, self)
