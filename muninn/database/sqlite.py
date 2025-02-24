@@ -150,7 +150,7 @@ class SQLiteConnection(object):
         # load the spatialite extension
         try:
             self._connection.enable_load_extension(True)
-            self._connection.execute("select load_extension(\"%s\");" % (self._mod_spatialite))
+            self._connection.execute("select load_extension('%s');" % (self._mod_spatialite))
         except Exception as e:
             raise Error("loading mod_spatialite extension failed (mod_spatialite_path='%s'): %s" %
                         (self._mod_spatialite, str(e)))
