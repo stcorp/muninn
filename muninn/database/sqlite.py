@@ -13,7 +13,7 @@ import uuid
 
 from .base import DatabaseBackend
 
-from muninn._compat import dictkeys, dictvalues, utcnow
+from muninn._compat import decode, dictkeys, dictvalues, utcnow
 
 # Select a version of dbapi2 that's available.
 # Since we need the spatialite module, we need a version of sqlite3 that supports extensions.
@@ -96,12 +96,22 @@ def _cast_geometry(blob):
     return blobgeometry.decode_blob_geometry(blob)
 
 
-def _adapt_datetime_iso(val):
-    return val.isoformat()
+def _adapt_datetime(val):
+    return val.isoformat(" ")
 
 
 def _cast_datetime(val):
-    return datetime.datetime.fromisoformat(val.decode())
+    datepart, timepart = decode(val).split(" ")
+    year, month, day = map(int, datepart.split("-"))
+    timepart_full = timepart.split(".")
+    hours, minutes, seconds = map(int, timepart_full[0].split(":"))
+    if len(timepart_full) == 2:
+        microseconds = int('{:0<6.6}'.format(timepart_full[1]))
+    else:
+        microseconds = 0
+
+    val = datetime.datetime(year, month, day, hours, minutes, seconds, microseconds)
+    return val
 
 
 class SQLiteConnection(object):
@@ -231,7 +241,7 @@ class SQLiteBackend(object):
         dbapi2.register_adapter(geometry.MultiPolygon, _adapt_geometry)
 
         dbapi2.register_converter("TIMESTAMP", _cast_datetime)
-        dbapi2.register_adapter(datetime.datetime, _adapt_datetime_iso)
+        dbapi2.register_adapter(datetime.datetime, _adapt_datetime)
 
         self._connection_string = connection_string
         self._connection = SQLiteConnection(connection_string, mod_spatialite_path, self)
