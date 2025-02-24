@@ -13,7 +13,7 @@ import uuid
 
 from .base import DatabaseBackend
 
-from muninn._compat import dictkeys, dictvalues
+from muninn._compat import dictkeys, dictvalues, utcnow
 
 # Select a version of dbapi2 that's available.
 # Since we need the spatialite module, we need a version of sqlite3 that supports extensions.
@@ -878,7 +878,7 @@ class SQLiteBackend(object):
 
     @translate_sqlite_errors
     def server_time_utc(self):
-        return datetime.datetime.utcnow()
+        return utcnow()
 
     @translate_sqlite_errors
     def source_products(self, uuid):

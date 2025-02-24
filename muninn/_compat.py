@@ -5,6 +5,7 @@ Inspired by six, future, and jinja2
 '''
 import sys
 import operator
+import datetime
 
 
 PY3 = sys.version_info[0] == 3
@@ -33,6 +34,9 @@ if PY3:
     def decode(s):
         return s.decode('utf-8')
 
+    def utcnow():
+        return datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+
     itervalues = operator.methodcaller("values")
 
     imap = map
@@ -55,11 +59,14 @@ else:
     def path_utf8(path):
         return path.decode(sys.getfilesystemencoding()).encode('utf-8')
 
+    def encode(s):
+        return s
+
     def decode(s):
         return s
 
-    def encode(s):
-        return s
+    def utcnow():
+        return datetime.datetime.utcnow()
 
     dictkeys = operator.methodcaller("keys")
     dictvalues = operator.methodcaller("values")

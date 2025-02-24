@@ -86,11 +86,11 @@ from muninn import Struct
 properties = Struct()
 properties.core = Struct()
 properties.core.product_type = "ABCD"
-properties.core.creation_date = datetime.datetime.utcnow()
+properties.core.creation_date = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
 ... more of the same ...
 
 properties.xml_pi = Struct()
-properties.xml_pi.startTime = datetime.datetime.utcnow()
+properties.xml_pi.startTime = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
 ... more of the same ...
 ```
 
