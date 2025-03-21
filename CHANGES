@@ -1,3 +1,6 @@
+* Added support for optional `auth_args` setting in credentials file for
+  oauth2 token requests.
+
 6.4.2 2025-02-24
 ~~~~~~~~~~~~~~~~
 

@@ -41,10 +41,14 @@ def download_http_oath2(url, target_dir, credentials, timeout, retries):
 
     assert credentials['grant_type'] == "ResourceOwnerPasswordCredentialsGrant"
 
+    auth_args = {}
+    if 'auth_args' in credentials:
+        auth_args = credentials['auth_args']
+
     session = OAuth2Session(client=LegacyApplicationClient(client_id=credentials['client_id']))
     session.fetch_token(token_url=credentials['token_url'], username=credentials['username'],
                         password=credentials['password'], client_id=credentials['client_id'],
-                        client_secret=credentials['client_secret'])
+                        client_secret=credentials['client_secret'], **auth_args)
     try:
         while True:
             try:
