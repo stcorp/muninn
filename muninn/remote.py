@@ -48,7 +48,7 @@ def download_http_oath2(url, target_dir, credentials, timeout, retries):
     session = OAuth2Session(client=LegacyApplicationClient(client_id=credentials['client_id']))
     session.fetch_token(token_url=credentials['token_url'], username=credentials['username'],
                         password=credentials['password'], client_id=credentials['client_id'],
-                        client_secret=credentials['client_secret'], **auth_args)
+                        client_secret=credentials['client_secret'], timeout=timeout, **auth_args)
     try:
         while True:
             try:
