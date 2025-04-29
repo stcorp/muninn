@@ -33,7 +33,7 @@ $ docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres --name muninn-test-po
 $ docker run -d -p 9000:9000 -p 9001:9001 -e MINIO_ACCESS_KEY=minio -e MINIO_SECRET_KEY=minio1300 --name muninn-test-minio minio/minio server /data --console-address ":9001"
 $ docker run -d -p 12345:8080 -e SWIFT_USERNAME=test:tester -e SWIFT_KEY=testing --name muninn-test-swift fnndsc/docker-swift-onlyone
 
-Create a conda environment for muninn and dependencies (requires mininconda/anaconda to be installed):
+Create a conda environment for muninn and dependencies (requires conda to be installed):
 $ conda env create -f environment.yml
 $ conda activate muninn-test
 
