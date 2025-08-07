@@ -262,6 +262,8 @@ class RemoteBackend(object):
 class FileBackend(RemoteBackend):
     def pull(self, archive, product, target_dir):
         source_path = urlparse(product.core.remote_url).path
+        if not os.path.exists(source_path):
+            raise DownloadError("%s does not exist" % product.core.remote_url)
         target_path = os.path.join(target_dir, os.path.basename(source_path))
         util.copy_path(source_path, target_path)
         return self.auto_extract(target_path, product)
