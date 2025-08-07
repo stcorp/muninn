@@ -12,11 +12,15 @@ from muninn.tools.utils import create_parser, parse_args_and_run
 def run(args):
     archive_names = args.archive or muninn.list_archives()
 
-    print("ARCHIVES", end='')
-    for archive_name in archive_names:
-        print("\n  " + archive_name)
+    print("ARCHIVES")
+    for index, archive_name in enumerate(sorted(archive_names)):
+        if index > 0 and not args.name_only:
+            print()
+        print("  " + archive_name)
         try:
             with muninn.open(archive_name) as archive:
+                if args.name_only:
+                    continue
                 print("    NAMESPACES")
                 for namespace in sorted(archive.namespaces()):
                     print("      %s" % namespace)
@@ -45,7 +49,10 @@ def run(args):
 
 def main():
     parser = create_parser(description="Display generic archive information")
-    parser.add_argument("archive", nargs='*', metavar="ARCHIVE", help="archive identifier (default: search archives)")
+    parser.add_argument("-n", "--name-only", action="store_true",
+                        help="only show archive name")
+    parser.add_argument("archive", nargs='*', metavar="ARCHIVE",
+                        help="archive identifier (default: search and show all archives)")
     return parse_args_and_run(parser, run)
 
 
