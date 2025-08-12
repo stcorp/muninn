@@ -56,6 +56,7 @@ class _ArchiveConfig(Mapping):
     product_type_extensions = _ExtensionList(optional=True)
     remote_backend_extensions = _ExtensionList(optional=True)
     hook_extensions = _ExtensionList(optional=True)
+    synchronizers = _ExtensionList(optional=True)
     auth_file = Text(optional=True)
     tempdir = Text(optional=True)
 
@@ -87,6 +88,15 @@ def _load_extension(name):
         __import__(name)
     except ImportError as e:
         raise Error("import of extension %r failed (%s)" % (name, e))
+
+    return sys.modules[name]
+
+
+def _load_synchronizer_module(name):
+    try:
+        __import__(name)
+    except ImportError as e:
+        raise Error("import of syncrhonizer %r failed (%s)" % (name, e))
 
     return sys.modules[name]
 
@@ -179,11 +189,16 @@ class Archive(object):
         product_type_extensions = options.pop("product_type_extensions", [])
         remote_backend_extensions = options.pop("remote_backend_extensions", [])
         hook_extensions = options.pop("hook_extensions", [])
+        synchronizers = options.pop("synchronizers", [])
         archive = Archive(database=database, storage=storage, id=id,
                           configuration=configuration, **options)
 
         # Register core namespace.
         archive.register_namespace("core", Core)
+
+        # Register synchronizers
+        for synchronizer in synchronizers:
+            archive.register_synchronizer(synchronizer)
 
         # Register custom extensions.
         for name in namespace_extensions:
@@ -217,6 +232,7 @@ class Archive(object):
         self._product_type_plugins = {}
         self._remote_backend_plugins = {}
         self._hook_extensions = collections.OrderedDict()
+        self._synchronizers = {}
 
         self._export_formats = set()
 
@@ -376,6 +392,51 @@ class Archive(object):
     def hook_extensions(self):
         """Return a list of supported hook extensions."""
         return list(self._hook_extensions.keys())
+
+    def register_synchronizer(self, synchronizer):
+        """Register a synchronizer.
+
+        Arguments:
+        synchronizer -- Synchronizer name
+        """
+        if synchronizer in self._synchronizers:
+            raise Error("redefinition of synchronizer: \"%s\"" % synchronizer)
+
+        if "synchronizer:" + synchronizer not in self._configuration:
+            raise Error("missing synchronizer '%s' configuration" % (synchronizer))
+
+        if "module" not in self._configuration.get("synchronizer:" + synchronizer):
+            raise Error("missing module option for synchronizer '%s'" % (synchronizer))
+
+        config_section = self._configuration.get('synchronizer:' + synchronizer)
+        module_name = config_section.pop("module")
+        module = _load_synchronizer_module(module_name)
+
+        if not hasattr(module, "synchronizers"):
+            raise Error("synchronizer %s does not implement the synchronizer API" % (synchronizer))
+
+        plugin = module.synchronizers(config_section)
+        for method in ["sync"]:
+            if not hasattr(plugin, method):
+                raise Error("missing '%s' method in plugin for synchronizer \"%s\"" % (method, synchronizer))
+
+        self._synchronizers[synchronizer] = plugin
+
+    def synchronizer(self, synchronizer):
+        """Return the synchronizer with the specified name.
+
+        Arguments:
+        synchronizer -- Synchronizer name
+        """
+        if synchronizer not in self._synchronizers:
+            raise Error("unregistered synchronizer: \"%s\"; registered synchronizers: %s" %
+                        (synchronizer, util.quoted_list(self._synchronizers.keys())))
+
+        return self._synchronizers[synchronizer]
+
+    def synchronizers(self):
+        """Return a list of supported synchronizers"""
+        return list(self._synchronizers.keys())
 
     def _analyze_paths(self, plugin, paths):
         metadata = plugin.analyze(paths)
@@ -1659,6 +1720,19 @@ class Archive(object):
         A list of row tuples matching the search expression created from the arguments.
         """
         return self._database.summary(where, parameters, aggregates, group_by, group_by_tag, having, order_by)
+
+    def sync(self, synchronizer, product_types=None, start=None, end=None, force=False):
+        """Synchronize the archive product catalogue using a synchronizer plugin.
+
+        Arguments:
+        synchronizer -- The synchronizer plugin
+        product_types -- Product types to be synchronized
+        start -- Start datetime of synchronization range (exclusive)
+        end -- End datetime of synchronization range (exclusive)
+        force
+        """
+        synchronizer = self.synchronizer(synchronizer)
+        synchronizer.sync(self, product_types, start, end, force)
 
     def tag(self, where=None, tags=None, parameters={}):
         """Set one or more tags on one or more product(s).

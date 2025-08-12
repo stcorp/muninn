@@ -41,6 +41,11 @@ def run(args):
                     print("\n    REMOTE BACKENDS")
                     for remote_backend in sorted(archive.remote_backends()):
                         print("      %s" % remote_backend)
+
+                if archive.synchronizers():
+                    print("\n    SYNCHRONIZERS")
+                    for synchronizer in sorted(archive.synchronizers()):
+                        print("      %s" % synchronizer)
         except Exception:
             print('    (could not open archive)')
 
