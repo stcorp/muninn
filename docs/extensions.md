@@ -14,9 +14,10 @@ A muninn extension is a Python module or package that implements the muninn
 extension interface. Muninn defines four main types of extensions: namespace
 extensions (that contain namespace definitions), product type extensions
 (that contain product type plug-ins), hook extensions (allowing
-functions to be executed at certain times, e.g. product creation/removal), and
+functions to be executed at certain times, e.g. product creation/removal),
 remote backend extensions (to support custom URL protocols for downloads
-performed by muninn).
+performed by muninn), and synchronizer extensions (to update the catalogue
+based on the contents of an external archive).
 
 A namespace is a named set of product properties (see
 [Namespaces](../namespaces)).
@@ -45,10 +46,18 @@ example, the plug-in controls what happens to a product (of the type it
 supports) when all of the products it is linked to (see [Links](../links)) have
 been removed from the archive.
 
-A fourth type of extension is the remote backend extension. This type of
-extension is specifically for muninn-pull and can introduce support for
-retrieving data using protocols other than the built-in support that muninn
-already has for http/https/ftp/file.
+Remote backend extensions are a type of extension that is specifically for
+muninn-pull and can introduce support for retrieving data using protocols other
+than the built-in support that muninn already has for http/https/ftp/file.
+
+Hook extensions allow for data driven triggering of operations whenever certain
+updates take place in the catalogue. These operations can include additional
+updates to the catalogue but could also involve the triggering of external
+functions that need to run on products in the archive.
+
+Synchronization extensions provide an implementation to synchronize catalogue
+entries for a certain set of product types with a remote archive using a
+specific protocol (using e.g. web APIs such as STAC, OData, or OpenSearch).
 
 For details concerning the actual implementation of extensions see
 [here](../extensions_dev).

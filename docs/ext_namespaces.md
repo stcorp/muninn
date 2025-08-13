@@ -16,3 +16,4 @@ permalink: /ext_namespaces/
 >   Return the namespace definition of the specified namespace. An exception
 >   should be raised if the specified namespace is not defined by the
 >   extension.
+>   The namespace definition should be a subclass of ``muninn.schema.Mapping``.

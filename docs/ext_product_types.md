@@ -8,9 +8,12 @@ permalink: /ext_product_types/
 
 ## Global functions
 
-``product_types()``
+``product_types([config])``
 >   Return a list containing all product types for which this extension defines
 >   plug-ins.
+>   The ``config`` parameter is optional for the function definition.
+>   If it exists, muninn will pass the content of the ``extension:<product_type_plugin>``
+>   section as a single ``muninn.Struct`` positional argument to this function.
 
 ``product_type_plugin(product_type)``
 >   Return an instance of a class that adheres to the product type plug-in API

@@ -46,6 +46,10 @@ settings:
   modules or packages that contain remote backend plug-ins (see
   [Extensions](../extensions)). The default is the empty list.
 
+- ``synchronizers``: White space separated list of names of catalogue
+  synchronizers. Each synchronizer should have its own ``synchronizer:<name>``
+  section in the archive configuration file.
+
 - ``auth_file``: [Optional] JSON file containing the credentials to download
   using muninn-pull and/or for S3/Swift access credentials.
 
@@ -146,6 +150,18 @@ backend and may contain the following settings:
 
 [*] ``user`` and ``key`` can be taken from a credentials file pointed to by ``auth_file``. The entry in the credentials file should then have a key value equal to the ``authurl`` value in the archive configuration and it should contain a field for ``auth_type`` (set to ``Swift``), and of course contain the ``user`` and ``key`` fields.
 
+# Section "extension:<product_type_extension>"
+
+Sections starting with ``extension:`` provide additional parameters that can be passed to the given product type extension.
+The documentation of the product type extension should define whether this section is applicable and what settings are possible.
+
+# Section "synchronizer:<name>"
+
+This section should exist for each synchronizer that is listed in the ``synchronizers`` setting of the ``archive`` section.
+It should contain the following settings:
+
+- ``module``: Mandatory. Python module or package that contains a synchronizer plug-in (see [Extensions](../extensions)).
+- ...: any further settings are defined by the synchronizer plug-in.
 
 # Example configuration file
 
