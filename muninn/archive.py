@@ -171,12 +171,12 @@ class Archive(object):
         options = config.parse(configuration.get("archive", {}), _ArchiveConfig)
         _ArchiveConfig.validate(options)
 
-        # Load and create the database backend.
+        # Load and create the database backend
         database_name = options.pop('database')
         database_module = _load_database_module(database_name)
         database = database_module.create(configuration)
 
-        # Load and create the storage backend.
+        # Load and create the storage backend
         storage_name = options.pop('storage')
         if storage_name == 'none':
             storage = None
@@ -184,7 +184,7 @@ class Archive(object):
             storage_module = _load_storage_module(storage_name)
             storage = storage_module.create(configuration, options.get('tempdir', None), options.get('auth_file', None))
 
-        # Create the archive.
+        # Create the archive
         namespace_extensions = options.pop("namespace_extensions", [])
         product_type_extensions = options.pop("product_type_extensions", [])
         remote_backend_extensions = options.pop("remote_backend_extensions", [])
@@ -193,14 +193,10 @@ class Archive(object):
         archive = Archive(database=database, storage=storage, id=id,
                           configuration=configuration, **options)
 
-        # Register core namespace.
+        # Register core namespace
         archive.register_namespace("core", Core)
 
-        # Register synchronizers
-        for synchronizer in synchronizers:
-            archive.register_synchronizer(synchronizer)
-
-        # Register custom extensions.
+        # Register custom extensions
         for name in namespace_extensions:
             extension = _load_extension(name)
             _register_extension(archive, extension, name, 'namespace')
@@ -216,6 +212,10 @@ class Archive(object):
         for name in hook_extensions:
             extension = _load_extension(name)
             _register_extension(archive, extension, name, 'hook_extension')
+
+        # Register synchronizers
+        for synchronizer in synchronizers:
+            archive.register_synchronizer(synchronizer)
 
         return archive
 
