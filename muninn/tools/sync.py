@@ -17,7 +17,7 @@ def valid_date(date: str) -> datetime:
     try:
         return datetime.strptime(date, date_fmt)
     except ValueError:
-        raise argparse.ArgumentTypeError(f"Invalid date: {date} (Expects '{date_fmt}')")
+        raise argparse.ArgumentTypeError(f"invalid date: {date} (expected '{date_fmt}')")
 
 
 def run(args):
@@ -28,15 +28,13 @@ def run(args):
 def main():
     parser = create_parser(description="Synchronize a muninn archive")
     parser.add_argument("archive", metavar="ARCHIVE", help="archive identifier")
-    parser.add_argument("synchronizer", help="which synchronizer plugin to use")
-    parser.add_argument("-p", "--product-types", nargs="+",
-                        help="the product types to be synchronized.")
-    parser.add_argument('--start', type=valid_date, help='start datetime of synchronization range (exclusive)')
-    parser.add_argument('--end', type=valid_date,
-                        help='end date of synchronization range (exclusive)')
-    parser.add_argument(
-        "-f", "--force", action="store_true", default=False, help="force update, even if archive date has not changed"
-    )
+    parser.add_argument("synchronizer", help="name of the synchronizer to use")
+    parser.add_argument("-p", "--product-types", nargs="*",
+                        help="the product types to be synchronized")
+    parser.add_argument('--start', type=valid_date, help='start datetime of synchronization range')
+    parser.add_argument('--end', type=valid_date, help='end datetime of synchronization range')
+    parser.add_argument("-f", "--force", action="store_true", default=False,
+                        help="force update, even if entries have not changed")
     return parse_args_and_run(parser, run)
 
 
