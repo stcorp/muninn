@@ -415,9 +415,8 @@ class Archive(object):
             raise Error("synchronizer %s does not implement the synchronizer API" % (synchronizer))
 
         plugin = module.synchronizers(config_section)
-        for method in ["sync"]:
-            if not hasattr(plugin, method):
-                raise Error("missing '%s' method in plugin for synchronizer \"%s\"" % (method, synchronizer))
+        if not hasattr(plugin, "sync""):
+            raise Error("missing 'sync' method in plugin for synchronizer \"%s\"" % (synchronizer))
 
         self._synchronizers[synchronizer] = plugin
 
