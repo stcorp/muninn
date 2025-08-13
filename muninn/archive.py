@@ -1215,7 +1215,6 @@ class Archive(object):
                     for path in paths:
                         if os.path.dirname(path) != parent_path:
                             raise Error("all paths need to have the same parent directory")
-                    # TODO: check that all paths are in the same directory
                     updated_properties.core.remote_url = 'file://' + os.path.realpath(os.path.dirname(paths[0]))
                 updated_properties.core.remote_url = updated_properties.core.remote_url.replace('\\', '/')
 
