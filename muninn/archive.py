@@ -403,16 +403,16 @@ class Archive(object):
             raise Error("redefinition of synchronizer: \"%s\"" % synchronizer)
 
         if "synchronizer:" + synchronizer not in self._configuration:
-            raise Error("missing synchronizer '%s' configuration" % (synchronizer))
+            raise Error("missing synchronizer \"%s\" configuration" % (synchronizer))
         config_section = self._configuration.get('synchronizer:' + synchronizer)
 
         if "module" not in config_section:
-            raise Error("missing module option for synchronizer '%s'" % (synchronizer))
+            raise Error("missing module option for synchronizer \"%s\"" % (synchronizer))
         module_name = config_section.pop("module")
         module = _load_synchronizer_module(module_name)
 
-        if not hasattr(module, "synchronizers"):
-            raise Error("synchronizer %s does not implement the synchronizer API" % (synchronizer))
+        if not hasattr(module, "synchronizer"):
+            raise Error("synchronizer \"%s\" does not implement the synchronizer API" % (synchronizer))
 
         plugin = module.synchronizers(config_section)
         if not hasattr(plugin, "sync""):
