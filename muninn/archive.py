@@ -1138,7 +1138,7 @@ class Archive(object):
         properties.core.uuid = self.generate_uuid()
         properties.core.active = False
         properties.core.hash = None
-        properties.core.size = util.product_size(paths)  # TODO determine after?
+        properties.core.size = util.product_size(paths)
         properties.core.metadata_date = None
         properties.core.archive_date = None
         properties.core.archive_path = None
@@ -1188,6 +1188,8 @@ class Archive(object):
 
         self.create_properties(properties, disable_hooks=True)
 
+        updated_properties = Struct({'core': {}})
+
         # Try to determine the product hash and ingest the product into the archive.
         try:
             # Determine product hash. Since it is an expensive operation, the hash is computed after inserting the
@@ -1195,25 +1197,23 @@ class Archive(object):
             hash_type = self._plugin_hash_type(plugin)
             if hash_type is not None:
                 try:
-                    properties.core.hash = util.product_hash(paths, hash_type=hash_type)
+                    updated_properties.core.hash = util.product_hash(paths, hash_type=hash_type)
                 except EnvironmentError as _error:
                     raise Error("cannot determine product hash [%s]" % (_error,))
-                self.update_properties(Struct({'core': {'hash': properties.core.hash}}), properties.core.uuid)
 
+            properties.update(updated_properties)
             if ingest_product:
                 use_enclosing_directory = plugin.use_enclosing_directory
                 self._storage.put(paths, properties, use_enclosing_directory, use_symlinks)
-                properties.core.archive_date = self._database.server_time_utc()
+                updated_properties.core.archive_date = self._database.server_time_utc()
 
             elif self._storage is None:
                 if len(paths) == 1:
-                    properties.core.remote_url = 'file://' + os.path.realpath(paths[0])
+                    updated_properties.core.remote_url = 'file://' + os.path.realpath(paths[0])
                 else:
                     # TODO: check that all paths are in the same directory
-                    properties.core.remote_url = 'file://' + os.path.realpath(os.path.dirname(paths[0]))
-                properties.core.remote_url = properties.core.remote_url.replace('\\', '/')
-                self.update_properties(Struct({'core': {'remote_url': properties.core.remote_url}}),
-                                       properties.core.uuid)
+                    updated_properties.core.remote_url = 'file://' + os.path.realpath(os.path.dirname(paths[0]))
+                updated_properties.core.remote_url = properties.core.remote_url.replace('\\', '/')
 
         except Exception as e:
             if not (isinstance(e, StorageError) and e.anything_stored):
@@ -1224,15 +1224,12 @@ class Archive(object):
             else:
                 raise
 
-        # Update archive date and activate product
-        properties.core.active = True
-        metadata = {
-            'active': properties.core.active,
-            'archive_date': properties.core.archive_date,
-        }
-        self.update_properties(Struct({'core': metadata}), properties.core.uuid)
+        # Set additional properties and activate product
+        updated_properties.core.active = True
+        self.update_properties(updated_properties, properties.core.uuid)
+        properties.update(updated_properties)
 
-        # Set product tags.
+        # Set product tags
         self._database.tag(properties.core.uuid, tags)
 
         # Verify product hash after copy
