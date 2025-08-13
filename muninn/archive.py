@@ -501,7 +501,7 @@ class Archive(object):
             assert len(products) == 1
             return products[0]
 
-    def _get_products(self, where, parameters=None, namespaces=None, property_names=None):  # TODO generator?
+    def _get_products(self, where, parameters=None, namespaces=None, property_names=None):
         if isinstance(where, basestring):
             return self.search(where, parameters=parameters, namespaces=namespaces, property_names=property_names)
 
@@ -652,7 +652,7 @@ class Archive(object):
             else:
                 with util.TemporaryDirectory(prefix=".run_for_product-",
                                              suffix="-%s" % product.core.uuid.hex) as tmp_path:
-                    retrieve_files = remote.retrieve_function(self, product, True)  # TODO verify hash?
+                    retrieve_files = remote.retrieve_function(self, product, True)
                     retrieve_files(tmp_path)
                     paths = [os.path.join(tmp_path, basename) for basename in os.listdir(tmp_path)]
                     return fn(paths)
@@ -1211,6 +1211,10 @@ class Archive(object):
                 if len(paths) == 1:
                     updated_properties.core.remote_url = 'file://' + os.path.realpath(paths[0])
                 else:
+                    parent_path = os.path.dirname(paths[0])
+                    for path in paths:
+                        if os.path.dirname(path) != parent_path:
+                            raise Error("all paths need to have the same parent directory")
                     # TODO: check that all paths are in the same directory
                     updated_properties.core.remote_url = 'file://' + os.path.realpath(os.path.dirname(paths[0]))
                 updated_properties.core.remote_url = updated_properties.core.remote_url.replace('\\', '/')
@@ -1840,4 +1844,4 @@ class Archive(object):
             if not self._verify_hash(product):
                 failed_products.append(product.core.uuid)
 
-        return failed_products  # TODO different type of return value when single product passed?
+        return failed_products
