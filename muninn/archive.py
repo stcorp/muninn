@@ -404,11 +404,10 @@ class Archive(object):
 
         if "synchronizer:" + synchronizer not in self._configuration:
             raise Error("missing synchronizer '%s' configuration" % (synchronizer))
-
-        if "module" not in self._configuration.get("synchronizer:" + synchronizer):
-            raise Error("missing module option for synchronizer '%s'" % (synchronizer))
-
         config_section = self._configuration.get('synchronizer:' + synchronizer)
+
+        if "module" not in config_section:
+            raise Error("missing module option for synchronizer '%s'" % (synchronizer))
         module_name = config_section.pop("module")
         module = _load_synchronizer_module(module_name)
 
