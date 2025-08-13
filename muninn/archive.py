@@ -1213,7 +1213,7 @@ class Archive(object):
                 else:
                     # TODO: check that all paths are in the same directory
                     updated_properties.core.remote_url = 'file://' + os.path.realpath(os.path.dirname(paths[0]))
-                updated_properties.core.remote_url = properties.core.remote_url.replace('\\', '/')
+                updated_properties.core.remote_url = updated_properties.core.remote_url.replace('\\', '/')
 
         except Exception as e:
             if not (isinstance(e, StorageError) and e.anything_stored):
