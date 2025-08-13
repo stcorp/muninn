@@ -22,6 +22,8 @@ try:
 except ImportError:
     import sqlite3.dbapi2 as dbapi2
 
+from .base import DatabaseBackend
+
 import muninn.config as config
 import muninn.database.sql as sql
 import muninn.database.blobgeometry as blobgeometry
@@ -222,7 +224,7 @@ class SQLiteConnection(object):
         return self._connection.cursor()
 
 
-class SQLiteBackend(object):
+class SQLiteBackend(DatabaseBackend):
     def __init__(self, connection_string="", mod_spatialite_path="mod_spatialite", table_prefix=""):
         dbapi2.register_converter("BOOLEAN", lambda x: bool(int(x)))
         dbapi2.register_adapter(bool, lambda x: int(x))
