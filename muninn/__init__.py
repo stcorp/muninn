@@ -14,7 +14,7 @@ import sys as _sys
 
 from muninn._compat import urlparse as _urlparse
 from muninn.archive import Archive
-from muninn.exceptions import *
+from muninn.exceptions import Error, InternalError, StorageError
 from muninn.struct import Struct
 
 

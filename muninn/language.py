@@ -14,9 +14,9 @@ import uuid
 import muninn.geometry as geometry
 
 from muninn.enum import Enum
-from muninn.exceptions import *
+from muninn.exceptions import Error, InternalError
 from muninn.function import Prototype, FunctionTable
-from muninn.schema import *
+from muninn.schema import Namespace, Boolean, Geometry, Integer, Long, Real, Sequence, Text, Timestamp, UUID
 from muninn.visitor import Visitor
 
 

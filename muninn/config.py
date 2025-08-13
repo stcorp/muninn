@@ -6,7 +6,7 @@ from __future__ import absolute_import, division, print_function
 
 from muninn._compat import string_types as basestring
 
-from muninn.schema import *
+from muninn.schema import prefix_message_with_path, join
 from muninn.exceptions import InternalError
 from muninn.visitor import TypeVisitor
 

@@ -13,10 +13,10 @@ except ImportError:
 
 import inspect
 
-from muninn.exceptions import *
+from muninn.exceptions import Error
 from muninn.function import Prototype
 from muninn.language import parse_and_analyze, Literal, Name, Identifier
-from muninn.schema import *
+from muninn.schema import Boolean, Integer, Long, Real, Sequence, Text, Timestamp, UUID
 from muninn.visitor import Visitor
 from muninn.core import Basename, ArchivePath
 

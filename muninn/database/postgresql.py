@@ -5,6 +5,7 @@
 from __future__ import absolute_import, division, print_function
 
 import re
+import datetime
 import functools
 import inspect
 import json
@@ -29,9 +30,9 @@ import muninn.database.sql as sql
 import muninn.database.ewkb as ewkb
 import muninn.geometry as geometry
 
-from muninn.exceptions import *
+from muninn.exceptions import Error, InternalError
 from muninn.function import Prototype
-from muninn.schema import *
+from muninn.schema import Mapping, Namespace, Boolean, Geometry, Integer, JSON, Long, Real, Text, Timestamp, UUID
 from muninn.struct import Struct
 
 from muninn._compat import dictkeys, dictvalues, is_python2_unicode

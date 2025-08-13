@@ -8,8 +8,8 @@ import sys
 import struct
 
 from muninn.enum import Enum
-from muninn.exceptions import *
-from muninn.geometry import *
+from muninn.exceptions import Error
+from muninn.geometry import LinearRing, LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon
 from muninn.visitor import Visitor
 
 

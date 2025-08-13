@@ -6,9 +6,8 @@ from __future__ import absolute_import, division, print_function
 
 import os
 
-from muninn.schema import *
+from muninn.schema import Mapping, Boolean, Geometry, Long, Text, Timestamp, UUID
 from muninn.util import split_path
-from muninn.remote import *
 
 
 class ArchivePath(Text):

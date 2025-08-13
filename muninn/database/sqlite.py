@@ -11,8 +11,6 @@ import functools
 import json
 import uuid
 
-from .base import DatabaseBackend
-
 from muninn._compat import decode, dictkeys, dictvalues, utcnow
 
 # Select a version of dbapi2 that's available.
@@ -29,9 +27,9 @@ import muninn.database.sql as sql
 import muninn.database.blobgeometry as blobgeometry
 import muninn.geometry as geometry
 
-from muninn.exceptions import *
+from muninn.exceptions import Error, InternalError
 from muninn.function import Prototype
-from muninn.schema import *
+from muninn.schema import Mapping, Namespace, Boolean, Geometry, Integer, JSON, Long, Real, Text, Timestamp, UUID
 from muninn.struct import Struct
 
 
@@ -39,8 +37,8 @@ class _SQLiteConfig(Mapping):
     _alias = "sqlite"
 
     connection_string = Text
-    mod_spatialite_path = optional(Text)
-    table_prefix = optional(Text)
+    mod_spatialite_path = Text(optional=True)
+    table_prefix = Text(optional=True)
 
 
 def create(configuration):

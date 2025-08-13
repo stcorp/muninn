@@ -591,9 +591,6 @@ class Archive(object):
 
     def _retrieve(self, product, target_path, use_symlinks=False, verify_hash=False):
         if 'archive_path' in product.core:
-            # Determine the path of the product in storage.
-            product_path = self._product_path(product)
-
             # Get the product type specific plugin.
             plugin = self.product_type_plugin(product.core.product_type)
             use_enclosing_directory = plugin.use_enclosing_directory
