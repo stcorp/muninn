@@ -43,3 +43,4 @@ data product catalogues and archives. [More information](about)
 
 [Hook Extension API](ext_hooks)
 
+[Synchronizer Extension API](ext_synchronizers)

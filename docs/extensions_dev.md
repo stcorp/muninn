@@ -109,6 +109,13 @@ A remote backend plug-in adds the ability of an archive to pull products
 from remote sources using a protocol beyond the basic file/ftp/http/https
 protocols.
 
+## Synchronizers
+
+A synchronizer plug-in adds the ability to synchronize catalogue entries for
+a certain set of product types with a remote archive. It is meant to allow
+for easy quick updates of the current catalogue to be in line with modifications
+made in the remote archive.
+
 ## Extension API
 
 All attributes, functions, and methods described in the below sections are
@@ -130,3 +137,5 @@ modules to propagate outside of the extension, this should be considered a bug.
 [Remote Backend Extensions](../ext_remote)
 
 [Hook Extensions](../ext_hooks)
+
+[Synchronizer Extensions](../ext_synchronizers)
