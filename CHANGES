@@ -1,3 +1,6 @@
+7.0 2025-08-14
+~~~~~~~~~~~~~~
+
 * Added catalogue synchronizer functionality to muninn. This introduces
   muninn-sync, archive.sync(), and a new synchronizer extension interface.
 
