@@ -8,7 +8,7 @@ permalink: /ext_synchronizers/
 
 ## Global functions
 
-``synchronizer(config: muninn.Struct)``
+``synchronizer(config: dict)``
 >   Return an instance of a class that adheres to the synchronizer plug-in API
 >   (see below).
 >   muninn will pass the content of the ``synchronizer:<name>`` section
@@ -25,7 +25,7 @@ permalink: /ext_synchronizers/
 >   Synchronizations should be performed on a product type by product type basis. The global list of applicable product
 >   types can be hard-coded in the extension or provided as configuration to the ``synchronizer`` global function.
 >   The ``sync`` method itself should limit itself to the list of product types given by the ``product_types`` parameter
->   if this parameter was set (and otherwise sync all product types).
+>   if this parameter was set (and otherwise sync all product types from the internal global list).
 >   The sync should ideally be performed in chronological order, following the timestamps of modifications in the external database.
 >   The ``start`` and ``end`` parameters are meant to define the time range within the chronological timeline to synchronize.
 >   The ``sync`` method should only update the catalogue database by means of e.g. ``muninn.create_properties``,
