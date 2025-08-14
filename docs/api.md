@@ -24,6 +24,9 @@ permalink: /api/
     * [register\_hook\_extension](#muninn.archive.Archive.register_hook_extension)
     * [hook\_extension](#muninn.archive.Archive.hook_extension)
     * [hook\_extensions](#muninn.archive.Archive.hook_extensions)
+    * [register\_synchronizer](#muninn.archive.Archive.register_synchronizer)
+    * [synchronizer](#muninn.archive.Archive.synchronizer)
+    * [synchronizers](#muninn.archive.Archive.synchronizers)
     * [attach](#muninn.archive.Archive.attach)
     * [auth\_file](#muninn.archive.Archive.auth_file)
     * [cleanup\_derived\_products](#muninn.archive.Archive.cleanup_derived_products)
@@ -54,6 +57,7 @@ permalink: /api/
     * [source\_products](#muninn.archive.Archive.source_products)
     * [strip](#muninn.archive.Archive.strip)
     * [summary](#muninn.archive.Archive.summary)
+    * [sync](#muninn.archive.Archive.sync)
     * [tag](#muninn.archive.Archive.tag)
     * [tags](#muninn.archive.Archive.tags)
     * [unlink](#muninn.archive.Archive.unlink)
@@ -298,6 +302,44 @@ def hook_extensions()
 ```
 
 Return a list of supported hook extensions.
+
+<a id="muninn.archive.Archive.register_synchronizer"></a>
+
+#### register\_synchronizer
+
+```python
+def register_synchronizer(synchronizer)
+```
+
+Register a synchronizer.
+
+**Arguments**:
+
+- `synchronizer` - Synchronizer name
+
+<a id="muninn.archive.Archive.synchronizer"></a>
+
+#### synchronizer
+
+```python
+def synchronizer(synchronizer)
+```
+
+Return the synchronizer with the specified name.
+
+**Arguments**:
+
+- `synchronizer` - Synchronizer name
+
+<a id="muninn.archive.Archive.synchronizers"></a>
+
+#### synchronizers
+
+```python
+def synchronizers()
+```
+
+Return a list of supported synchronizers
 
 <a id="muninn.archive.Archive.attach"></a>
 
@@ -927,6 +969,24 @@ Return a summary of the products matching the specified search expression.
 **Returns**:
 
   A list of row tuples matching the search expression created from the arguments.
+
+<a id="muninn.archive.Archive.sync"></a>
+
+#### sync
+
+```python
+def sync(synchronizer, product_types=None, start=None, end=None, force=False)
+```
+
+Synchronize the archive product catalogue using a synchronizer plugin.
+
+**Arguments**:
+
+- `synchronizer` - The synchronizer plugin
+- `product_types` - Product types to be synchronized
+- `start` - Start datetime of synchronization range (exclusive)
+- `end` - End datetime of synchronization range (exclusive)
+  force
 
 <a id="muninn.archive.Archive.tag"></a>
 
