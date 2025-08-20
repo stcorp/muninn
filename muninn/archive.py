@@ -1314,8 +1314,11 @@ class Archive(object):
         if archive_path is not None and self._storage is not None:
             product_path = self._product_path(product)
             return os.path.join(self._storage.global_prefix, product_path)
-        elif remote_url is not None:
+        if remote_url is not None:
+            if remote_url.startswith('file://'):
+                return remote_url[7:]
             return remote_url
+        return None
 
     def pull(self, where="", parameters={}, verify_hash=False, verify_hash_download=False):
         """Pull one or more remote products into the archive.
