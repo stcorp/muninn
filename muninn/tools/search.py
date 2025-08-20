@@ -121,12 +121,12 @@ def uuid(args):
 def paths(args):
     with muninn.open(args.archive) as archive:
         # Collect possibly multiple sort order specifier lists into a single list.
-        order_by_default = ['+core.archive_path', '+core.physical_name']
+        order_by_default = ['+core.archive_path', '+core.physical_name', '+core.remote_url']
         order_by = order_by_default if not args.order_by else sum(args.order_by, []) + order_by_default
 
         # Find products using the search expression and print the paths of the products found.
         products = archive.search(args.expression, order_by, args.limit,
-                                  property_names=['archive_path', 'physical_name'])
+                                  property_names=['archive_path', 'physical_name', 'remote_url'])
         for product in products:
             product_path = archive.product_path(product)
             if product_path is not None:
