@@ -34,7 +34,7 @@ def ceil(size):
     return integer_size + 1 if size > integer_size else integer_size
 
 
-def human_readable_size(size, base=1024, powers=["Bi", "Ki", "Mi", "Gi", "Ti", "Ei"]):
+def human_readable_size(size, base=1024, powers=["Bi", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]):
     if len(powers) == 0:
         return str(size)
 
