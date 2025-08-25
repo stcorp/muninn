@@ -5,19 +5,20 @@
 from __future__ import absolute_import, division, print_function
 
 import argparse
-from datetime import datetime
+import datetime
 
 import muninn
 
 from muninn.tools.utils import create_parser, parse_args_and_run
 
 
-def valid_date(date: str) -> datetime:
-    date_fmt = '%Y-%m-%d'
-    try:
-        return datetime.strptime(date, date_fmt)
-    except ValueError:
-        raise argparse.ArgumentTypeError(f"invalid date: {date} (expected '{date_fmt}')")
+def valid_date(arg: str) -> datetime:
+    for format_string in ("%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f"):
+        try:
+            return datetime.datetime.strptime(arg, format_string)
+        except ValueError:
+            pass
+    raise argparse.ArgumentTypeError(f"invalid datetime: {arg} (expected 'YYYY-MM-DD(THH:MM:SS(.ffffff))')")
 
 
 def run(args):
