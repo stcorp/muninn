@@ -1,3 +1,6 @@
+7.0.1 2025-08-25
+~~~~~~~~~~~~~~~~
+
 * Fixed incorrect unit of sizes >= Petabyte for the -H command line option.
 
 * 'muninn-search --path' now shows the content of remote_url if a product
