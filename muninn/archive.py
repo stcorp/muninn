@@ -96,7 +96,7 @@ def _load_synchronizer_module(name):
     try:
         __import__(name)
     except ImportError as e:
-        raise Error("import of syncrhonizer %r failed (%s)" % (name, e))
+        raise Error("import of synchronizer %r failed (%s)" % (name, e))
 
     return sys.modules[name]
 
