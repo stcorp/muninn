@@ -1,3 +1,9 @@
+7.0.2 2025-10-10
+~~~~~~~~~~~~~~~~
+
+* Fixed issue where a Geometry Linearring could not be closed or had a
+  duplicate closing point.
+
 7.0.1 2025-08-25
 ~~~~~~~~~~~~~~~~
 

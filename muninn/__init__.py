@@ -4,7 +4,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-__version__ = "7.0.1"
+__version__ = "7.0.2"
 __copyright__ = "Copyright (C) 2014-2025 S[&]T, The Netherlands."
 
 __all__ = ["Error", "InternalError", "Struct", "Archive", "open", "config_path"]
