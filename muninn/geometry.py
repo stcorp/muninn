@@ -284,6 +284,7 @@ class LineString(GeometrySequence):
 
 class LinearRing(GeometrySequence):
     def __init__(self, geometries=[]):
+        geometries = list(geometries)
         if len(geometries) > 1 and geometries[0] != geometries[-1]:
             # close the ring
             geometries.append(geometries[0])
