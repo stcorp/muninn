@@ -485,7 +485,7 @@ def parse_linear_ring(stream):
     if points[-1] != points[0]:
         raise Error("char %d: linear ring should be closed" % stream.token_start_position)
 
-    return geometry.LinearRing(points[:-1])
+    return geometry.LinearRing(points)
 
 
 def parse_polygon(stream):

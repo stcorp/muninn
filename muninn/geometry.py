@@ -284,10 +284,14 @@ class LineString(GeometrySequence):
 
 class LinearRing(GeometrySequence):
     def __init__(self, geometries=[]):
+        if len(geometries) > 1 and geometries[0] != geometries[-1]:
+            # close the ring
+            geometries.append(geometries[0])
+
         super(LinearRing, self).__init__(geometries)
 
-        if self and len(self) < 3:
-            raise ValueError("linear ring should be empty or should contain >= 3 points")
+        if self and len(self) < 4:
+            raise ValueError("linear ring should be empty or should contain >= 4 points")
 
     def point(self, index):
         return self[index]
@@ -296,8 +300,7 @@ class LinearRing(GeometrySequence):
         if not self:
             wkt = "EMPTY"
         else:
-            wkt = "(%s, %f %f)" % (", ".join(["%f %f" % (point.x, point.y) for point in self]), self.point(0).x,
-                                   self.point(0).y)
+            wkt = "("  + ", ".join(["%f %f" % (point.x, point.y) for point in self]) + ")"
         return "LINESTRING " + wkt if tagged else wkt
 
     def __repr__(self):
@@ -421,7 +424,8 @@ class Polygon(GeometrySequence):
                     del crossing_lat[min_index]
         for pts in pts_set:
             # close ring
-            pts.append(pts[0])
+            if pts[0] != pts[-1]:
+                pts.append(pts[0])
         if len(pts_set) == 1:
             return Polygon([LinearRing(pts)])
         else:
