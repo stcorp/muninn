@@ -1320,7 +1320,7 @@ class Archive(object):
             return remote_url
         return None
 
-    def pull(self, where="", parameters={}, verify_hash=False, verify_hash_download=False):
+    def pull(self, where="", parameters={}, update_properties=False, verify_hash=False, verify_hash_download=False):
         """Pull one or more remote products into the archive.
 
         Products should have a valid remote_url core metadata field and they should not yet exist in the local
@@ -1329,6 +1329,9 @@ class Archive(object):
         Arguments:
         where         --  Search expression or one or more product uuid(s) or properties.
         parameters    --  Parameters referenced in the search expression (if any).
+        update_properties  --  If set to True then, after the pull, metadata and tags will be extracted from the
+                               product using the analyze() function of the product type plugin, and the catalog entry
+                               for the product will be updated with this metadata and tags.
         verify_hash   --  If set to True then, after the pull, the product in the archive will be matched against
                           the hash from the metadata (only if the metadata contained a hash).
         verify_hash_download  --  If set to True then, before the product is stored in the archive, the pulled
@@ -1365,10 +1368,20 @@ class Archive(object):
                 if len(paths) > 1 and not use_enclosing_directory:
                     raise Error("cannot pull multi-file product without enclosing directory")
 
+                # extract properties/tags if an update is requested
+                if update_properties:
+                    properties, tags = self._analyze_paths(plugin, paths)
+                else:
+                    properties = Struct({'core': Struct()})
+                    tags = []
+                core = properties.core
+
                 # reactivate and update archive_date, size
                 product_path = self._product_path(product)
                 size = self._storage.size(product_path)
-                metadata = {'active': True, 'archive_date': self._database.server_time_utc(), 'size': size}
+                core.active = True
+                core.archive_date = self._database.server_time_utc()
+                core.size = size
                 if 'hash' not in product.core or product.core.hash is None:
                     hash_type = self._plugin_hash_type(plugin)
                     if hash_type is not None:
@@ -1376,8 +1389,12 @@ class Archive(object):
                             hash = util.product_hash(paths, hash_type=hash_type)
                         except EnvironmentError as _error:
                             raise Error("cannot determine product hash [%s]" % (_error,))
-                        metadata['hash'] = hash
-                self.update_properties(Struct({'core': metadata}), product.core.uuid)
+                        # update hash
+                        core.hash = hash
+                self.update_properties(properties, product.core.uuid, create_namespaces=update_properties)
+
+                if tags:
+                    self._database.tag(product.core.uuid, tags)
 
                 # verify product hash.
                 if verify_hash and 'hash' in product.core:

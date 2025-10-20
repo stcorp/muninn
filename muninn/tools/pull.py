@@ -15,12 +15,14 @@ class PullProcessor(Processor):
     def __init__(self, args):
         super(PullProcessor, self).__init__(args)
         self.args = args
+        self.update_properties = True if args.update_properties else False
         self.verify_hash = True if args.verify_hash else False
         self.verify_hash_download = True if args.verify_hash_download else False
 
     def perform_operation(self, archive, product):
         archive.pull(
             product.core.uuid,
+            update_properties=self.update_properties,
             verify_hash=self.verify_hash,
             verify_hash_download=self.verify_hash_download
         )
@@ -44,6 +46,8 @@ def pull(args):
 
 def main():
     parser = create_parser(description="Pull remote files into the archive.", parallel=True)
+    parser.add_argument("--update-properties", action="store_true",
+                        help="update properties in catalog as if the product was ingested using muninn-ingest")
     parser.add_argument("--verify-hash", action="store_true",
                         help="verify the hash of the product after it has been put in the archive")
     parser.add_argument("--verify-hash-download", action="store_true",
