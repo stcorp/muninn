@@ -712,7 +712,7 @@ Return the path in storage to the specified product.
 #### pull
 
 ```python
-def pull(where="", parameters={}, verify_hash=False, verify_hash_download=False)
+def pull(where="", parameters={}, update_properties=False, verify_hash=False, verify_hash_download=False)
 ```
 
 Pull one or more remote products into the archive.
@@ -724,6 +724,9 @@ archive (i.e. the archive_path core metadata field should not be set).
 
 - `where` - Search expression or one or more product uuid(s) or properties.
 - `parameters` - Parameters referenced in the search expression (if any).
+- `update_properties` - If set to True then, after the pull, metadata and tags will be extracted from the
+  product using the analyze() function of the product type plugin, and the catalog entry
+  for the product will be updated with this metadata and tags.
 - `verify_hash` - If set to True then, after the pull, the product in the archive will be matched against
   the hash from the metadata (only if the metadata contained a hash).
 - `verify_hash_download` - If set to True then, before the product is stored in the archive, the pulled
