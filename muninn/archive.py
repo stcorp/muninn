@@ -245,6 +245,15 @@ class Archive(object):
 
         _register_extension(self, remote, 'muninn.remote', 'remote_backend')
 
+        # s3fs mappings
+        self.s3fs_mappings = {}
+        if configuration is not None and 's3fs' in configuration:
+            for mapping in configuration.get('s3fs').get('mappings').split(' '):
+                prefix, path = mapping.split('=')
+                if not prefix.startswith('s3://'):
+                    raise Error("s3fs mapping '%s' does not start with an s3 url" % mapping)
+                self.s3fs_mappings[prefix] = path
+
     def __enter__(self):
         return self
 
@@ -638,8 +647,14 @@ class Archive(object):
         if self._storage is None:
             remote_url = product.core.remote_url
 
+            # apply s3fs mapping if applicable
+            for prefix in self.s3fs_mappings:
+                if remote_url.startswith(prefix):
+                    remote_url = "file://" + self.s3fs_mappings[prefix] + remote_url[len(prefix):]
+                    break
+
             if remote_url.startswith('file://'):
-                product_path = product.core.remote_url[7:]
+                product_path = remote_url[7:]
                 if os.path.isdir(product_path):
                     paths = [os.path.join(product_path, basename) for basename in os.listdir(product_path)]
                 else:
@@ -1315,6 +1330,10 @@ class Archive(object):
             product_path = self._product_path(product)
             return os.path.join(self._storage.global_prefix, product_path)
         if remote_url is not None:
+            # apply s3fs mapping if applicable
+            for prefix in self.s3fs_mappings:
+                if remote_url.startswith(prefix):
+                    return self.s3fs_mappings[prefix] + remote_url[len(prefix):]
             if remote_url.startswith('file://'):
                 return remote_url[7:]
             return remote_url

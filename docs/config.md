@@ -150,6 +150,14 @@ backend and may contain the following settings:
 
 [*] ``user`` and ``key`` can be taken from a credentials file pointed to by ``auth_file``. The entry in the credentials file should then have a key value equal to the ``authurl`` value in the archive configuration and it should contain a field for ``auth_type`` (set to ``Swift``), and of course contain the ``user`` and ``key`` fields.
 
+# Section "s3fs"
+
+For data where muninn maintains the storage (i.e. ``archive_path`` is set in the properties for products) it is possible to switch from the ``s3`` storage backend to the ``fs`` storage backend to have muninn point to a local s3fs mounted version of the same archive.
+
+For data where muninn does not maintain the storage (i.e. ``archive_path`` is not set) the product location is provided by the ``remote_url`` property and switching between direct s3 access and local s3fs access then cannot be done using the storage backend setting. This s3fs configuration section is meant to cover this use case and to allow mapping of ``remote_url`` values using an ``s3://`` url to a local file path. This mapping is only applied when muninn retrieves/pulls files or when ``Archive.product_path`` is called. The value of the ``remote_url`` property itself will never be modified.
+
+- ``mappings``: Mandatory. A space separate list of mappings, with each mapping providing an ``s3://`` remote_url prefix, a ``=`` separation character, and the absolute local file path of the s3fs mount for that prefix. e.g. ``mapping = s3://mybucket=/myarchive s3://otherbucket/some/path=/mounts/otherarchive``
+
 # Section "extension:<product_type_extension>"
 
 Sections starting with ``extension:`` provide additional parameters that can be passed to the given product type extension.

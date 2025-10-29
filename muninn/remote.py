@@ -289,6 +289,15 @@ class FTPBackend(RemoteBackend):
 
 class S3Backend(RemoteBackend):
     def pull(self, archive, product, target_dir):
+        # apply s3fs mapping if applicable
+        for prefix in archive.s3fs_mappings:
+            if product.core.remote_url.startswith(prefix):
+                source_path = archive.s3fs_mappings[prefix] + product.core.remote_url[len(prefix):]
+                if not os.path.exists(source_path):
+                    raise DownloadError("s3fs path %s (for %s) does not exist" % (source_path, product.core.remote_url))
+                target_path = os.path.join(target_dir, os.path.basename(source_path))
+                util.copy_path(source_path, target_path)
+                return self.auto_extract(target_path, product)
         credentials = get_credentials(archive, product.core.remote_url)
         paths = download_s3(product.core.remote_url, target_dir, credentials=credentials)
         if len(paths) == 1:
