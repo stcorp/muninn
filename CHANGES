@@ -1,3 +1,9 @@
+7.2.0 2025-10-29
+~~~~~~~~~~~~~~~~
+
+* Added support for defining s3fs mappings in the muninn archive config
+  for mapping 'remote_url' s3 urls (mostly useful when storage=none).
+
 7.1.0 2025-10-20
 ~~~~~~~~~~~~~~~~
 
