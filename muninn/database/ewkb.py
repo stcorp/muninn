@@ -39,9 +39,8 @@ class EWKBEncoder(Visitor):
         if len(visitable) == 0:
             ewkb = self._encode("I", 0)
         else:
-            ewkb = self._encode("I", len(visitable) + 1)
+            ewkb = self._encode("I", len(visitable))
             ewkb += b"".join([self.visit(point, False) for point in visitable])
-            ewkb += self.visit(visitable.point(0), False)
         return self._encode_tag(GeometryType.LINESTRING, srid) + ewkb if tagged else ewkb
 
     def visit_Polygon(self, visitable, tagged, srid):
@@ -125,7 +124,7 @@ def _decode_linear_ring(stream):
     if points[-1] != points[0]:
         raise Error("linear ring should be closed")
 
-    return LinearRing(points[:-1])
+    return LinearRing(points)
 
 
 def _decode_polygon(stream):

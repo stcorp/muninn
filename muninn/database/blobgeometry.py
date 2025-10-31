@@ -39,9 +39,8 @@ class BLOBGeometryEncoder(Visitor):
         if len(visitable) == 0:
             wkb = self._encode("I", 0)
         else:
-            wkb = self._encode("I", len(visitable) + 1)
+            wkb = self._encode("I", len(visitable))
             wkb += b"".join([self.visit(point, False) for point in visitable])
-            wkb += self.visit(visitable.point(0), False)
         return self._encode_tag(GeometryType.LINESTRING) + wkb if tagged else wkb
 
     def visit_Polygon(self, visitable, tagged):
