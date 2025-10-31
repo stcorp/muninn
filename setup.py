@@ -15,7 +15,7 @@ requirements = []
 
 setup(
     name="muninn",
-    version="7.2.0",
+    version="7.2.1",
     description="Data product catalogue and archive system",
     url="https://github.com/stcorp/muninn",
     author="S[&]T",
