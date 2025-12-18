@@ -200,14 +200,8 @@ def download_sftp(url, target_dir, credentials, timeout):
         transport = paramiko.Transport((url.hostname, url.port or 22))
         transport.connect(username=username, password=password)
         sftp = paramiko.SFTPClient.from_transport(transport)
-        with sftp.open(url.path, 'rb') as remote_file:
-            remote_file.prefetch(max_concurrent_requests=64)  # limit max requests to prevent request flood
-            with open(local_file, 'wb') as output:
-                while True:
-                    chunk = remote_file.read(1048576)  # use 1MB blocks
-                    if not chunk:
-                        break
-                    output.write(chunk)
+        sftp.get_channel().settimeout(timeout)
+        sftp.get(url.path, local_file, max_concurrent_prefetch_requests=128)
         sftp.close()
         transport.close()
     except Exception as e:
