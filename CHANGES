@@ -1,3 +1,7 @@
+* Added explicit 'max concurrent requests' setting for sftp remote backend to
+  prevent potential request flooding of sftp servers when downloading large
+  files (which could result in very slow download behaviour).
+
 7.2.1 2025-10-31
 ~~~~~~~~~~~~~~~~
 
