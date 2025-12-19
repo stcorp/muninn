@@ -1,3 +1,5 @@
+* Added support for --human-readable option to muninn-search.
+
 * Added explicit 'max concurrent requests' setting for sftp remote backend to
   prevent potential request flooding of sftp servers when downloading large
   files (which could result in very slow download behaviour).
