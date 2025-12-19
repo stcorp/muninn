@@ -9,7 +9,7 @@ from datetime import timedelta
 import argparse
 
 import muninn
-from muninn.tools.utils import create_parser, parse_args_and_run
+from muninn.tools.utils import create_parser, format_duration, format_size, parse_args_and_run
 
 
 try:
@@ -27,59 +27,6 @@ else:
 
 
 DEFAULT_STATS = ['size.sum', 'validity_start.min', 'validity_stop.max']
-
-
-def ceil(size):
-    integer_size = int(size)
-    return integer_size + 1 if size > integer_size else integer_size
-
-
-def human_readable_size(size, base=1024, powers=["Bi", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]):
-    if len(powers) == 0:
-        return str(size)
-
-    power = 0
-    unit = 1
-    while power < len(powers) - 1 and unit * base <= size:
-        unit *= base
-        power += 1
-
-    size = size / unit
-    ceil_size = ceil(size)
-    ceil_size_10 = ceil(size * 10.0) / 10.0
-
-    if power > 0 and size < 10.0 and ceil_size_10 < 10.0:
-        result = "%.1f" % ceil_size_10
-    elif ceil_size == base and power < len(powers) - 1:
-        power += 1
-        result = "1.0"
-    else:
-        result = str(ceil_size)
-
-    return result + powers[power]
-
-
-def format_duration(duration):
-    if duration is None:
-        return ''
-        # return "<unknown>"
-
-    try:
-        duration = timedelta(seconds=round(duration))
-    except OverflowError:
-        return "<overflow>"
-    return str(duration)
-
-
-def format_size(size, human_readable=False):
-    if size is None:
-        return ''
-        # return "<unknown>"
-
-    if not human_readable:
-        return str(size)
-
-    return human_readable_size(float(size))
 
 
 # Support multiple table output formats
@@ -130,9 +77,6 @@ class TabulateWriter(PlainWriter):
         self._data.append(self._format_items(values))
 
     def footer(self):
-        # align core.size fields to the right (only available in tabulate > 0.8.2)
-        # colalign = ['right' if i in self._size_fields else None for i in range(len(self._header))]
-        # print(tabulate.tabulate(self._data, headers=self._header, tablefmt=self._format), colalign=colalign)
         print(tabulate.tabulate(self._data, headers=self._header, tablefmt=self._format))
 
 

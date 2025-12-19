@@ -13,7 +13,7 @@ try:
 except ImportError:
     tabulate = None
 
-from muninn.tools.utils import create_parser, parse_args_and_run
+from muninn.tools.utils import create_parser, format_size, parse_args_and_run
 
 OWN_SUPPORTED_FORMATS = ['psv', 'csv']
 if tabulate is None:
@@ -25,20 +25,27 @@ else:
 
 
 class PlainWriter(object):
-    def __init__(self, properties):
+    def __init__(self, properties, human_readable=False):
         self._properties = properties
+        self.human_readable = human_readable
 
     def header(self):
         header = [namespace + "." + name for namespace, name in self._properties]
         print("|", " | ".join(header), "|")
 
+    def _format_property(self, namespace, name, properties):
+        try:
+            if namespace == "core" and name == "size":
+                return format_size(properties[namespace][name], self.human_readable)
+            else:
+                return str(properties[namespace][name])
+        except KeyError:
+            return ""
+
     def properties(self, properties):
         values = []
         for namespace, name in self._properties:
-            try:
-                values.append(str(properties[namespace][name]))
-            except KeyError:
-                values.append("")
+            values.append(self._format_property(namespace, name, properties))
         print("|", " | ".join(values), "|")
 
     def footer(self):
@@ -46,8 +53,8 @@ class PlainWriter(object):
 
 
 class TabulateWriter(PlainWriter):
-    def __init__(self, properties, fmt='orgtbl'):
-        super(TabulateWriter, self).__init__(properties)
+    def __init__(self, properties, human_readable=False, fmt='orgtbl'):
+        super(TabulateWriter, self).__init__(properties, human_readable)
         self._header = []
         self._data = []
         self._format = fmt
@@ -58,10 +65,7 @@ class TabulateWriter(PlainWriter):
     def properties(self, properties):
         values = []
         for namespace, name in self._properties:
-            try:
-                values.append(str(properties[namespace][name]))
-            except KeyError:
-                values.append("")
+            values.append(self._format_property(namespace, name, properties))
         self._data.append(values)
 
     def footer(self):
@@ -69,9 +73,6 @@ class TabulateWriter(PlainWriter):
 
 
 class CSVWriter(PlainWriter):
-    def __init__(self, properties):
-        super(CSVWriter, self).__init__(properties)
-
     def header(self):
         header = [namespace + "." + name for namespace, name in self._properties]
         print(",".join(["\"" + name.replace("\"", "\"\"") + "\"" for name in header]))
@@ -79,10 +80,7 @@ class CSVWriter(PlainWriter):
     def properties(self, properties):
         values = []
         for namespace, name in self._properties:
-            try:
-                values.append("\"" + str(properties[namespace][name]).replace("\"", "\"\"") + "\"")
-            except KeyError:
-                values.append("\"\"")
+            values.append("\"" + self._format_property(namespace, name, properties) + "\"")
         print(",".join(values))
 
 
@@ -182,13 +180,13 @@ def search(args):
 
         # Output the requested properties of all products matching the search expression in the requested output format.
         if args.output_format == "psv":  # PSV = Pipe Separated Values
-            writer = PlainWriter(properties)
+            writer = PlainWriter(properties, args.human_readable)
         elif args.output_format == "csv":
-            writer = CSVWriter(properties)
+            writer = CSVWriter(properties, args.human_readable)
         elif tabulate is not None:
-            writer = TabulateWriter(properties, args.output_format)
+            writer = TabulateWriter(properties, args.human_readable, args.output_format)
         else:
-            writer = PlainWriter(properties)
+            writer = PlainWriter(properties, args.human_readable)
 
         writer.header()
         for product in products:
@@ -254,6 +252,7 @@ def main():
     parser.add_argument("-p", "--property", action="append", type=property_list, dest="properties",
                         help="white space separated list of properties to output; use `<namespace>.*` to include all "
                         "properties of a namespace, e.g. core.*; use `*` to include all namespaces")
+    parser.add_argument("-H", "--human-readable", action="store_true", help="output human readable core.size")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-c", "--count", action="store_true", help="suppress normal output; instead print the "
                        "number of products matching the search expression")

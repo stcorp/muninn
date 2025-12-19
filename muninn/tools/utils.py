@@ -21,6 +21,59 @@ except ImportError:
 import muninn
 
 
+def ceil(size):
+    integer_size = int(size)
+    return integer_size + 1 if size > integer_size else integer_size
+
+
+def human_readable_size(size, base=1024, powers=["Bi", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]):
+    if len(powers) == 0:
+        return str(size)
+
+    power = 0
+    unit = 1
+    while power < len(powers) - 1 and unit * base <= size:
+        unit *= base
+        power += 1
+
+    size = size / unit
+    ceil_size = ceil(size)
+    ceil_size_10 = ceil(size * 10.0) / 10.0
+
+    if power > 0 and size < 10.0 and ceil_size_10 < 10.0:
+        result = "%.1f" % ceil_size_10
+    elif ceil_size == base and power < len(powers) - 1:
+        power += 1
+        result = "1.0"
+    else:
+        result = str(ceil_size)
+
+    return result + powers[power]
+
+
+def format_duration(duration):
+    if duration is None:
+        return ''
+        # return "<unknown>"
+
+    try:
+        duration = timedelta(seconds=round(duration))
+    except OverflowError:
+        return "<overflow>"
+    return str(duration)
+
+
+def format_size(size, human_readable=False):
+    if size is None:
+        return ''
+        # return "<unknown>"
+
+    if not human_readable:
+        return str(size)
+
+    return human_readable_size(float(size))
+
+
 # This is a base class for operations on a list of items that can be performed in parallel using multiprocessing.
 # If you use the processor object as a callable then it is assumed that the operation is performed using subprocesses.
 # It will then create its own muninn archive instance per sub-process and prevents KeyboardInterrupt handling.
