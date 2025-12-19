@@ -69,7 +69,8 @@ class TabulateWriter(PlainWriter):
         self._data.append(values)
 
     def footer(self):
-        print(tabulate.tabulate(self._data, headers=self._header, tablefmt=self._format, disable_numparse=True))
+        colalign = ['right' if field == 'core.size' else 'left' for field in self._header]
+        print(tabulate.tabulate(self._data, headers=self._header, tablefmt=self._format, colalign=colalign))
 
 
 class CSVWriter(PlainWriter):

@@ -77,7 +77,12 @@ class TabulateWriter(PlainWriter):
         self._data.append(self._format_items(values))
 
     def footer(self):
-        print(tabulate.tabulate(self._data, headers=self._header, tablefmt=self._format))
+        def right_align(field):
+            if field == "count" or field.startswith('size.'):
+                return True
+            return False
+        colalign = ['right' if right_align(field) else 'left' for field in self._header]
+        print(tabulate.tabulate(self._data, headers=self._header, tablefmt=self._format, colalign=colalign))
 
 
 class CSVWriter(PlainWriter):
