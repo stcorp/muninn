@@ -70,6 +70,8 @@ class TabulateWriter(PlainWriter):
 
     def footer(self):
         colalign = ['right' if field == 'core.size' else 'left' for field in self._header]
+        if len(self._data) == 0:
+            colalign = []
         print(tabulate.tabulate(self._data, headers=self._header, tablefmt=self._format, colalign=colalign))
 
 
