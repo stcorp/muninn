@@ -45,6 +45,21 @@ class _ExtensionList(Sequence):
     sub_type = _ExtensionName
 
 
+class _Identifier(Text):
+    _alias = "identifier"
+
+    @classmethod
+    def validate(cls, value):
+        super(_Identifier, cls).validate(value)
+        if not re.match(r"[a-zA-Z][_\-a-zA-Z0-9]*$", value):
+            raise ValueError("invalid value %r for type %r" % (value, cls.name()))
+
+
+class _IdentifierList(Sequence):
+    _alias = "identifier_list"
+    sub_type = _Identifier
+
+
 class _ArchiveConfig(Mapping):
     _alias = "archive"
 
@@ -56,7 +71,7 @@ class _ArchiveConfig(Mapping):
     product_type_extensions = _ExtensionList(optional=True)
     remote_backend_extensions = _ExtensionList(optional=True)
     hook_extensions = _ExtensionList(optional=True)
-    synchronizers = _ExtensionList(optional=True)
+    synchronizers = _IdentifierList(optional=True)
     auth_file = Text(optional=True)
     tempdir = Text(optional=True)
 

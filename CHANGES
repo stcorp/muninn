@@ -4,6 +4,8 @@
   prevent potential request flooding of sftp servers when downloading large
   files (which could result in very slow download behaviour).
 
+* Allow synchronizer names in archive config to contain '-' (and disallow '.').
+
 7.2.1 2025-10-31
 ~~~~~~~~~~~~~~~~
 
