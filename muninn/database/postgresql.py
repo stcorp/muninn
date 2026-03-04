@@ -942,9 +942,9 @@ class PostgresqlBackend(DatabaseBackend):
         return sqls
 
     @translate_errors
-    def search(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], property_names=[]):
+    def search(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], property_names=[], offset=None):
         query, query_parameters, query_description = \
-            self._sql_builder.build_search_query(where, order_by, limit, parameters, namespaces, property_names)
+            self._sql_builder.build_search_query(where, order_by, limit, parameters, namespaces, property_names, offset)
 
         with self._connection:
             cursor = self._connection.cursor()
