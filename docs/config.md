@@ -129,14 +129,14 @@ backend and may contain the following settings:
 - ``host``: Mandatory. S3 host name or URL.
 - ``port``: Optional. S3 host port.
 - ``region``: Optional. Name of the S3 region.
-- ``access_key``: Mandatory*. S3 authentication access key.
-- ``secret_access_key``: Mandatory*. S3 authentication secret access key.
+- ``access_key``: Optional*. S3 authentication access key.
+- ``secret_access_key``: Optional*. S3 authentication secret access key.
 - ``download_args``: [Optional] JSON representation of boto3 download_file ExtraArgs parameter.
 - ``upload_args``: [Optional] JSON representation of boto3 upload_file ExtraArgs parameter.
 - ``copy_args``: [Optional] JSON representation of boto3 copy ExtraArgs parameter.
 - ``transfer_config``: [Optional] JSON representation of boto3.s3.transfer.TransferConfig parameters.
 
-[*] ``access_key`` and ``secret_access_key`` can be taken from a credentials file pointed to by ``auth_file``. The entry in the credentials file should then have a key value equal to the ``host`` value in the archive configuration and it should contain fields for ``auth_type`` (set to ``S3``),  ``bucket`` (set equal to the ``bucket`` value in the archive configuration), and of course contain the ``access_key`` and ``secret_access_key`` fields.
+[*] ``access_key`` and ``secret_access_key`` can be taken from a credentials file pointed to by ``auth_file``. The entry in the credentials file should then have a key value equal to the ``host`` value in the archive configuration and it should contain fields for ``auth_type`` (set to ``S3``),  ``bucket`` (set equal to the ``bucket`` value in the archive configuration), and of course contain the ``access_key`` and ``secret_access_key`` fields. Otherwise boto3's standard credential resolving logic is used.
 
 # Section "swift"
 
