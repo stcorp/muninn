@@ -362,7 +362,7 @@ class PostgresqlBackend(DatabaseBackend):
                       (self._link_table_name, self._link_table_name))
 
         # Create the table for tags.
-        result.append("CREATE TABLE %s (id SERIAL PRIMARY KEY, uuid UUID NOT NULL, tag TEXT NOT NULL);" %
+        result.append("CREATE TABLE %s (id SERIAL PRIMARY KEY, uuid UUID NOT NULL, tag TEXT COLLATE \"C\" NOT NULL);" %
                       self._tag_table_name)
         result.append("ALTER TABLE %s ADD CONSTRAINT %s_tag_uuid_tag_uniq UNIQUE (uuid, tag);" %
                       (self._tag_table_name, self._tag_table_name))
