@@ -1664,7 +1664,7 @@ class Archive(object):
         if self._storage is not None:
             return self._storage._root.replace('\\', '/')
 
-    def search(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], property_names=[]):
+    def search(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], property_names=[], offset=None):
         """Search the product catalogue for products matching the specified search expression.
 
         Arguments:
@@ -1683,11 +1683,12 @@ class Archive(object):
                         Properties are specified as `<namespace>.<identifier>`
                         (the namespace can be omitted for the `core` namespace).
                         If the `property_names` parameter is provided then the namespaces parameter is ignored.
+        offset      --  Offset the results by the specified number, useful for pagination.
 
         Returns:
         A list of matching products.
         """
-        return self._database.search(where, order_by, limit, parameters, namespaces, property_names)
+        return self._database.search(where, order_by, limit, parameters, namespaces, property_names, offset)
 
     def source_products(self, uuid):
         """Return the UUIDs of the products that are linked to the given product as source products.
