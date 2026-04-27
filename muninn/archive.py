@@ -769,7 +769,6 @@ class Archive(object):
                             against the metadata hash (if it exists).
         use_current_path -- Ingest the product by keeping the file(s) at the current path (which must be inside the
                             root directory of the archive).
-                            This option is ignored if `ingest_product` is False.
         force            -- If set to True, then skip default size check between product and existing metadata.
 
         Returns:
