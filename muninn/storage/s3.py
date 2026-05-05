@@ -56,17 +56,12 @@ def create(configuration, tempdir, auth_file):
                     if option in record and option not in options:
                         options[option] = record[option]
 
-    # check that mandatory options are configured
-    for option in ('access_key', 'secret_access_key'):
-        if option not in options:
-            raise Error("'%s' not configured" % option)
-
     _S3Config.validate(options)
     return S3StorageBackend(tempdir=tempdir, **options)
 
 
 class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate directory, 'dir/' with contents?
-    def __init__(self, bucket, host, access_key, secret_access_key, port=None, region=None, prefix='',
+    def __init__(self, bucket, host, access_key=None, secret_access_key=None, port=None, region=None, prefix='',
                  download_args=None, upload_args=None, copy_args=None, transfer_config=None, tempdir=None):
         super(S3StorageBackend, self).__init__(tempdir)
 
