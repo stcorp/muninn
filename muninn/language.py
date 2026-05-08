@@ -221,7 +221,7 @@ class TokenStream(object):
             r"""[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}""",  # UUID literals
             r"""\d+(?:\.\d*(?:[eE][+-]?\d+)?|[eE][+-]?\d+)""",               # Real literals
             r"""0x[0-9a-fA-F]+|0o[0-7]\d+|0b[0-1]+|\d+""",                   # Integer literals
-            r"""<=|>=|==|!=|~=|not in|[*<>@()\[\],.+-/]""",                  # Operators and delimiters
+            r"""<=|>=|==|!=|~=|[*<>@()\[\],.+-/]""",                         # Operators and delimiters
             r"""[a-zA-Z]\w*""",                                              # Names (incl. true, false, in)
         )
 
@@ -571,9 +571,20 @@ def parse_arithmetic_expression(stream):
 
 def parse_comparison(stream):
     lhs = parse_arithmetic_expression(stream)
-    if stream.test(TokenType.OPERATOR, ("<", ">", "==", ">=", "<=", "!=", "~=", "in", "not in")):
-        operator_token = stream.expect(TokenType.OPERATOR, ("<", ">", "==", ">=", "<=", "!=", "~=", "in", "not in"))
+
+    # Handle "not in" pseudo-operator.
+    if stream.test(TokenType.NAME, "not"):
+        stream.next()
+        if stream.test(TokenType.OPERATOR, "in"):
+            stream.next()
+            return FunctionCall("not in", lhs, parse_comparison(stream))
+        else:
+            raise Error("expected 'in' after 'not'")
+
+    if stream.test(TokenType.OPERATOR, ("<", ">", "==", ">=", "<=", "!=", "~=", "in")):
+        operator_token = stream.expect(TokenType.OPERATOR, ("<", ">", "==", ">=", "<=", "!=", "~=", "in"))
         return FunctionCall(operator_token.value, lhs, parse_comparison(stream))
+
     return lhs
 
 
