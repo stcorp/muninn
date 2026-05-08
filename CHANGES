@@ -6,6 +6,11 @@
 
 * Allow synchronizer names in archive config to contain '-' (and disallow '.').
 
+* Implemented workaround for unbounded requests in paramiko sftp backend and
+  properly support timeout setting.
+
+* Fix invalid distinction between 'not' and 'not in' in some query expressions.
+
 7.2.1 2025-10-31
 ~~~~~~~~~~~~~~~~
 
