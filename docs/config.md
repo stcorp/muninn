@@ -62,7 +62,7 @@ This section contains backend specific settings for the postgresql backend and
 may contain the following settings:
 
 - ``library``: Python library used to connect to postgresql. The default is
-  ``psycopg2``. The only other library that is currently supported is ``pg8000``.
+  ``psycopg``. The only other libraries that are currently supported are ``psycopg2`` and ``pg8000``.
 
 - ``connection_string``: Mandatory. A postgresql connection string of the database
   containing product properties. The default is the empty string, which will
