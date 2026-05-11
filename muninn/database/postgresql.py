@@ -326,7 +326,7 @@ class PostgresqlConnection(object):
 
 
 class PostgresqlBackend(DatabaseBackend):
-    def __init__(self, connection_string="", table_prefix="", library="psycopg2"):
+    def __init__(self, connection_string="", table_prefix="", library="psycopg"):
         self._connection = PostgresqlConnection(connection_string, library)
         self._library = library
 
