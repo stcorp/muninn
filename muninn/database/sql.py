@@ -575,7 +575,7 @@ class SQLBuilder(object):
 
         return query, where_parameters, result_fields
 
-    def build_search_query(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], property_names=[]):
+    def build_search_query(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], property_names=[], offset=None):
         if property_names:
             namespaces = []
             namespace_properties = {}
@@ -628,6 +628,19 @@ class SQLBuilder(object):
 
             limit_clause = "LIMIT %d" % limit
 
+        # Parse the offset clause.
+        offset_clause = ""
+        if offset is not None:
+            try:
+                offset = int(offset)
+            except (TypeError, ValueError):
+                raise Error("offset %r must be a positive integer" % offset)
+
+            if offset < 0:
+                raise Error("offset %r must be a positive integer" % offset)
+
+            offset_clause = "OFFSET %d" % offset
+
         # Generate the SELECT clause.
         select_list = []
         for namespace, identifiers in description:
@@ -649,6 +662,8 @@ class SQLBuilder(object):
             query = "%s %s" % (query, order_by_clause)
         if limit_clause:
             query = "%s %s" % (query, limit_clause)
+        if offset_clause:
+            query = "%s %s" % (query, offset_clause)
 
         return query, where_parameters, description
 

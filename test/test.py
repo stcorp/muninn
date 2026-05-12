@@ -810,6 +810,15 @@ class TestArchive:
             s = archive.search(limit=x)
             assert len(s) == min(x, 2)
 
+        # offset
+        archive.ingest(['data/b.txt'])
+        s = archive.search(limit=1, order_by=['archive_date'], offset=0).pop()
+        assert s.core.physical_name == "pi.txt"
+        s = archive.search(limit=1, order_by=['archive_date'], offset=1).pop()
+        assert s.core.physical_name == "a.txt"
+        s = archive.search(limit=1, order_by=['archive_date'], offset=2).pop()
+        assert s.core.physical_name == "b.txt"
+
     def test_tags(self, archive):
         properties = self._ingest_file(archive)
         uuid = properties.core.uuid
