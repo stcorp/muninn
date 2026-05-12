@@ -1,4 +1,9 @@
+* Added support for psycopg (V3) as backend library for postgresql. This is now
+  also the default library for the postgresql backend.
+
 * Added support for --human-readable option to muninn-search.
+
+* Added support for offset parameter in archive.search().
 
 * Added explicit 'max concurrent requests' setting for sftp remote backend to
   prevent potential request flooding of sftp servers when downloading large
