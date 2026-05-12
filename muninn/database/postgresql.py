@@ -244,13 +244,13 @@ class PostgresqlConnection(object):
         self._library = library
         self._connection = None
         self._in_transaction = False
-        
+
         if library == 'psycopg':
             try:
                 self._backend = psycopg
             except NameError:
                 raise Error('could not import psycopg')
-            
+
         elif library == 'psycopg2':
             try:
                 self._backend = psycopg2
