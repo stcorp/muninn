@@ -11,6 +11,13 @@ import inspect
 import json
 
 try:
+    import psycopg
+    from psycopg.adapt import Dumper, Loader
+    from psycopg.types import TypeInfo
+except ImportError:
+    pass
+
+try:
     import psycopg2
     import psycopg2.extensions
     import psycopg2.extras
@@ -140,6 +147,30 @@ def _connect_psycopg2(connection_string):
 
     return _connection
 
+def _connect_psycopg(connection_string):
+    class GeometryDumper(Dumper):
+        def dump(self, obj):
+            return ewkb.encode_hexewkb(obj).encode()
+
+    class GeographyLoader(Loader):
+        def load(self, data):
+            if data is None:
+                return None
+            return ewkb.decode_hexewkb(data)
+
+    conn = psycopg.connect(connection_string)
+
+    # Register adapter for the Geometry type.
+    conn.adapters.register_dumper(geometry.Geometry, GeometryDumper)
+
+    # Register cast for the Geometry type.
+    info = TypeInfo.fetch(conn, "geography")
+    if info is None:
+        raise InternalError('unable to retrieve type object id of database type: "GEOGRAPHY"')
+    conn.adapters.register_loader(info.oid, GeographyLoader)
+
+    return conn
+
 
 class _PostgresqlConfig(Mapping):
     _alias = "postgresql"
@@ -169,9 +200,8 @@ def translate_errors(func):
             return func(self, *args, **kwargs)
         except self._connection._backend.Error as _error:
             message = None
-
-            # psycopg2
-            if self._library == 'psycopg2':
+            # psycopg
+            if self._library in ('psycopg2', 'psycopg'):
                 try:
                     message = _error.diag.message_primary
                     if message is not None:
@@ -215,7 +245,13 @@ class PostgresqlConnection(object):
         self._connection = None
         self._in_transaction = False
 
-        if library == 'psycopg2':
+        if library == 'psycopg':
+            try:
+                self._backend = psycopg
+            except NameError:
+                raise Error('could not import psycopg')
+
+        elif library == 'psycopg2':
             try:
                 self._backend = psycopg2
             except NameError:
@@ -257,9 +293,11 @@ class PostgresqlConnection(object):
             self._in_transaction = False
             self.close()
 
+
     def _connect(self):
-        # Re-establish the connection to the database.
-        if self._library == 'psycopg2':
+        if self._library == 'psycopg':
+            self._connection = _connect_psycopg(self._connection_string)
+        elif self._library == 'psycopg2':
             self._connection = _connect_psycopg2(self._connection_string)
         else:
             self._connection = _connect_pg8000(self._connection_string)
@@ -288,7 +326,7 @@ class PostgresqlConnection(object):
 
 
 class PostgresqlBackend(DatabaseBackend):
-    def __init__(self, connection_string="", table_prefix="", library="psycopg2"):
+    def __init__(self, connection_string="", table_prefix="", library="psycopg"):
         self._connection = PostgresqlConnection(connection_string, library)
         self._library = library
 

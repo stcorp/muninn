@@ -8,6 +8,7 @@ Steps to run the Muninn tests:
   - pytest
   - boto3
   - swiftclient
+  - psycopg
   - psycopg2
   - pg8000
   - pyftpdlib
