@@ -13,6 +13,8 @@ except ImportError:
 from muninn.exceptions import Error
 
 
+# This function only works for polygons on a 2D surface
+# It explicitly does not support polygons crossing the dateline and/or covering the poles (you need to wrap() first)
 def polygon_rotation(pts):
     # return wether polygon is:
     #  1: anti-clockwise rotation (right-hand-rule) -> use inner area
