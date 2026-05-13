@@ -158,18 +158,18 @@ def _connect_psycopg(connection_string):
                 return None
             return ewkb.decode_hexewkb(data)
 
-    conn = psycopg.connect(connection_string)
+    _connection = psycopg.connect(connection_string)
 
     # Register adapter for the Geometry type.
-    conn.adapters.register_dumper(geometry.Geometry, GeometryDumper)
+    _connection.adapters.register_dumper(geometry.Geometry, GeometryDumper)
 
     # Register cast for the Geometry type.
-    info = TypeInfo.fetch(conn, "geography")
+    info = TypeInfo.fetch(_connection, "geography")
     if info is None:
         raise InternalError('unable to retrieve type object id of database type: "GEOGRAPHY"')
-    conn.adapters.register_loader(info.oid, GeographyLoader)
+    _connection.adapters.register_loader(info.oid, GeographyLoader)
 
-    return conn
+    return _connection
 
 
 class _PostgresqlConfig(Mapping):
@@ -547,7 +547,7 @@ class PostgresqlBackend(DatabaseBackend):
         # For those cases we swallow the exception.
         swallow = False
 
-        if self._library == 'psycopg2':
+        if self._library in ('psycopg2', 'psycopg'):
             try:
                 if _error.pgcode == PG_UNIQUE_VIOLATION:
                     swallow = True
