@@ -547,7 +547,7 @@ class PostgresqlBackend(DatabaseBackend):
         # For those cases we swallow the exception.
         swallow = False
 
-        if self._library == 'psycopg2':
+        if self._library in ('psycopg2', 'psycopg'):
             try:
                 if _error.pgcode == PG_UNIQUE_VIOLATION:
                     swallow = True
