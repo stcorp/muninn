@@ -13,24 +13,6 @@ except ImportError:
 from muninn.exceptions import Error
 
 
-# This function only works for polygons on a 2D surface
-# It explicitly does not support polygons crossing the dateline and/or covering the poles (you need to wrap() first)
-def polygon_rotation(pts):
-    # return wether polygon is:
-    #  1: anti-clockwise rotation (right-hand-rule) -> use inner area
-    #  0: no rotation -> polygon is empty or invalid
-    # -1: clockwise rotation (left-hand-rule) -> use outer area
-    # this can be calculated by summing the outer products of consecutive pts (taking vectors from (0,0) to the pt)
-    prev_pt = pts[0]
-    sum = 0
-    for pt in pts[1:]:
-        sum += pt[1] * prev_pt[0] - pt[0] * prev_pt[1]
-        prev_pt = pt
-    if sum == 0:
-        return 0
-    return math.copysign(1, sum)
-
-
 class Geometry(object):
     @property
     def min_x(self):
@@ -306,6 +288,68 @@ class LinearRing(GeometrySequence):
             wkt = "("  + ", ".join(["%f %f" % (point.x, point.y) for point in self]) + ")"
         return "LINESTRING " + wkt if tagged else wkt
 
+    def rotation_2d(self):
+        """
+        Return wether ring is:
+           1: anti-clockwise rotation (right-hand-rule) -> use inner area
+           0: no rotation -> ring is empty or invalid
+          -1: clockwise rotation (left-hand-rule) -> use outer area
+        This can be calculated by summing the outer products of consecutive pts (taking vectors from (0,0) to the pt)
+        """
+        prev_pt = self[0]
+        sum = 0
+        for pt in self[1:]:
+            sum += pt[1] * prev_pt[0] - pt[0] * prev_pt[1]
+            prev_pt = pt
+        if sum == 0:
+            return 0
+        return math.copysign(1, sum)
+
+    def rotation_3d(self):
+        """
+        Return wether ring is:
+           1: anti-clockwise rotation (right-hand-rule) -> use inner area
+           0: no rotation -> ring is empty or invalid
+          -1: clockwise rotation (left-hand-rule) -> use outer area
+        This can be calculated by summing the outer products of consecutive pts (dot(cross(b-a,c-b),b)/(|b-a||c-b|))
+        """
+        def xyz(pt):
+            sinlat = math.sin(pt[1] * math.pi / 180.);
+            sinlon = math.sin(pt[0] * math.pi / 180.);
+            coslat = math.cos(pt[1] * math.pi / 180.);
+            coslon = math.cos(pt[0] * math.pi / 180.);
+            return [coslat * coslon, coslat * sinlon, sinlat]
+        pts = [self[0]]
+        for pt in self[1:]:
+            if pt != pts[-1]:
+                pts.append(pt)
+        if pts[0] == pts[-1]:
+            pts = pts[:-1]
+        if len(pts) < 3:
+            return 0
+        a = xyz(pts[-2])
+        b = xyz(pts[-1])
+        edge1 = [pb - pa for pa, pb in zip(a,b)]
+        norm_edge1 = math.sqrt(edge1[0] * edge1[0] + edge1[1] * edge1[1] + edge1[2] * edge1[2])
+        sum = 0
+        for pt in pts:
+            c = xyz(pt)
+            edge2 = [pc - pb for pb, pc in zip(b,c)]
+            norm_edge2 = math.sqrt(edge2[0] * edge2[0] + edge2[1] * edge2[1] + edge2[2] * edge2[2])
+            v = [
+                edge1[1] * edge2[2] - edge1[2] * edge2[1],
+                edge1[2] * edge2[0] - edge1[0] * edge2[2],
+                edge1[0] * edge2[1] - edge1[1] * edge2[0],
+            ]
+            sum += (v[0] * b[0] + v[1] * b[1] + v[2] * b[2]) / (norm_edge1 * norm_edge2)
+            a = b
+            b = c
+            edge1 = edge2
+            norm_edge1 = norm_edge2
+        if sum == 0:
+            return 0
+        return math.copysign(1, sum)
+
     def __repr__(self):
         return "LinearRing(points=%r)" % self._geometries
 
@@ -332,6 +376,14 @@ class Polygon(GeometrySequence):
             'type': 'Polygon',
             'coordinates': [[[point.x, point.y] for point in ring] for ring in self],
         }
+
+    def rotation_2d(self):
+        # use outer ring
+        return self[0].rotation_2d()
+
+    def rotation_3d(self):
+        # use outer ring
+        return self[0].rotation_3d()
 
     def wrap(self):
         """
@@ -385,7 +437,7 @@ class Polygon(GeometrySequence):
             pts.append(Point(lon, lat))
         if len(pts_set) == 1:
             assert len(crossing_lat) == 0
-            if polygon_rotation(pts) < 0:
+            if as_linear_ring(pts).rotation_2d() < 0:
                 world = LinearRing([Point(-180, -90), Point(180, -90), Point(180, 90), Point(-180, 90),
                                     Point(-180, -90)])
                 return Polygon([world, LinearRing(pts)])
@@ -506,6 +558,12 @@ class MultiPolygon(GeometrySequence):
             'type': 'MultiPolygon',
             'coordinates': [[[[point.x, point.y] for point in ring] for ring in polygon] for polygon in self],
         }
+
+    def rotation_2d(self):
+        return [polygon.rotation_2d() for polygon in self]
+
+    def rotation_3d(self):
+        return [polygon.rotation_3d() for polygon in self]
 
     def wrap(self):
         polys = []
