@@ -14,6 +14,10 @@
 * Implemented workaround for unbounded requests in paramiko sftp backend and
   properly support timeout setting.
 
+* The file:// remote_url setting when storage=none will now have a trailing '/'
+  for the enclosing directory of multi-file products (to distinguish it from
+  products that are a directory themselves).
+
 * Fix invalid distinction between 'not' and 'not in' in some query expressions.
 
 7.2.1 2025-10-31

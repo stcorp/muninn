@@ -670,7 +670,7 @@ class Archive(object):
 
             if remote_url.startswith('file://'):
                 product_path = remote_url[7:]
-                if os.path.isdir(product_path):
+                if os.path.isdir(product_path) and product_path[-1] == '/':
                     paths = [os.path.join(product_path, basename) for basename in os.listdir(product_path)]
                 else:
                     paths = [product_path]
@@ -1241,7 +1241,7 @@ class Archive(object):
                     for path in paths:
                         if os.path.dirname(path) != parent_path:
                             raise Error("all paths need to have the same parent directory")
-                    updated_properties.core.remote_url = 'file://' + os.path.realpath(os.path.dirname(paths[0]))
+                    updated_properties.core.remote_url = 'file://' + os.path.realpath(os.path.dirname(paths[0])) + '/'
                 updated_properties.core.remote_url = updated_properties.core.remote_url.replace('\\', '/')
 
         except Exception as e:
