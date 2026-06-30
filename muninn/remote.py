@@ -129,6 +129,7 @@ def download_ftp(url, target_dir, credentials, timeout):
 
 def download_s3(url, target_dir, credentials=None):
     import boto3
+    from boto3.s3.transfer import TransferConfig
     url = urlparse(url)
     bucket = url.hostname
     access_key = None
@@ -137,6 +138,7 @@ def download_s3(url, target_dir, credentials=None):
     region = None
     paths = []
 
+    transfer_config = boto3.s3.transfer.TransferConfig()
     if credentials is not None:
         if 'host' in credentials:
             endpoint_url = credentials['host']
@@ -146,6 +148,8 @@ def download_s3(url, target_dir, credentials=None):
             access_key = credentials['access_key']
         if 'secret_access_key' in credentials:
             secret_access_key = credentials['secret_access_key']
+        if 'transfer_config' in credentials:
+            transfer_config = boto3.s3.transfer.TransferConfig(**json.loads(credentials['transfer_config']))
 
     s3_path = url.path[1:]  # ignore leading '/'
     try:
@@ -175,7 +179,7 @@ def download_s3(url, target_dir, credentials=None):
                 dirname = os.path.dirname(target)
                 if dirname != '':
                     util.make_path(dirname)
-                resource.Object(bucket, obj.key).download_file(target)
+                resource.Object(bucket, obj.key).download_file(target, Config=transfer_config)
     except Exception as e:
         raise DownloadError('Error downloading %s (Reason: %s)' % (url.geturl(), e))
 

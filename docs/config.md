@@ -229,7 +229,8 @@ connection_string = dbname=foo user=alice password=wonderland host=192.168.0.1
      "bucket": "another-bucket",
      "port": 443,
      "access_key": "XXXXXXXXXXXXXXXXXXXX",
-     "secret_access_key": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+     "secret_access_key": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+     "transfer_config": "{\"use_threads\": false}"
   }
 }
 ```

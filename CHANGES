@@ -9,6 +9,9 @@
   prevent potential request flooding of sftp servers when downloading large
   files (which could result in very slow download behaviour).
 
+* Added support for 'transfer_config' option in credentials file for S3 remote
+  backend (similar to the archive config file option for the S3 storage backend).
+
 * Allow synchronizer names in archive config to contain '-' (and disallow '.').
 
 * Implemented workaround for unbounded requests in paramiko sftp backend and
