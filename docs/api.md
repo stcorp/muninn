@@ -862,7 +862,7 @@ Return the archive root path.
 #### search
 
 ```python
-def search(where="", order_by=[], limit=None, parameters={}, namespaces=[], property_names=[])
+def search(where="", order_by=[], limit=None, parameters={}, namespaces=[], property_names=[], offset=None)
 ```
 
 Search the product catalogue for products matching the specified search expression.
@@ -884,6 +884,7 @@ Search the product catalogue for products matching the specified search expressi
   Properties are specified as `<namespace>.<identifier>`
   (the namespace can be omitted for the `core` namespace).
   If the `property_names` parameter is provided then the namespaces parameter is ignored.
+- `offset` - Offset the results by the specified number, useful for pagination.
   
 
 **Returns**:
