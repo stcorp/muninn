@@ -1,11 +1,11 @@
 #
-# Copyright (C) 2014-2025 S[&]T, The Netherlands.
+# Copyright (C) 2014-2026 S[&]T, The Netherlands.
 #
 
 from __future__ import absolute_import, division, print_function
 
 __version__ = "7.2.1"
-__copyright__ = "Copyright (C) 2014-2025 S[&]T, The Netherlands."
+__copyright__ = "Copyright (C) 2014-2026 S[&]T, The Netherlands."
 
 __all__ = ["Error", "InternalError", "Struct", "Archive", "open", "config_path"]
 
