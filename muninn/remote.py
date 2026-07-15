@@ -127,9 +127,10 @@ def download_ftp(url, target_dir, credentials, timeout):
     return local_file
 
 
-def download_s3(url, target_dir, credentials=None):
+def download_s3(url, target_dir, credentials, timeout, retries):
     import boto3
     from boto3.s3.transfer import TransferConfig
+    from botocore.client import Config
     url = urlparse(url)
     bucket = url.hostname
     access_key = None
@@ -151,10 +152,13 @@ def download_s3(url, target_dir, credentials=None):
         if 'transfer_config' in credentials:
             transfer_config = boto3.s3.transfer.TransferConfig(**json.loads(credentials['transfer_config']))
 
+    client_config = Config(connect_timeout=timeout, read_timeout=timeout, retries={'max_attempts': retries})
+
     s3_path = url.path[1:]  # ignore leading '/'
     try:
         resource = boto3.resource(service_name="s3", region_name=region, endpoint_url=endpoint_url,
-                                  aws_access_key_id=access_key, aws_secret_access_key=secret_access_key)
+                                  aws_access_key_id=access_key, aws_secret_access_key=secret_access_key,
+                                  config=client_config)
         objs = list(resource.Bucket(bucket).objects.filter(Prefix=s3_path))
     except Exception as e:
         raise DownloadError('Error downloading %s (Reason: %s)' % (url.geturl(), e))
@@ -304,7 +308,7 @@ class S3Backend(RemoteBackend):
                 util.copy_path(source_path, target_path)
                 return self.auto_extract(target_path, product)
         credentials = get_credentials(archive, product.core.remote_url)
-        paths = download_s3(product.core.remote_url, target_dir, credentials=credentials)
+        paths = download_s3(product.core.remote_url, target_dir, credentials, self.timeout, self.retries)
         if len(paths) == 1:
             return self.auto_extract(paths[0], product)
         return paths

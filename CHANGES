@@ -9,7 +9,8 @@
 * Added support for offset parameter in archive.search().
 
 * Added support for 'transfer_config' option in credentials file for S3 remote
-  backend (similar to the archive config file option for the S3 storage backend).
+  backend (similar to the archive config file option for the S3 storage backend)
+  and properly support timeout and retries settings.
 
 * Added explicit 'max concurrent requests' setting for sftp remote backend to
   prevent potential request flooding of sftp servers when downloading large
