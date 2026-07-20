@@ -131,6 +131,7 @@ backend and may contain the following settings:
 - ``region``: Optional. Name of the S3 region.
 - ``access_key``: Mandatory*. S3 authentication access key.
 - ``secret_access_key``: Mandatory*. S3 authentication secret access key.
+- ``client_config``: [Optional] JSON representation of boto3 client boto3.config.Config parameters.
 - ``download_args``: [Optional] JSON representation of boto3 download_file ExtraArgs parameter.
 - ``upload_args``: [Optional] JSON representation of boto3 upload_file ExtraArgs parameter.
 - ``copy_args``: [Optional] JSON representation of boto3 copy ExtraArgs parameter.

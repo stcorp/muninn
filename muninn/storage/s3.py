@@ -26,6 +26,7 @@ class _S3Config(Mapping):
     secret_access_key = Text(optional=True)
     region = Text(optional=True)
     prefix = Text(optional=True)
+    client_config = Text(optional=True)  # JSON representation of boto3 client boto3.config.Config parameters
     download_args = Text(optional=True)  # JSON representation of boto3 download_file ExtraArgs parameter
     upload_args = Text(optional=True)  # JSON representation of boto3 upload_file ExtraArgs parameter
     copy_args = Text(optional=True)  # JSON representation of boto3 copy ExtraArgs parameter
@@ -67,7 +68,8 @@ def create(configuration, tempdir, auth_file):
 
 class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate directory, 'dir/' with contents?
     def __init__(self, bucket, host, access_key, secret_access_key, port=None, region=None, prefix='',
-                 download_args=None, upload_args=None, copy_args=None, transfer_config=None, tempdir=None):
+                 client_config=None, download_args=None, upload_args=None, copy_args=None,
+                 transfer_config=None, tempdir=None):
         super(S3StorageBackend, self).__init__(tempdir)
 
         self.bucket = bucket
@@ -90,12 +92,17 @@ class S3StorageBackend(StorageBackend):  # TODO '/' in keys to indicate director
 
         self._root = bucket
 
+        _client_config = None
+        if client_config:
+            _client_config = botocore.config.Config(**json.loads(client_config))
+
         self._resource = boto3.resource(
             service_name='s3',
             region_name=region,
             aws_access_key_id=access_key,
             aws_secret_access_key=secret_access_key,
             endpoint_url=endpoint_url,
+            config=_client_config,
         )
 
         self._download_args = None
