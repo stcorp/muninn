@@ -30,7 +30,7 @@ Quick setup
 These steps provide a quick setup to run the test for all cases.
 
 Use docker to run postgres/minio/swift servers:
-$ docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres --name muninn-test-postgresql postgis/postgis
+$ docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres --name muninn-test-postgresql --platform linux/amd64 postgis/postgis
 $ docker run -d -p 9000:9000 -p 9001:9001 -e MINIO_ACCESS_KEY=minio -e MINIO_SECRET_KEY=minio1300 --name muninn-test-minio minio/minio server /data --console-address ":9001"
 $ docker run -d -p 12345:8080 -e SWIFT_USERNAME=test:tester -e SWIFT_KEY=testing --name muninn-test-swift fnndsc/docker-swift-onlyone
 
