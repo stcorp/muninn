@@ -164,6 +164,13 @@ For data where muninn does not maintain the storage (i.e. ``archive_path`` is no
 Sections starting with ``extension:`` provide additional parameters that can be passed to the given product type extension.
 The documentation of the product type extension should define whether this section is applicable and what settings are possible.
 
+# Section "extension:muninn.remote"
+
+The ``extension:muninn.remote`` section provides settings that apply to all remote backends in muninn. This section supports the following settings:
+
+- ``timeout``: The connection timeout in seconds (default is 60 seconds). Only applicable for the http/https, ftp, s3, and sftp backends.
+- ``retries``: The number of retries to perform before failing with an error (default is 0). Only applicable for the http/https, ftp, s3, and sftp backends.
+
 # Section "synchronizer:<name>"
 
 This section should exist for each synchronizer that is listed in the ``synchronizers`` setting of the ``archive`` section.
@@ -172,7 +179,7 @@ It should contain the following settings:
 - ``module``: Mandatory. Python module or package that contains a synchronizer plug-in (see [Extensions](../extensions)).
 - ...: any further settings are defined by the synchronizer plug-in.
 
-# Example configuration file
+# Example configuration files
 
 ```
 [archive]
@@ -187,6 +194,24 @@ root = /home/alice/archives/foo
 
 [postgresql]
 connection_string = dbname=foo user=alice password=wonderland host=192.168.0.1
+```
+
+```
+[archive]
+database = sqlite
+storage = s3
+product_type_extensions = muninn_file
+
+[sqlite]
+connection_string=/home/user/archive.sqlite
+mod_spatialite_path=/usr/local/lib/mod_spatialite.dylib
+
+[s3]
+bucket=mybucket
+host=http://localhost/
+access_key=XXXXXXXXXXXXXXXXXXXX
+secret_access_key=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+client_config={"request_checksum_calculation": "when_required", "response_checksum_validation": "when_required"}
 ```
 
 # Example credentials file
