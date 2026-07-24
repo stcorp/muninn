@@ -198,9 +198,9 @@ connection_string = dbname=foo user=alice password=wonderland host=192.168.0.1
 
 ```
 [archive]
-database = sqlite
-storage = s3
-product_type_extensions = muninn_file
+database=sqlite
+storage=s3
+product_type_extensions=muninn_file
 
 [sqlite]
 connection_string=/home/user/archive.sqlite
