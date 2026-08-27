@@ -1,3 +1,6 @@
+7.5.0 2026-08-27
+~~~~~~~~~~~~~~~~
+
 * Allow auto extraction for a muninn pull to also work when the zip/tgz
   extension is a replacement of the extension in the physical_name instead of
   an addition.
