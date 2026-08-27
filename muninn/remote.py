@@ -52,7 +52,13 @@ def download_http_oath2(url, target_dir, credentials, timeout, retries):
     try:
         while True:
             try:
-                r = session.get(url, timeout=timeout, stream=True)
+                if 'reuse_auth_on_redirect' in credentials and credentials['reuse_auth_on_redirect']:
+                    r = session.get(url, allow_redirects=False, timeout=timeout, stream=True)
+                    if r.status_code == 301:
+                        redirect_url = r.headers['Location']
+                        r = session.get(redirect_url, allow_redirects=False, timeout=timeout, stream=True)
+                else:
+                    r = session.get(url, timeout=timeout, stream=True)
                 r.raise_for_status()
                 local_file = os.path.join(target_dir, os.path.basename(urlparse(r.url).path))
                 if "content-disposition" in [k.lower() for k in r.headers.keys()]:

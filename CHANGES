@@ -1,3 +1,7 @@
+* Added 'reuse_auth_on_redirect' option to credentials file for oauth2
+  downloads. This explicitly passes the same token to a redirected url (which
+  is needed when the redirected url uses a different domain).
+
 7.4.0 2026-07-24
 ~~~~~~~~~~~~~~~~
 

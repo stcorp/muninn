@@ -237,7 +237,8 @@ client_config={"request_checksum_calculation": "when_required", "response_checks
      "password": "somepassword",
      "client_id": "thisclient",
      "client_secret": "somesecret",
-     "token_url": "https://authentication-server.com/token/endpoint"
+     "token_url": "https://authentication-server.com/token/endpoint",
+     "reuse_auth_on_redirect": true
   },
   "s3://some-bucket": {
      "host": "https://s3-provider.com/",
