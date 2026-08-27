@@ -1,4 +1,8 @@
-* Added 'reuse_auth_on_redirect' option to credentials file for oauth2
+* Allow auto extraction for a muninn pull to also work when the zip/tgz
+  extension is a replacement of the extension in the physical_name instead of
+  an addition.
+
+* Introduced 'reuse_auth_on_redirect' option for credentials file for oauth2
   downloads. This explicitly passes the same token to a redirected url (which
   is needed when the redirected url uses a different domain).
 

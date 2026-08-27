@@ -242,34 +242,35 @@ class RemoteBackend(object):
         dirname = os.path.dirname(file_path)
         filename = os.path.basename(file_path)
 
-        zip_extensions = [".zip"]
-        zip_extensions += [extension.upper() for extension in zip_extensions]
-        for extension in zip_extensions:
-            if filename == product.core.physical_name + extension:
-                with zipfile.ZipFile(file_path, 'r') as ziparchive:
-                    ziparchive.extractall(dirname)
-                    paths = set([path.split('/', 1)[0] for path in ziparchive.namelist()])
-                    paths = [os.path.join(dirname, path) for path in sorted(paths)]
-                util.remove_path(file_path)
-                return paths
+        if filename != product.core.physical_name:
+            zip_extensions = [".zip"]
+            zip_extensions += [extension.upper() for extension in zip_extensions]
+            for extension in zip_extensions:
+                if filename == product.core.physical_name + extension or filename == product.core.product_name + extension:
+                    with zipfile.ZipFile(file_path, 'r') as ziparchive:
+                        ziparchive.extractall(dirname)
+                        paths = set([path.split('/', 1)[0] for path in ziparchive.namelist()])
+                        paths = [os.path.join(dirname, path) for path in sorted(paths)]
+                    util.remove_path(file_path)
+                    return paths
 
-        tar_extensions = [".tar", ".tgz", ".tar.gz", ".txz", ".tar.xz", ".tbz", ".tb2", "tar.bz2"]
-        tar_extensions += [extension.upper() for extension in tar_extensions]
-        for extension in tar_extensions:
-            if filename == product.core.physical_name + extension:
-                absdirname = os.path.abspath(dirname)
-                with tarfile.open(file_path) as tararchive:
-                    paths = []
-                    for member in tararchive.getmembers():
-                        # CVE-2007-4559: only extract tar members that end up inside the extraction target directory
-                        member_path = os.path.abspath(os.path.join(dirname, member.name))
-                        if os.path.commonprefix([absdirname, member_path]) == absdirname:
-                            paths += [os.path.relpath(member_path, dirname)]
-                            tararchive.extract(member, dirname)
-                    paths = set([path.split('/', 1)[0] for path in paths])
-                    paths = [os.path.join(dirname, path) for path in sorted(paths)]
-                util.remove_path(file_path)
-                return paths
+            tar_extensions = [".tar", ".tgz", ".tar.gz", ".txz", ".tar.xz", ".tbz", ".tb2", "tar.bz2"]
+            tar_extensions += [extension.upper() for extension in tar_extensions]
+            for extension in tar_extensions:
+                if filename == product.core.physical_name + extension or filename == product.core.product_name + extension:
+                    absdirname = os.path.abspath(dirname)
+                    with tarfile.open(file_path) as tararchive:
+                        paths = []
+                        for member in tararchive.getmembers():
+                            # CVE-2007-4559: only extract tar members that end up inside the extraction target directory
+                            member_path = os.path.abspath(os.path.join(dirname, member.name))
+                            if os.path.commonprefix([absdirname, member_path]) == absdirname:
+                                paths += [os.path.relpath(member_path, dirname)]
+                                tararchive.extract(member, dirname)
+                        paths = set([path.split('/', 1)[0] for path in paths])
+                        paths = [os.path.join(dirname, path) for path in sorted(paths)]
+                    util.remove_path(file_path)
+                    return paths
 
         return [file_path]
 
