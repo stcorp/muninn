@@ -54,7 +54,7 @@ def download_http_oath2(url, target_dir, credentials, timeout, retries):
             try:
                 if 'reuse_auth_on_redirect' in credentials and credentials['reuse_auth_on_redirect']:
                     r = session.get(url, allow_redirects=False, timeout=timeout, stream=True)
-                    if r.status_code == 301:
+                    if r.status_code in [301, 302, 303, 307, 308]:
                         redirect_url = r.headers['Location']
                         r = session.get(redirect_url, allow_redirects=False, timeout=timeout, stream=True)
                 else:
