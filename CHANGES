@@ -1,3 +1,5 @@
+* Fixed memory leak that happened for each new postgresql connection.
+
 7.5.0 2026-08-27
 ~~~~~~~~~~~~~~~~
 
