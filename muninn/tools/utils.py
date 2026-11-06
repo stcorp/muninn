@@ -9,6 +9,7 @@ import logging
 import multiprocessing
 import os
 import sys
+from datetime import timedelta
 
 try:
     from tqdm import tqdm as bar
@@ -54,8 +55,6 @@ def human_readable_size(size, base=1024, powers=["Bi", "Ki", "Mi", "Gi", "Ti", "
 def format_duration(duration):
     if duration is None:
         return ''
-        # return "<unknown>"
-
     try:
         duration = timedelta(seconds=round(duration))
     except OverflowError:

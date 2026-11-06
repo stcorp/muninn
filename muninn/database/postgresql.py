@@ -296,7 +296,6 @@ class PostgresqlConnection(object):
             self._in_transaction = False
             self.close()
 
-
     def _connect(self):
         if self._library == 'psycopg':
             self._connection = _connect_psycopg(self._connection_string)

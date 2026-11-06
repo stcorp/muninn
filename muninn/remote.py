@@ -145,7 +145,7 @@ def download_s3(url, target_dir, credentials, timeout, retries):
     region = None
     paths = []
 
-    transfer_config = boto3.s3.transfer.TransferConfig()
+    transfer_config = TransferConfig()
     if credentials is not None:
         if 'host' in credentials:
             endpoint_url = credentials['host']
@@ -156,7 +156,7 @@ def download_s3(url, target_dir, credentials, timeout, retries):
         if 'secret_access_key' in credentials:
             secret_access_key = credentials['secret_access_key']
         if 'transfer_config' in credentials:
-            transfer_config = boto3.s3.transfer.TransferConfig(**json.loads(credentials['transfer_config']))
+            transfer_config = TransferConfig(**json.loads(credentials['transfer_config']))
 
     client_config = Config(connect_timeout=timeout, read_timeout=timeout, retries={'max_attempts': retries})
 
@@ -246,7 +246,8 @@ class RemoteBackend(object):
             zip_extensions = [".zip"]
             zip_extensions += [extension.upper() for extension in zip_extensions]
             for extension in zip_extensions:
-                if filename == product.core.physical_name + extension or filename == product.core.product_name + extension:
+                if filename == product.core.physical_name + extension or \
+                        filename == product.core.product_name + extension:
                     with zipfile.ZipFile(file_path, 'r') as ziparchive:
                         ziparchive.extractall(dirname)
                         paths = set([path.split('/', 1)[0] for path in ziparchive.namelist()])
@@ -257,7 +258,8 @@ class RemoteBackend(object):
             tar_extensions = [".tar", ".tgz", ".tar.gz", ".txz", ".tar.xz", ".tbz", ".tb2", "tar.bz2"]
             tar_extensions += [extension.upper() for extension in tar_extensions]
             for extension in tar_extensions:
-                if filename == product.core.physical_name + extension or filename == product.core.product_name + extension:
+                if filename == product.core.physical_name + extension or \
+                        filename == product.core.product_name + extension:
                     absdirname = os.path.abspath(dirname)
                     with tarfile.open(file_path) as tararchive:
                         paths = []

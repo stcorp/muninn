@@ -575,7 +575,8 @@ class SQLBuilder(object):
 
         return query, where_parameters, result_fields
 
-    def build_search_query(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], property_names=[], offset=None):
+    def build_search_query(self, where="", order_by=[], limit=None, parameters={}, namespaces=[], property_names=[],
+                           offset=None):
         if property_names:
             namespaces = []
             namespace_properties = {}

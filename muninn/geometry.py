@@ -285,7 +285,7 @@ class LinearRing(GeometrySequence):
         if not self:
             wkt = "EMPTY"
         else:
-            wkt = "("  + ", ".join(["%f %f" % (point.x, point.y) for point in self]) + ")"
+            wkt = "(" + ", ".join(["%f %f" % (point.x, point.y) for point in self]) + ")"
         return "LINESTRING " + wkt if tagged else wkt
 
     def rotation_2d(self):
@@ -314,10 +314,10 @@ class LinearRing(GeometrySequence):
         This can be calculated by summing the outer products of consecutive pts (dot(cross(b-a,c-b),b)/(|b-a||c-b|))
         """
         def xyz(pt):
-            sinlat = math.sin(pt[1] * math.pi / 180.);
-            sinlon = math.sin(pt[0] * math.pi / 180.);
-            coslat = math.cos(pt[1] * math.pi / 180.);
-            coslon = math.cos(pt[0] * math.pi / 180.);
+            sinlat = math.sin(pt[1] * math.pi / 180.)
+            sinlon = math.sin(pt[0] * math.pi / 180.)
+            coslat = math.cos(pt[1] * math.pi / 180.)
+            coslon = math.cos(pt[0] * math.pi / 180.)
             return [coslat * coslon, coslat * sinlon, sinlat]
         pts = [self[0]]
         for pt in self[1:]:
@@ -329,12 +329,12 @@ class LinearRing(GeometrySequence):
             return 0
         a = xyz(pts[-2])
         b = xyz(pts[-1])
-        edge1 = [pb - pa for pa, pb in zip(a,b)]
+        edge1 = [pb - pa for pa, pb in zip(a, b)]
         norm_edge1 = math.sqrt(edge1[0] * edge1[0] + edge1[1] * edge1[1] + edge1[2] * edge1[2])
         sum = 0
         for pt in pts:
             c = xyz(pt)
-            edge2 = [pc - pb for pb, pc in zip(b,c)]
+            edge2 = [pc - pb for pb, pc in zip(b, c)]
             norm_edge2 = math.sqrt(edge2[0] * edge2[0] + edge2[1] * edge2[1] + edge2[2] * edge2[2])
             v = [
                 edge1[1] * edge2[2] - edge1[2] * edge2[1],
