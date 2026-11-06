@@ -66,6 +66,18 @@ def _get_db_type_id(connection, typename):
     return type_id
 
 
+class GeometryDumper(Dumper):
+    def dump(self, obj):
+        return ewkb.encode_hexewkb(obj).encode()
+
+
+class GeographyLoader(Loader):
+    def load(self, data):
+        if data is None:
+            return None
+        return ewkb.decode_hexewkb(data)
+
+
 def geometry_recv(data, offset, length):  # TODO binary send/recv needed for pg8000 <= 1.15
     return ewkb.decode_ewkb(data[offset:offset+length])
 
@@ -147,17 +159,8 @@ def _connect_psycopg2(connection_string):
 
     return _connection
 
+
 def _connect_psycopg(connection_string):
-    class GeometryDumper(Dumper):
-        def dump(self, obj):
-            return ewkb.encode_hexewkb(obj).encode()
-
-    class GeographyLoader(Loader):
-        def load(self, data):
-            if data is None:
-                return None
-            return ewkb.decode_hexewkb(data)
-
     _connection = psycopg.connect(connection_string)
 
     # Register adapter for the Geometry type.
