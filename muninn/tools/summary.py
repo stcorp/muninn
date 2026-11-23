@@ -81,7 +81,8 @@ class TabulateWriter(PlainWriter):
                 return True
             return False
         colalign = ['right' if right_align(field) else 'left' for field in self._header]
-        print(tabulate.tabulate(self._data, headers=self._header, tablefmt=self._format, colalign=colalign))
+        print(tabulate.tabulate(self._data, headers=self._header, tablefmt=self._format, disable_numparse=True,
+                                colalign=colalign))
 
 
 class CSVWriter(PlainWriter):
